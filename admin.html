@@ -672,12 +672,14 @@ const CERTIFICATE_PAGE_URL = 'https://cadetmediaoffice.github.io/NAAD-ADMIN/cert
 const CODES_URL     = APPS_SCRIPT_URL + '?action=checkStatus&code=ALL';
 const CACHE_KEY     = 'cmgAdminCache';
 const CACHE_TS_KEY  = 'cmgAdminCacheTS';
+const HISTORY_CACHE_KEY = 'cmgAdminHistoryCache';
 const TOKEN_KEY      = 'cmgAdminToken';
 
 var allStudents = [];   // from Codes sheet
 var allResults  = [];   // from Results sheet
 var mergedData  = [];   // combined
 var studentTableRows = []; // last-rendered filtered list, for profile lookups by row index
+var allProgramHistory = []; // every NAAD program result across every program, keyed by AccountID
 
 // Quiz module score fields, in display order — matches the headers written
 // by submitResults()/legacySubmit() in Code.gs.
@@ -1038,6 +1040,10 @@ function loadData(){
   // Always show cached data immediately if available
   var cached = localStorage.getItem(CACHE_KEY);
   var cachedTS = localStorage.getItem(CACHE_TS_KEY);
+  var cachedHistory = localStorage.getItem(HISTORY_CACHE_KEY);
+  if(cachedHistory){
+    try{ allProgramHistory = JSON.parse(cachedHistory); }catch(e){}
+  }
   if(cached){
     try{
       mergedData = JSON.parse(cached);
@@ -1059,18 +1065,23 @@ function loadData(){
   var token = sessionStorage.getItem(TOKEN_KEY);
   Promise.all([
     fetch(APPS_SCRIPT_URL + '?action=adminGetAllData&token=' + encodeURIComponent(token || '')).then(function(r){ return r.json(); }),
-    fetch(APPS_SCRIPT_URL + '?action=adminGetCodes&token=' + encodeURIComponent(token || '')).then(function(r){ return r.json(); })
+    fetch(APPS_SCRIPT_URL + '?action=adminGetCodes&token=' + encodeURIComponent(token || '')).then(function(r){ return r.json(); }),
+    fetch(APPS_SCRIPT_URL + '?action=adminGetProgramHistory&token=' + encodeURIComponent(token || '')).then(function(r){ return r.json(); })
   ])
     .then(function(results){
       var rows  = results[0];
       var codes = results[1];
+      var history = results[2];
       if(rows && rows.error === 'unauthorized'){ forceReLogin(); return; }
       if(codes && codes.error === 'unauthorized'){ forceReLogin(); return; }
+      if(history && history.error === 'unauthorized'){ forceReLogin(); return; }
       allResults = rows;
+      allProgramHistory = Array.isArray(history) ? history : [];
       mergedData = mergeWithCodes(buildMerged(rows), Array.isArray(codes) ? codes : []);
       // Cache it
       localStorage.setItem(CACHE_KEY,    JSON.stringify(mergedData));
       localStorage.setItem(CACHE_TS_KEY, new Date().toISOString());
+      localStorage.setItem(HISTORY_CACHE_KEY, JSON.stringify(allProgramHistory));
       renderAll();
       setBadge('online');
     })
@@ -1100,6 +1111,9 @@ function mergeWithCodes(submittedList, codesList){
     if(c){
       r.photo = c.photoUrl || '';
       if(!r.district) r.district = c.district || '';
+      r.accountId = c.accountId || r.code;
+    } else {
+      r.accountId = r.code; // no matching Codes row found — fall back to the quiz code itself
     }
   });
 
@@ -1115,7 +1129,8 @@ function mergeWithCodes(submittedList, codesList){
       return {
         name: c.name, gender: c.gender, school: c.school, region: c.region,
         district: c.district || '', code: c.code, date: c.actDate, badge: '',
-        total: 0, submitted: false, raw: null, photo: c.photoUrl || ''
+        total: 0, submitted: false, raw: null, photo: c.photoUrl || '',
+        accountId: c.accountId || c.code
       };
     })
     .filter(function(r){ return r.name; });
@@ -1541,9 +1556,94 @@ function computeStrengthWeakness(raw){
   return { strongest: strongest, weakest: weakest, topAreas: topAreas };
 }
 
+// ── CROSS-PROGRAM RECORD (NAAD Program History) ─────────────────────
+// Every NAAD program a student has ever done — this quiz, Cadet
+// Personality Awards, Cadet Register, Cadet Drill Star, whatever comes
+// next — all tagged to the same AccountID. This is the "one continuous
+// CV" view inside the student profile modal.
+var currentProfileAccountId = null;
+
+function getProgramHistoryFor(accountId){
+  if(!accountId) return [];
+  return allProgramHistory
+    .filter(function(row){ return String(row.AccountID || '').trim() === String(accountId).trim(); })
+    .sort(function(a,b){ return new Date(a.ActivatedAt || 0) - new Date(b.ActivatedAt || 0); });
+}
+
+function renderProgramHistoryHtml(accountId){
+  var rows = getProgramHistoryFor(accountId);
+  if(!rows.length){
+    return '<div class="empty" style="padding:10px 0;">No other NAAD program records yet for this student.</div>';
+  }
+  return '<div class="module-grid">' + rows.map(function(row){
+    var meta = [row.Level, row.Year].filter(Boolean).join(' · ');
+    var result = row.Result ? esc(row.Result) : 'Pending';
+    return '<div class="module-row"><span>' + esc(row.Program || 'Unknown program') +
+      (meta ? ' <span style="opacity:.6;">(' + esc(meta) + ')</span>' : '') + '</span>' +
+      '<span class="score">' + result + '</span></div>';
+  }).join('') + '</div>';
+}
+
+function toggleOtherProgramInput(){
+  var sel = document.getElementById('newProgramSelect');
+  var other = document.getElementById('newProgramOther');
+  if (sel && other) other.style.display = (sel.value === '__other__') ? 'block' : 'none';
+}
+
+// Manually attaches a program result to the currently open student's
+// account — for results that never went through a pendrive code at all
+// (e.g. an external Personality Award result), or ordinary backfills.
+function saveProgramResult(){
+  var sel      = document.getElementById('newProgramSelect');
+  var program  = sel.value === '__other__'
+    ? document.getElementById('newProgramOther').value.trim()
+    : sel.value;
+  var result   = document.getElementById('newProgramResult').value.trim();
+  var level    = document.getElementById('newProgramLevel').value.trim();
+  var year     = document.getElementById('newProgramYear').value.trim();
+  var statusEl = document.getElementById('programResultStatus');
+
+  if(!currentProfileAccountId){ statusEl.textContent = '❌ No student selected.'; return; }
+  if(!program){ statusEl.textContent = '❌ Choose or type a program name.'; return; }
+  if(!result){ statusEl.textContent = '❌ Enter a result or award.'; return; }
+  if(!navigator.onLine){ statusEl.textContent = '❌ Needs an internet connection to save.'; return; }
+
+  statusEl.textContent = 'Saving…';
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  var url = APPS_SCRIPT_URL + '?action=adminRecordProgramResult'
+    + '&token='     + encodeURIComponent(token || '')
+    + '&accountId=' + encodeURIComponent(currentProfileAccountId)
+    + '&program='   + encodeURIComponent(program)
+    + '&result='    + encodeURIComponent(result)
+    + '&level='     + encodeURIComponent(level)
+    + '&year='      + encodeURIComponent(year);
+
+  fetch(url).then(function(r){ return r.json(); }).then(function(data){
+    if(data && data.status === 'ok'){
+      statusEl.textContent = '✅ Saved.';
+      allProgramHistory.push({
+        AccountID: currentProfileAccountId, Program: program, Code: 'MANUAL',
+        Level: level, Year: year, Result: result,
+        ActivatedAt: new Date().toISOString(), SubmittedAt: new Date().toISOString()
+      });
+      localStorage.setItem(HISTORY_CACHE_KEY, JSON.stringify(allProgramHistory));
+      document.getElementById('programHistoryList').innerHTML = renderProgramHistoryHtml(currentProfileAccountId);
+      document.getElementById('newProgramResult').value = '';
+      document.getElementById('newProgramLevel').value  = '';
+      document.getElementById('newProgramYear').value   = '';
+    } else {
+      statusEl.textContent = '❌ ' + ((data && data.message) || 'Could not save.');
+    }
+  }).catch(function(){
+    statusEl.textContent = '❌ Network error — check your connection and try again.';
+  });
+}
+
 function openStudentProfile(idx){
   var r = studentTableRows[idx];
   if(!r) return;
+
+  currentProfileAccountId = r.accountId || r.code || null;
 
   var raw = r.raw || {};
   var certId = r.code || '—';
@@ -1635,6 +1735,26 @@ function openStudentProfile(idx){
         '<div class="profile-section-title">📝 Assessment Results — ' + (r.submitted ? r.total + '%' : 'Pending') + '</div>' +
         assessmentSection +
       '</div>' +
+    '</div>' +
+    '<div class="profile-section-title">📚 NAAD Program History</div>' +
+    '<div id="programHistoryList">' + renderProgramHistoryHtml(currentProfileAccountId) + '</div>' +
+    '<div class="profile-section-title">➕ Record a Program Result</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;max-width:340px;">' +
+      '<select id="newProgramSelect" onchange="toggleOtherProgramInput()" style="padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:13px;">' +
+        '<option value="">Select program…</option>' +
+        '<option value="Cadet TV Personality Awards">Cadet TV Personality Awards</option>' +
+        '<option value="Cadet Drill Star">Cadet Drill Star</option>' +
+        '<option value="Fire Service Tales">Fire Service Tales</option>' +
+        '<option value="__other__">Other…</option>' +
+      '</select>' +
+      '<input type="text" id="newProgramOther" placeholder="Program name" style="display:none;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:13px;">' +
+      '<input type="text" id="newProgramResult" placeholder="Result / Award (e.g. Gold, Winner — Best Cadet)" style="padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:13px;">' +
+      '<div style="display:flex;gap:8px;">' +
+        '<input type="text" id="newProgramLevel" placeholder="Class / Level (optional)" style="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:13px;">' +
+        '<input type="text" id="newProgramYear" placeholder="Year (optional)" style="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:13px;">' +
+      '</div>' +
+      '<button onclick="saveProgramResult()" style="padding:10px;border:none;border-radius:8px;background:linear-gradient(45deg,#f2c300,#e6a800);color:#000;font-weight:bold;font-size:13px;cursor:pointer;">Save Result</button>' +
+      '<div id="programResultStatus" style="font-size:12px;min-height:16px;"></div>' +
     '</div>';
 
   document.getElementById('profileContent').innerHTML = html;
