@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Register — Cadet TV Personality Awards 2026 | Cadet Media Ghana</title>
+<meta name="description" content="Register your child/ward for the Cadet TV Personality Awards 2026 — a youth programme developing confidence, communication skills and talent.">
+
+<!-- ══════════════════════════════════════
+  WHATSAPP / FACEBOOK / TWITTER LINK PREVIEW (Open Graph tags)
+  IMPORTANT: og:image and og:url below MUST be full, absolute URLs
+  (starting with https://) once this page is hosted — WhatsApp cannot
+  fetch a relative path like "og_image.jpg". Replace the two
+  PASTE_YOUR_SITE_URL placeholders below with your real hosted URL,
+  e.g. https://yoursite.com/tv_awards_register.html
+═══════════════════════════════════════ -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Cadet TV Personality Awards 2026 — Register Now">
+<meta property="og:description" content="Discover • Develop • Showcase • Celebrate. Register your child/ward for the Cadet TV Personality Awards 2026.">
+<meta property="og:image" content="https://cadetmediaoffice.github.io/TV-Personality-Awards/og_image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://cadetmediaoffice.github.io/TV-Personality-Awards/tv_awards_register.html">
+<meta property="og:site_name" content="Cadet Media Ghana">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Cadet TV Personality Awards 2026 — Register Now">
+<meta name="twitter:description" content="Discover • Develop • Showcase • Celebrate. Register your child/ward today.">
+<meta name="twitter:image" content="https://cadetmediaoffice.github.io/TV-Personality-Awards/og_image.jpg">
+
+<!-- ══════════════════════════════════════
+  "ADD TO HOME SCREEN" — lets parents tap Share → Add to Home Screen
+  on their phone and get an app-like icon, without needing a real app.
+═══════════════════════════════════════ -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0f3460">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="CTVA 2026">
+<link rel="apple-touch-icon" href="logo_quiz.png">
+<link rel="icon" type="image/png" href="logo_quiz.png">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:Arial,sans-serif;
+  background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
+  min-height:100vh;color:#fff;
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-start;padding:20px;
+}
+.logo{width:100px;height:100px;border-radius:50%;
+  border:3px solid rgba(255,215,0,0.5);margin-bottom:16px;
+  box-shadow:0 0 30px rgba(255,215,0,0.3);
+  background:#fff;object-fit:contain;padding:4px;}
+.banner-slideshow{position:relative;width:100%;max-width:380px;height:220px;
+  margin-bottom:20px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.03);
+  filter:drop-shadow(0 0 10px rgba(255,255,255,0.15));}
+.banner-slideshow .slide{position:absolute;top:0;left:0;width:100%;height:100%;
+  object-fit:contain;opacity:0;transition:opacity 1s ease-in-out;}
+.banner-slideshow .slide.active{opacity:1;}
+.prizes-strip{width:100%;max-width:440px;border-radius:14px;margin-top:6px;
+  border:1px solid rgba(255,215,0,0.25);box-shadow:0 6px 24px rgba(0,0,0,0.4);}
+.sponsors-strip{width:100%;max-width:440px;border-radius:10px;margin-top:24px;
+  opacity:.9;}
+.page-layout{display:flex;flex-direction:column;align-items:center;width:100%;max-width:900px;}
+.left-col{display:flex;flex-direction:column;align-items:center;width:100%;}
+.right-col{display:flex;flex-direction:column;align-items:center;width:100%;}
+
+/* Wider screens: banner sits fixed on the left, form scrolls on the right. */
+@media (min-width: 900px) {
+  .page-layout{flex-direction:row;align-items:flex-start;justify-content:center;gap:48px;}
+  .left-col{position:sticky;top:24px;flex:0 0 380px;width:380px;align-self:flex-start;}
+  .right-col{flex:0 0 440px;width:440px;}
+}
+.card{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:16px;padding:28px 24px;
+  width:100%;max-width:440px;
+  display:flex;flex-direction:column;gap:16px;
+  box-shadow:0 10px 40px rgba(0,0,0,0.5);
+}
+.card h2{font-size:20px;text-align:center;color:#FFD700;}
+.card p{font-size:13px;opacity:.75;text-align:center;line-height:1.7;}
+.step{
+  background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.2);
+  border-radius:10px;padding:12px 14px;font-size:13px;
+  display:flex;align-items:flex-start;gap:10px;line-height:1.6;
+}
+.step-num{
+  background:linear-gradient(45deg,#FFD700,#e6a800);
+  color:#000;font-weight:900;font-size:13px;
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+label{font-size:13px;font-weight:bold;opacity:.85;}
+input,select,textarea{
+  width:100%;padding:12px 14px;border-radius:10px;
+  border:2px solid rgba(255,255,255,0.15);
+  background:rgba(255,255,255,0.07);color:#fff;
+  font-size:14px;outline:none;transition:border .2s;
+  font-family:inherit;
+}
+input:focus,select:focus,textarea:focus{border-color:#FFD700;}
+select option{background:#1a1a2e;color:#fff;}
+.fee-box{
+  background:rgba(0,180,255,0.08);border:1px solid rgba(0,180,255,0.25);
+  border-radius:10px;padding:12px 14px;font-size:12.5px;line-height:1.7;
+  color:#9fd8ff;
+}
+.fee-box strong{color:#fff;}
+.consent-box{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px;padding:14px;font-size:12.5px;line-height:1.7;opacity:.85;
+}
+.checkline{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;line-height:1.6;opacity:.9;}
+.checkline input[type=checkbox]{width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:#FFD700;}
+.btn{
+  padding:14px;font-size:16px;font-weight:bold;border:none;border-radius:12px;cursor:pointer;
+  background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;transition:all .2s;
+  box-shadow:0 4px 18px rgba(255,215,0,0.4);
+}
+.btn:hover{transform:scale(1.02);}
+.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
+.err{background:rgba(220,50,50,0.15);border:1px solid rgba(220,50,50,0.4);
+  border-radius:8px;padding:10px 14px;font-size:13px;color:#ff9090;text-align:center;display:none;}
+.success{background:rgba(0,200,80,0.12);border:1px solid rgba(0,200,80,0.35);
+  border-radius:8px;padding:10px 14px;font-size:13px;color:#80ffb0;text-align:center;display:none;}
+.spinner{display:none;text-align:center;font-size:13px;opacity:.7;}
+.done-card{display:none;flex-direction:column;gap:14px;text-align:center;}
+.done-card h3{color:#FFD700;font-size:19px;}
+.done-card p{font-size:13px;opacity:.8;line-height:1.7;}
+.ref-box{
+  background:rgba(255,215,0,0.08);border:1px solid rgba(255,215,0,0.25);
+  border-radius:10px;padding:14px;font-size:13px;
+}
+.ref-box .ref-code{font-family:monospace;font-size:18px;letter-spacing:2px;color:#FFD700;font-weight:bold;margin-top:4px;}
+
+@media (max-width: 380px) {
+  .logo{width:80px;height:80px;}
+  .banner{max-width:300px;}
+}
+</style>
+</head>
+<body>
+
+<div class="page-layout">
+<div class="left-col">
+<img src="logo_quiz.png" alt="Cadet Media Ghana" class="logo">
+<div class="banner-slideshow" id="bannerSlideshow">
+  <img src="tv_awards_banner.png" alt="Cadet TV Personality Awards 2026" class="slide active">
+  <img src="prizes_2025.jpg" alt="Cadet TV Personality Awards Prizes" class="slide">
+  <img src="event_01.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_02.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_03.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_04.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_05.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_06.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_07.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_08.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_09.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_10.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_11.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_12.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_13.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_14.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_15.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_16.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_17.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_18.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_19.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_20.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_21.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_22.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_23.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_24.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_25.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_26.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_27.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_28.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_29.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_30.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="event_31.jpg" alt="Cadet TV Personality Awards 2025 highlight" class="slide">
+  <img src="sponsors_strip.jpg" alt="Media Partners and Sponsors" class="slide">
+</div>
+
+<button type="button" onclick="var p=document.getElementById('prizesBox'); var open=p.style.display==='flex'; p.style.display= open ? 'none' : 'flex'; this.textContent = open ? '🏆 See Last Year\'s Awards' : '🔼 Hide';" style="
+  margin-bottom:16px;padding:10px 18px;border-radius:30px;border:2px solid rgba(255,215,0,0.4);
+  background:rgba(255,215,0,0.08);color:#FFD700;font-size:13px;font-weight:bold;cursor:pointer;">
+  🏆 See Last Year's Awards
+</button>
+<div id="prizesBox" style="display:none;flex-direction:column;align-items:center;margin-bottom:16px;">
+  <img src="prizes_2025.jpg" alt="Cadet TV Personality Awards 2025 Prizes" class="prizes-strip">
+  <p style="font-size:11px;opacity:.5;text-align:center;margin-top:8px;max-width:400px;">
+    Prizes shown are from the 2025 edition. 2026 prizes will be announced closer to the event.
+  </p>
+</div>
+</div>
+
+<div class="right-col">
+<!-- ═══════════ REGISTRATION FORM ═══════════ -->
+<div class="card" id="regCard">
+  <h2>🎬 Cadet TV Personality Awards 2026</h2>
+  <p>Discover • Develop • Showcase • Celebrate<br>
+     Register below to take part in the programme. A parent or guardian must complete the consent section.</p>
+
+  <div class="step">
+    <span class="step-num">1</span>
+    <span>Fill in the student's details exactly as they appear on the school register.</span>
+  </div>
+
+  <!-- Honeypot: hidden from real users via CSS. Bots that auto-fill every
+       field on a page will fill this too, which flags them as a bot. -->
+  <div style="position:absolute;left:-9999px;" aria-hidden="true">
+    <label>Leave this field blank</label>
+    <input type="text" id="inWebsite" tabindex="-1" autocomplete="off">
+  </div>
+
+  <div><label>Student's Full Name</label>
+    <input type="text" id="inStudentName" placeholder="e.g. Kofi Mensah Asante" maxlength="60"></div>
+
+  <div><label>Date of Birth</label>
+    <input type="date" id="inDob"></div>
+
+  <div><label>Gender</label>
+    <select id="inGender">
+      <option value="" disabled selected>Select gender…</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+    </select></div>
+
+  <div><label>School</label>
+    <input type="text" id="inSchool" placeholder="e.g. Accra Academy SHS" maxlength="80"></div>
+
+  <div><label>School Region</label>
+    <select id="inRegion">
+      <option value="" disabled selected>Select region…</option>
+      <option>Ahafo</option>
+      <option>Ashanti</option>
+      <option>Bono</option>
+      <option>Bono East</option>
+      <option>Central</option>
+      <option>Eastern</option>
+      <option>Greater Accra</option>
+      <option>North East</option>
+      <option>Northern</option>
+      <option>Oti</option>
+      <option>Savannah</option>
+      <option>Upper East</option>
+      <option>Upper West</option>
+      <option>Volta</option>
+      <option>Western</option>
+      <option>Western North</option>
+    </select></div>
+
+  <div><label>Grade</label>
+    <select id="inGrade">
+      <option value="" disabled selected>Select grade…</option>
+      <option value="Grade 5">Grade 5</option>
+      <option value="Grade 6">Grade 6</option>
+      <option value="JHS 1">JHS 1</option>
+      <option value="JHS 2">JHS 2</option>
+      <option value="JHS 3">JHS 3</option>
+      <option value="SHS 1">SHS 1</option>
+      <option value="SHS 2">SHS 2</option>
+      <option value="SHS 3">SHS 3</option>
+    </select></div>
+
+  <div><label>Nominee Category</label>
+    <select id="inCategory">
+      <option value="" disabled selected>Select category…</option>
+      <optgroup label="News">
+        <option>Best International News Anchor</option>
+        <option>Best International News Reporter</option>
+        <option>Best International News Producer</option>
+        <option>Best Local News Anchor</option>
+        <option>Best Local News Reporter</option>
+        <option>Best Local News Producer</option>
+        <option>Best Sports News Anchor</option>
+        <option>Best Sports News Reporter</option>
+        <option>Best Sports News Producer</option>
+        <option>Best Entertainment News Anchor</option>
+        <option>Best Entertainment News Reporter</option>
+        <option>Best Entertainment News Producer</option>
+      </optgroup>
+      <optgroup label="Weather">
+        <option>Best Weather Presenter</option>
+        <option>Best Weather Reporter</option>
+        <option>Best Weather Producer</option>
+      </optgroup>
+    </select></div>
+
+  <div><label>Student's Photo <span style="color:#FFD700;">*required — used on the award profile, certificate and flyer</span></label>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:6px;">
+      <img id="photoPreview" src="" alt="" style="display:none;width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #FFD700;flex-shrink:0;">
+      <div id="photoPlaceholder" style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.08);
+        border:2px dashed rgba(255,255,255,0.25);display:flex;align-items:center;justify-content:center;
+        font-size:22px;flex-shrink:0;">📷</div>
+      <div style="flex:1;">
+        <input type="file" id="inPhoto" accept="image/*" capture="user" style="display:none;" onchange="handlePhotoSelect(event)">
+        <button type="button" onclick="document.getElementById('inPhoto').click();" style="
+          width:100%;padding:10px;border-radius:10px;border:2px solid rgba(255,215,0,0.3);
+          background:rgba(255,215,0,0.08);color:#FFD700;font-size:13px;font-weight:bold;cursor:pointer;">
+          📸 Take / Choose Photo
+        </button>
+        <div id="photoStatus" style="font-size:11px;opacity:.6;margin-top:4px;"></div>
+        <div style="font-size:11px;opacity:.5;margin-top:2px;">Use good lighting and a clear, front-facing shot — this photo will also appear on the promotional flyer.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="step">
+    <span class="step-num">2</span>
+    <span>A parent or guardian completes this section to give consent for the student's participation.</span>
+  </div>
+
+  <div><label>Parent/Guardian Name</label>
+    <input type="text" id="inParentName" placeholder="e.g. Mrs. Abena Asante" maxlength="60"></div>
+
+  <div><label>Parent/Guardian Phone / WhatsApp</label>
+    <input type="tel" id="inParentPhone" placeholder="e.g. 024 000 0000" maxlength="20"></div>
+
+  <div><label>Parent/Guardian Email <span style="color:#FFD700;">*required — for your registration confirmation</span></label>
+    <input type="email" id="inParentEmail" placeholder="e.g. abena.asante@gmail.com" maxlength="100"></div>
+
+  <div class="fee-box">
+    💰 <strong>Participation fee: GH₵400 per student.</strong><br>
+    This fee is collected and submitted collectively by the school — no online payment is needed here.
+  </div>
+
+  <div class="consent-box">
+    I confirm that I am aware of my child/ward's participation in the Cadet TV Personality Awards 2026,
+    a youth programme aimed at developing students' confidence, communication skills and talents,
+    and I give my consent for him/her to participate. I also consent to the photo submitted above
+    being used for the student's award profile and certificate.
+  </div>
+
+  <label class="checkline">
+    <input type="checkbox" id="inConsent">
+    <span>I am the parent/guardian named above, and typing my name in this form serves as my signature and consent.</span>
+  </label>
+
+  <div class="err" id="errMsg"></div>
+
+  <button class="btn" id="registerBtn" onclick="goToReview()">
+    👀 Review My Details
+  </button>
+
+  <p style="font-size:11px;opacity:.45;text-align:center;">
+    Your details are sent securely to Cadet Media Ghana for verification by the school.
+  </p>
+</div>
+
+<!-- ═══════════ REVIEW CARD ═══════════ -->
+<div class="card" id="reviewCard" style="display:none;">
+  <h2>👀 Review Before Submitting</h2>
+  <p>Please check everything below is correct. You can go back and edit, or confirm to submit.</p>
+
+  <div style="display:flex;justify-content:center;">
+    <img id="reviewPhoto" src="" alt="" style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid #FFD700;">
+  </div>
+
+  <div id="reviewFields" style="display:flex;flex-direction:column;gap:8px;font-size:13.5px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.12);border-radius:10px;padding:14px;"></div>
+
+  <div class="err" id="reviewErrMsg"></div>
+  <div class="spinner" id="reviewSpinner">⏳ Submitting registration...</div>
+
+  <button class="btn" id="confirmBtn" onclick="confirmAndSubmit()">
+    ✅ Confirm &amp; Submit
+  </button>
+  <button class="btn" onclick="backToEdit()" style="background:rgba(255,255,255,0.1);color:#fff;box-shadow:none;">
+    ✏️ Edit Details
+  </button>
+</div>
+
+<!-- ═══════════ CONFIRMATION CARD ═══════════ -->
+<div class="card done-card" id="doneCard">
+  <h3>✅ Registration Received</h3>
+  <img id="donePhoto" src="" alt="" style="display:none;width:80px;height:80px;border-radius:50%;object-fit:cover;border:2px solid #FFD700;margin:0 auto;">
+  <p id="doneText"></p>
+  <div class="ref-box">
+    Your registration reference<br>
+    <span class="ref-code" id="refCode"></span>
+  </div>
+  <p style="font-size:12px;opacity:.6;">
+    Keep this reference. Your school will collect the GH₵400 participation fee separately.
+  </p>
+  <button class="btn" id="waBtn" onclick="sendWhatsAppConfirmation()" style="background:linear-gradient(45deg,#25D366,#128C7E);color:#fff;box-shadow:0 4px 18px rgba(37,211,102,0.4);">
+    📲 Send Confirmation via WhatsApp
+  </button>
+  <button class="btn" onclick="location.reload()">Register Another Student</button>
+</div>
+
+<img src="sponsors_strip.jpg" alt="Media Partners and Sponsors" class="sponsors-strip">
+</div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+//  CONFIG
+//  Replace with your deployed Google Apps Script Web App URL
+//  (bound to the Google Sheet that should collect registrations).
+// ══════════════════════════════════════
+var APPS_SCRIPT_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+
+// Must match SHARED_SECRET in the Apps Script backend exactly.
+// This is visible to anyone who views the page source — it isn't a real
+// secret, just a filter against generic bots that don't inspect the page.
+var APP_SECRET = 'CHANGE_ME_TO_A_RANDOM_STRING';
+
+// Cadet Media Ghana's WhatsApp number in international format, no + or spaces
+// e.g. Ghana number 024 000 0000 becomes 233240000000
+var CMG_WHATSAPP_NUMBER = 'PASTE_WHATSAPP_NUMBER_HERE';
+
+// ══════════════════════════════════════
+//  BANNER SLIDESHOW — cross-fades between the promo images every 3s.
+// ══════════════════════════════════════
+(function initBannerSlideshow() {
+  var slides = document.querySelectorAll('#bannerSlideshow .slide');
+  if (!slides.length) return;
+  var current = 0;
+  setInterval(function() {
+    slides[current].classList.remove('active');
+    current = (current + 1) % slides.length;
+    slides[current].classList.add('active');
+  }, 3000);
+})();
+
+function showErr(msg) {
+  var el = document.getElementById('errMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function makeRefCode(name) {
+  var initials = (name || '').trim().split(/\s+/).map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,3);
+  var stamp = Date.now().toString().slice(-6);
+  return 'CTVA-2026-' + (initials || 'STU') + '-' + stamp;
+}
+
+// ══════════════════════════════════════
+//  PHOTO CAPTURE — same pattern as activate.html.
+//  Compressed client-side before upload so it stays small on slow/mobile
+//  data connections. Kept in memory (and localStorage as a fallback copy)
+//  until the registration POST succeeds.
+// ══════════════════════════════════════
+var selectedPhotoDataUrl = null;
+
+function handlePhotoSelect(event) {
+  var file = event.target.files && event.target.files[0];
+  if (!file) return;
+  var statusEl = document.getElementById('photoStatus');
+
+  if (!file.type || file.type.indexOf('image/') !== 0) {
+    statusEl.textContent = '❌ Please choose an image file.';
+    return;
+  }
+  if (file.size > 15 * 1024 * 1024) {
+    statusEl.textContent = '❌ That photo is too large — please choose a smaller one.';
+    return;
+  }
+
+  statusEl.textContent = '⏳ Processing photo…';
+  // Higher resolution than before (900px / 0.85 quality) since this photo
+  // now also gets used on the printed/shared promotional flyer, not just
+  // a small certificate thumbnail.
+  compressImage(file, 900, 0.85).then(function(dataUrl) {
+    selectedPhotoDataUrl = dataUrl;
+    var img = document.getElementById('photoPreview');
+    img.src = dataUrl;
+    img.style.display = 'block';
+    document.getElementById('photoPlaceholder').style.display = 'none';
+    statusEl.textContent = '✅ Photo ready';
+  }).catch(function() {
+    statusEl.textContent = '❌ Could not read that photo — please try another.';
+  });
+}
+
+// Resizes to at most maxDim on the longest side and re-encodes as JPEG,
+// so a large phone photo becomes roughly 30–80KB before it's ever sent.
+function compressImage(file, maxDim, quality) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onerror = reject;
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        if (w > h) { if (w > maxDim) { h = Math.round(h * (maxDim / w)); w = maxDim; } }
+        else       { if (h > maxDim) { w = Math.round(w * (maxDim / h)); h = maxDim; } }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+var pendingRegistration = null;
+
+// Grade determines school level automatically, so parents don't have to
+// answer two overlapping questions.
+function levelFromGrade(grade) {
+  if (grade === 'Grade 5' || grade === 'Grade 6') return 'Primary';
+  if (grade && grade.indexOf('JHS') === 0) return 'JHS';
+  if (grade && grade.indexOf('SHS') === 0) return 'SHS';
+  return '';
+}
+
+function goToReview() {
+  var studentName  = document.getElementById('inStudentName').value.trim();
+  var dob          = document.getElementById('inDob').value;
+  var gender       = document.getElementById('inGender').value;
+  var grade        = document.getElementById('inGrade').value;
+  var level        = levelFromGrade(grade);
+  var school       = document.getElementById('inSchool').value.trim();
+  var region       = document.getElementById('inRegion').value;
+  var category     = document.getElementById('inCategory').value;
+  var parentName   = document.getElementById('inParentName').value.trim();
+  var parentPhone  = document.getElementById('inParentPhone').value.trim();
+  var parentEmail  = document.getElementById('inParentEmail').value.trim();
+  var consent      = document.getElementById('inConsent').checked;
+
+  document.getElementById('errMsg').style.display = 'none';
+
+  if (!studentName)  { showErr('Please enter the student\'s full name.'); return; }
+  if (!dob)            { showErr('Please enter the student\'s date of birth.'); return; }
+  if (!gender)         { showErr('Please select the student\'s gender.'); return; }
+  if (!grade)          { showErr('Please select the student\'s grade.'); return; }
+  if (!school)        { showErr('Please enter the school.'); return; }
+  if (!region)         { showErr('Please select the school\'s region.'); return; }
+  if (!category)       { showErr('Please select a nominee category.'); return; }
+  if (!selectedPhotoDataUrl) { showErr('Please take or choose the student\'s photo.'); return; }
+  if (!parentName)    { showErr('Please enter the parent/guardian name.'); return; }
+  if (!parentPhone)   { showErr('Please enter a parent/guardian phone or WhatsApp number.'); return; }
+  if (!parentEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(parentEmail)) { showErr('Please enter a valid parent/guardian email address.'); return; }
+  if (!consent)        { showErr('A parent/guardian must tick the consent box to continue.'); return; }
+
+  pendingRegistration = {
+    ref: makeRefCode(studentName),
+    studentName: studentName,
+    dob: dob,
+    gender: gender,
+    level: level,
+    grade: grade,
+    school: school,
+    region: region,
+    category: category,
+    parentName: parentName,
+    parentPhone: parentPhone,
+    parentEmail: parentEmail,
+    photoData: selectedPhotoDataUrl
+  };
+
+  renderReview();
+  document.getElementById('regCard').style.display = 'none';
+  document.getElementById('reviewCard').style.display = 'flex';
+  window.scrollTo(0, 0);
+}
+
+function renderReview() {
+  var r = pendingRegistration;
+  document.getElementById('reviewPhoto').src = r.photoData;
+
+  var rows = [
+    ['Student Name', r.studentName],
+    ['Date of Birth', r.dob],
+    ['Gender', r.gender],
+    ['School', r.school],
+    ['Region', r.region],
+    ['Grade', r.grade],
+    ['School Level', r.level],
+    ['Nominee Category', r.category],
+    ['Parent/Guardian', r.parentName],
+    ['Parent Phone', r.parentPhone],
+    ['Parent Email', r.parentEmail || '—']
+  ];
+
+  var html = '';
+  rows.forEach(function(row) {
+    html += '<div style="display:flex;justify-content:space-between;gap:10px;">' +
+      '<span style="opacity:.6;">' + row[0] + '</span>' +
+      '<span style="font-weight:bold;text-align:right;">' + row[1] + '</span></div>';
+  });
+  document.getElementById('reviewFields').innerHTML = html;
+}
+
+function backToEdit() {
+  document.getElementById('reviewCard').style.display = 'none';
+  document.getElementById('regCard').style.display = 'flex';
+  window.scrollTo(0, 0);
+}
+
+function confirmAndSubmit() {
+  var r = pendingRegistration;
+  if (!r) return;
+
+  document.getElementById('reviewErrMsg').style.display = 'none';
+  document.getElementById('confirmBtn').disabled = true;
+  document.getElementById('reviewSpinner').style.display = 'block';
+
+  var payload = {
+    action: 'registerStudent',
+    secret: APP_SECRET,
+    website: document.getElementById('inWebsite').value, // honeypot
+    ref: r.ref,
+    studentName: r.studentName,
+    dob: r.dob,
+    gender: r.gender,
+    level: r.level,
+    school: r.school,
+    region: r.region,
+    studentClass: r.grade,
+    category: r.category,
+    parentName: r.parentName,
+    parentPhone: r.parentPhone,
+    parentEmail: r.parentEmail,
+    consent: 'true',
+    photoData: r.photoData,
+    date: new Date().toISOString()
+  };
+
+  if (!APPS_SCRIPT_URL || APPS_SCRIPT_URL.indexOf('PASTE_YOUR') === 0) {
+    // No backend configured yet — still confirm locally so the flow can be tested.
+    finishRegistration(r.studentName, r.ref);
+    return;
+  }
+
+  // POST (not GET) — the photo is a base64 payload, too large and too
+  // sensitive to send as a URL query string.
+  fetch(APPS_SCRIPT_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  })
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      document.getElementById('reviewSpinner').style.display = 'none';
+      if (data && data.status === 'ok') {
+        finishRegistration(r.studentName, r.ref);
+      } else {
+        document.getElementById('confirmBtn').disabled = false;
+        var e = document.getElementById('reviewErrMsg');
+        e.textContent = '❌ ' + ((data && data.message) || 'Could not submit right now. Please check your connection and try again.');
+        e.style.display = 'block';
+      }
+    })
+    .catch(function(){
+      document.getElementById('reviewSpinner').style.display = 'none';
+      document.getElementById('confirmBtn').disabled = false;
+      var e = document.getElementById('reviewErrMsg');
+      e.textContent = '❌ Network error. Please check your connection and try again.';
+      e.style.display = 'block';
+    });
+}
+
+var lastRegistration = null;
+
+function finishRegistration(studentName, refCode) {
+  var r = pendingRegistration || {};
+  lastRegistration = {
+    ref: refCode,
+    studentName: studentName,
+    dob: r.dob,
+    gender: r.gender,
+    level: r.level,
+    school: r.school,
+    region: r.region,
+    grade: r.grade,
+    category: r.category,
+    parentName: r.parentName,
+    parentPhone: r.parentPhone,
+    parentEmail: r.parentEmail
+  };
+
+  document.getElementById('reviewCard').style.display = 'none';
+  document.getElementById('doneCard').style.display = 'flex';
+  if (selectedPhotoDataUrl) {
+    var donePhoto = document.getElementById('donePhoto');
+    if (donePhoto) { donePhoto.src = selectedPhotoDataUrl; donePhoto.style.display = 'block'; }
+  }
+  document.getElementById('doneText').innerHTML =
+    'Thank you! <strong style="color:#FFD700;">' + studentName + '</strong> has been registered for the ' +
+    'Cadet TV Personality Awards 2026.' +
+    (r.parentEmail ? ' A confirmation email has also been sent to <strong>' + r.parentEmail + '</strong>.' : '');
+  document.getElementById('refCode').textContent = refCode;
+
+  if (!CMG_WHATSAPP_NUMBER || CMG_WHATSAPP_NUMBER.indexOf('PASTE_') === 0) {
+    document.getElementById('waBtn').style.display = 'none';
+  }
+}
+
+function sendWhatsAppConfirmation() {
+  if (!lastRegistration) return;
+  var r = lastRegistration;
+  var text =
+    'CADET TV PERSONALITY AWARDS 2026 — Registration Confirmation\n' +
+    'Reference: ' + r.ref + '\n' +
+    'Student: ' + r.studentName + '\n' +
+    'Date of Birth: ' + r.dob + '\n' +
+    'Gender: ' + r.gender + '\n' +
+    'Level: ' + r.level + '\n' +
+    'School: ' + r.school + '\n' +
+    'Region: ' + r.region + '\n' +
+    'Grade: ' + r.grade + '\n' +
+    'Nominee Category: ' + r.category + '\n' +
+    'Parent/Guardian: ' + r.parentName + '\n' +
+    'Parent Phone: ' + r.parentPhone + '\n' +
+    (r.parentEmail ? ('Parent Email: ' + r.parentEmail + '\n') : '') +
+    'Consent given: Yes';
+
+  var url = 'https://wa.me/' + CMG_WHATSAPP_NUMBER + '?text=' + encodeURIComponent(text);
+  window.open(url, '_blank');
+}
+</script>
+</body>
+</html>
