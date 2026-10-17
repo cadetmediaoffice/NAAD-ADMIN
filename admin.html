@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <title>CMG Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#07101e">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NAAD Admin">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -364,6 +372,8 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
       onkeydown="if(event.key==='Enter')doLogin()">
     <div class="login-err" id="loginErr">❌ Incorrect password. Try again.</div>
     <button onclick="doLogin()">🔓 Enter Dashboard</button>
+    <a id="installLink" href="#" onclick="installApp();return false;"
+       style="display:none;margin-top:12px;font-size:12px;color:var(--gold);text-decoration:none;letter-spacing:.5px;">📲 Install this app on your phone or laptop</a>
   </div>
 </div>
 
@@ -374,6 +384,19 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
   <div class="load-pct" id="loadPct">0%</div>
   <div class="load-status" id="loadStatus">Loading NAAD data<span class="dots"></span></div>
   <div class="load-sub">Cadet Media Ghana · Secure Session</div>
+</div>
+
+<!-- INSTALL HELP (iPhone / iPad) -->
+<div id="installHelp" style="display:none;position:fixed;inset:0;z-index:10100;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:20px;">
+  <div style="max-width:340px;background:#0b1a2b;border:1.5px solid var(--gold);border-radius:16px;padding:22px;color:#e8f0ff;font-size:14px;line-height:1.7;text-align:center;">
+    <img src="icon-192.png" alt="" style="width:64px;height:64px;border-radius:14px;margin-bottom:8px;">
+    <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:14px;margin-bottom:10px;">INSTALL NAAD ADMIN</div>
+    1. Open this page in <b>Safari</b>.<br>
+    2. Tap the <b>Share</b> button <span style="font-size:18px;">⬆️</span><br>
+    3. Choose <b>“Add to Home Screen”</b>.<br>
+    4. Tap <b>Add</b>.
+    <button onclick="document.getElementById('installHelp').style.display='none'" style="display:block;margin:16px auto 0;padding:10px 22px;border:none;border-radius:10px;background:var(--gold);color:#04090f;font-weight:800;cursor:pointer;">Got it</button>
+  </div>
 </div>
 
 <!-- MAIN DASHBOARD -->
@@ -390,6 +413,7 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
         <img id="meLogo" src="logo_cmg.png" alt="">
         <div><div class="me-name" id="meName"></div><div class="me-sub">● LOGGED IN</div></div>
       </div>
+      <button class="refresh-btn" id="installBtn" style="display:none;" onclick="installApp()">📲 Install App</button>
       <button class="refresh-btn" onclick="loadData()">🔄 Refresh</button>
       <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
     </div>
@@ -1070,6 +1094,35 @@ function applyAgencyUI(){
   });
 }
 applyAgencyUI();
+
+// ── INSTALL AS AN APP (PWA) ────────────────────────
+var deferredInstall = null;
+function isStandalone(){
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+}
+function isIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function updateInstallUI(){
+  var show = !isStandalone() && (!!deferredInstall || isIOS());
+  ['installBtn','installLink'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.style.display = show ? '' : 'none';
+  });
+}
+window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredInstall = e; updateInstallUI(); });
+window.addEventListener('appinstalled', function(){ deferredInstall = null; updateInstallUI(); });
+function installApp(){
+  if(deferredInstall){
+    deferredInstall.prompt();
+    deferredInstall.userChoice.then(function(){ deferredInstall = null; updateInstallUI(); });
+  } else if(isIOS()){
+    document.getElementById('installHelp').style.display = 'flex';
+  }
+}
+updateInstallUI();
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
 
 // ── PRESENCE: logo of the logged-in agency + agencies online now ──
 var presenceTimer = null, presenceKnown = null;
