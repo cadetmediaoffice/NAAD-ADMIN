@@ -125,6 +125,31 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);
   background:rgba(255,80,80,0.07);color:#ff8080;font-size:13px;font-weight:700;
   cursor:pointer;font-family:'Barlow Condensed',sans-serif;transition:all .2s;}
 .logout-btn:hover{background:rgba(255,80,80,0.15);}
+/* AGENCY BADGE + ONLINE STRIP + TOASTS */
+.me-badge{display:flex;align-items:center;gap:9px;padding:4px 14px 4px 4px;border:1.5px solid rgba(0,230,118,.35);
+  border-radius:999px;background:rgba(0,230,118,.06);}
+.me-badge img{width:38px;height:38px;border-radius:50%;background:#fff;object-fit:contain;display:block;}
+.me-badge .me-name{font-size:12px;font-weight:700;color:#e8f0ff;line-height:1.15;max-width:170px;}
+.me-badge .me-sub{font-size:10px;color:#00e676;letter-spacing:.5px;}
+#onlineStrip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:-8px 0 22px;padding:10px 14px;
+  border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);}
+#onlineStrip .os-label{font-size:12px;color:var(--muted);letter-spacing:.8px;white-space:nowrap;}
+#onlineStrip .os-label b{color:#00e676;}
+#onlineLogos{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.ol{position:relative;width:46px;height:46px;border-radius:50%;background:#fff;border:2px solid #00e676;
+  box-shadow:0 0 10px rgba(0,230,118,.4);}
+.ol img{width:100%;height:100%;border-radius:50%;object-fit:contain;display:block;}
+.ol .dot{position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;background:#00e676;border:2px solid #0b1a2b;}
+.ol.new{animation:logoPop .6s ease;}
+.ol .ini{display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;font-weight:800;color:#0b1a2b;}
+#toastBox{position:fixed;bottom:16px;right:16px;flex-direction:column-reverse;z-index:10050;display:flex;flex-direction:column;gap:10px;max-width:min(360px,calc(100vw - 32px));}
+.toast{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;background:rgba(8,20,36,.96);
+  border:1.5px solid #00e676;box-shadow:0 8px 28px rgba(0,0,0,.5);color:#e8f0ff;font-size:13px;
+  animation:toastIn .45s ease;transition:opacity .5s,transform .5s;}
+.toast img{width:40px;height:40px;border-radius:50%;background:#fff;object-fit:contain;flex:none;}
+.toast b{color:#00e676;}
+.toast.out{opacity:0;transform:translateX(30px);}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 .live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;
   background:var(--green);box-shadow:0 0 8px var(--green);
   animation:pulse 1.5s infinite;margin-right:6px;}
@@ -361,10 +386,21 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
       <p><span class="live-dot"></span>CADET MEDIA GHANA · NAAD SAFETY EDITION 2026</p>
     </div>
     <div class="header-right">
+      <div class="me-badge" id="meBadge" style="display:none;">
+        <img id="meLogo" src="logo_cmg.png" alt="">
+        <div><div class="me-name" id="meName"></div><div class="me-sub">● LOGGED IN</div></div>
+      </div>
       <button class="refresh-btn" onclick="loadData()">🔄 Refresh</button>
       <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
     </div>
   </div>
+
+  <!-- AGENCIES ONLINE NOW -->
+  <div id="onlineStrip">
+    <div class="os-label">🟢 AGENCIES ONLINE: <b id="onlineCount">0</b></div>
+    <div id="onlineLogos"></div>
+  </div>
+  <div id="toastBox"></div>
 
   <!-- DATA SOURCE -->
   <div id="sourceBadge" class="source-badge hybrid">
@@ -934,6 +970,7 @@ function runLoginLoadingSequence(onDone){
 }
 
 function doLogout(){
+  stopPresence(true);
   sessionStorage.removeItem(TOKEN_KEY);
   document.getElementById('loginOverlay').style.display = 'flex';
   document.getElementById('dashboard').style.display    = 'none';
@@ -956,6 +993,7 @@ function tryAutoLogin(){
 
 // Called whenever a data fetch comes back unauthorized (expired/invalid token)
 function forceReLogin(message){
+  stopPresence(false);
   sessionStorage.removeItem(TOKEN_KEY);
   document.getElementById('dashboard').style.display    = 'none';
   document.getElementById('loginOverlay').style.display = 'flex';
@@ -1032,6 +1070,85 @@ function applyAgencyUI(){
   });
 }
 applyAgencyUI();
+
+// ── PRESENCE: logo of the logged-in agency + agencies online now ──
+var presenceTimer = null, presenceKnown = null;
+function myAgencyName(){ try{ return sessionStorage.getItem('cmgAdminAgency') || ''; }catch(e){ return ''; } }
+function logoSrcFor(info){ return info.logo ? 'logo_' + info.logo + '.png' : ''; }
+
+function applyMeBadge(){
+  var info = agencyInfo(myAgencyName());
+  var badge = document.getElementById('meBadge');
+  if(!myAgencyName()){ badge.style.display = 'none'; return; }
+  document.getElementById('meLogo').src = logoSrcFor(info) || 'logo_cmg.png';
+  document.getElementById('meName').textContent = info.name;
+  badge.style.display = 'flex';
+}
+
+function showToast(info){
+  var box = document.getElementById('toastBox');
+  var t = document.createElement('div'); t.className = 'toast';
+  var src = logoSrcFor(info);
+  t.innerHTML = (src ? '<img src="' + src + '" alt="">' : '') +
+    '<div>' + (info.logo === 'cmg' ? '🛡️ CMG admin is online' : '🤝 Sister agency joined') + '<br><b>' + esc(info.name) + '</b></div>';
+  box.appendChild(t);
+  setTimeout(function(){ t.classList.add('out'); }, 6500);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 7100);
+}
+
+function renderOnline(list){
+  // Merge duplicates (e.g. two passwords that map to the same agency) by logo key / name
+  var merged = {};
+  (list || []).forEach(function(a){
+    var info = agencyInfo(a.agency);
+    var key = info.logo || info.name;
+    merged[key] = info;
+  });
+  var keys = Object.keys(merged);
+  document.getElementById('onlineCount').textContent = keys.length;
+  var wrap = document.getElementById('onlineLogos');
+  var prev = presenceKnown || {};
+  wrap.innerHTML = keys.map(function(k){
+    var info = merged[k], src = logoSrcFor(info);
+    var inner = src ? '<img src="' + src + '" alt="' + esc(info.name) + '">'
+                    : '<div class="ini">' + esc(info.name.slice(0,3).toUpperCase()) + '</div>';
+    var isNew = presenceKnown !== null && !prev[k];
+    return '<div class="ol' + (isNew ? ' new' : '') + '" title="' + esc(info.name) + '">' + inner + '<span class="dot"></span></div>';
+  }).join('');
+  if(presenceKnown !== null){
+    var meKey = (function(){ var i = agencyInfo(myAgencyName()); return i.logo || i.name; })();
+    keys.forEach(function(k){ if(!prev[k] && k !== meKey) showToast(merged[k]); });
+  }
+  presenceKnown = merged;
+}
+
+function pollPresence(){
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  if(!token || !navigator.onLine) return;
+  fetch(APPS_SCRIPT_URL + '?action=adminPresence&token=' + encodeURIComponent(token))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.error === 'unauthorized'){ forceReLogin(); return; }
+      if(res && res.ok) renderOnline(res.online);
+    })
+    .catch(function(){});
+}
+function startPresence(){
+  applyMeBadge();
+  if(presenceTimer) return;
+  presenceKnown = null;
+  pollPresence();
+  presenceTimer = setInterval(function(){ if(!document.hidden) pollPresence(); }, 25000);
+}
+function stopPresence(tellServer){
+  clearInterval(presenceTimer); presenceTimer = null; presenceKnown = null;
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  if(tellServer && token){
+    try{ fetch(APPS_SCRIPT_URL + '?action=adminLeave&token=' + encodeURIComponent(token), {mode:'no-cors', keepalive:true}).catch(function(){}); }catch(e){}
+  }
+}
+window.addEventListener('pagehide', function(){ if(presenceTimer) stopPresence(true); });
+document.addEventListener('visibilitychange', function(){ if(!document.hidden && presenceTimer) pollPresence(); });
 
 // ── VISITOR ID + ADMIN-PAGE OPEN TRACKING ──────────
 function cmgVid(){
@@ -1213,6 +1330,7 @@ function minutesAgoFromStr(str){
 
 // ── LOAD DATA (hybrid: online + localStorage fallback) ─
 function loadData(){
+  startPresence();
   setBadge('loading');
 
   // Always show cached data immediately if available
