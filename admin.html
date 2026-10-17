@@ -92,6 +92,15 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);
 #loadingOverlay .load-sub{margin-top:6px;font-size:11px;color:var(--muted);
   text-transform:uppercase;letter-spacing:1.5px;}
 .login-err{color:var(--red);font-size:12px;display:none;}
+.login-logo{width:110px;height:110px;margin:0 auto 6px;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  border:3px solid rgba(255,215,0,.45);box-shadow:0 0 0 0 rgba(0,230,118,0);transition:box-shadow .4s,border-color .4s;}
+.login-logo img{width:100%;height:100%;object-fit:contain;display:block;}
+.login-logo .lock{font-size:48px;}
+.login-logo.verified{border-color:#00e676;box-shadow:0 0 28px 6px rgba(0,230,118,.45);animation:logoPop .5s ease;}
+.login-logo.swap img{animation:logoPop .5s ease;}
+.login-ok{color:#00e676;font-weight:700;}
+@keyframes logoPop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
 
 /* OFFLINE BANNER */
 #offlineBanner{display:none;position:fixed;top:0;left:0;right:0;z-index:8888;
@@ -320,9 +329,12 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
 <!-- LOGIN OVERLAY -->
 <div id="loginOverlay">
   <div class="login-box">
-    <div class="lock">🔐</div>
-    <h2>ADMIN DASHBOARD</h2>
-    <p>Cadet Media Ghana · NAAD Safety Edition<br>Enter administrator password to continue.</p>
+    <div class="login-logo" id="loginLogoWrap">
+      <img id="loginLogo" src="logo_cmg.png" alt="" onerror="this.style.display='none';document.getElementById('loginLock').style.display='block';">
+      <div class="lock" id="loginLock" style="display:none;">🔐</div>
+    </div>
+    <h2 id="loginTitle">ADMIN DASHBOARD</h2>
+    <p id="loginSub">Cadet Media Ghana · NAAD Safety Edition<br>Enter your agency password to continue.</p>
     <input type="password" id="pwInput" placeholder="••••••••" maxlength="40"
       onkeydown="if(event.key==='Enter')doLogin()">
     <div class="login-err" id="loginErr">❌ Incorrect password. Try again.</div>
@@ -441,6 +453,7 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
     <button class="tab" onclick="switchTab('schools',this)">🏫 Schools</button>
     <button class="tab" onclick="switchTab('regions',this)">🌍 Regions</button>
     <button class="tab" onclick="switchTab('charts',this)">📊 Charts</button>
+    <button class="tab" onclick="switchTab('visitors',this)">📈 Visitors</button>
     <button class="tab" onclick="switchTab('live',this)">🟢 Live Activity</button>
     <button class="tab" onclick="switchTab('settings',this)">⚙️ Settings</button>
   </div>
@@ -538,6 +551,48 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
           <tr><td colspan="6"><div class="loading"><div class="spinner"></div><br>Loading regions…</div></td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- VISITORS PANEL -->
+  <div class="panel" id="panel-visitors">
+    <div class="sec-title">📈 Page Visitors</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">👁</div><div class="stat-val" id="visTotal">—</div><div class="stat-lbl">Total Visits</div></div>
+      <div class="stat-card"><div class="stat-icon">🧑</div><div class="stat-val" id="visUnique">—</div><div class="stat-lbl">Unique Visitors</div></div>
+      <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="visToday">—</div><div class="stat-lbl">Visits Today</div></div>
+      <div class="stat-card"><div class="stat-icon">✨</div><div class="stat-val" id="visTodayUnique">—</div><div class="stat-lbl">Unique Today</div></div>
+    </div>
+    <div class="sec-title" style="font-size:14px;">Admin Page (Agency Staff)</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">🚪</div><div class="stat-val" id="admOpens">—</div><div class="stat-lbl">Admin Page Opens</div></div>
+      <div class="stat-card"><div class="stat-icon">🔐</div><div class="stat-val" id="admLogins">—</div><div class="stat-lbl">Successful Logins</div></div>
+      <div class="stat-card"><div class="stat-icon">🧑‍💼</div><div class="stat-val" id="admLoginsUnique">—</div><div class="stat-lbl">Devices Logged In</div></div>
+      <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-val" id="admFailed">—</div><div class="stat-lbl">Failed Login Attempts</div></div>
+    </div>
+    <div class="sec-title" style="font-size:14px;">Logins by Agency</div>
+    <div class="tbl-wrap" style="margin-bottom:24px;">
+      <table>
+        <thead><tr><th>Agency</th><th>Logins</th><th>Devices</th><th>Last Login</th></tr></thead>
+        <tbody id="admAgenciesTbody"><tr><td colspan="4">No logins yet.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="sec-title" style="font-size:14px;">Last 7 Days (Public Pages)</div>
+    <div class="tbl-wrap" style="margin-bottom:24px;">
+      <table>
+        <thead><tr><th>Date</th><th>Visits</th><th>Unique Visitors</th></tr></thead>
+        <tbody id="visDaysTbody"><tr><td colspan="3"><div class="loading"><div class="spinner"></div><br>Loading…</div></td></tr></tbody>
+      </table>
+    </div>
+    <div class="sec-title" style="font-size:14px;">By Page</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Page</th><th>Visits</th><th>Unique Visitors</th></tr></thead>
+        <tbody id="visPagesTbody"><tr><td colspan="3"></td></tr></tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;font-size:12px;opacity:.7;">
+      A visit is counted once per page per browser session. Each login is counted every time someone signs in, under the agency whose password was used; "devices" counts different browsers. Unique visitors are counted by an anonymous ID stored on each device — no names or contact details are recorded. Visits are only counted when the device is online.
     </div>
   </div>
 
@@ -672,14 +727,12 @@ const CERTIFICATE_PAGE_URL = 'https://cadetmediaoffice.github.io/NAAD-ADMIN/cert
 const CODES_URL     = APPS_SCRIPT_URL + '?action=checkStatus&code=ALL';
 const CACHE_KEY     = 'cmgAdminCache';
 const CACHE_TS_KEY  = 'cmgAdminCacheTS';
-const HISTORY_CACHE_KEY = 'cmgAdminHistoryCache';
 const TOKEN_KEY      = 'cmgAdminToken';
 
 var allStudents = [];   // from Codes sheet
 var allResults  = [];   // from Results sheet
 var mergedData  = [];   // combined
 var studentTableRows = []; // last-rendered filtered list, for profile lookups by row index
-var allProgramHistory = []; // every NAAD program result across every program, keyed by AccountID
 
 // Quiz module score fields, in display order — matches the headers written
 // by submitResults()/legacySubmit() in Code.gs.
@@ -739,6 +792,54 @@ function generateOpportunityComment(sw){
     'opportunities, subject to each programme\'s own eligibility requirements.';
 }
 
+// ── AGENCY IDENTITY (logo + full name shown for 3s after a correct password) ──
+var AGENCY_INFO = {
+  master:      { logo: 'cmg',         name: 'Cadet Media Ghana (Master Admin)' },
+  fire:        { logo: 'fire',        name: 'Ghana National Fire Service' },
+  police:      { logo: 'police',      name: 'Ghana Police Service' },
+  ambulance:   { logo: 'ambulance',   name: 'National Ambulance Service' },
+  prisons:     { logo: 'prisons',     name: 'Ghana Prisons Service' },
+  nadmo:       { logo: 'nadmo',       name: 'NADMO Ghana' },
+  immigration: { logo: 'immigration', name: 'Ghana Immigration Service' },
+  customs:     { logo: 'customs',     name: 'Customs Division' },
+  tourism:     { logo: 'tourism',     name: 'Ghana Tourism Authority' },
+  forestry:    { logo: 'forestry',    name: 'Forestry Commission' },
+  gaf:         { logo: 'gaf',         name: 'Ghana Armed Forces' },
+  nacoc:       { logo: 'nacoc',       name: 'Narcotics Control Commission' }
+};
+var AGENCY_ALIAS = { forest:'forestry', fc:'forestry', narcotics:'nacoc', armedforces:'gaf', army:'gaf',
+  gnfs:'fire', gps:'police', nas:'ambulance', gis:'immigration', cmg:'master' };
+function agencyInfo(name){
+  var k = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if(AGENCY_ALIAS[k]) k = AGENCY_ALIAS[k];
+  return AGENCY_INFO[k] || { logo: '', name: String(name || '') };
+}
+var LOGIN_SUB_DEFAULT = 'Cadet Media Ghana · NAAD Safety Edition<br>Enter your agency password to continue.';
+function showLoginIdentity(agency){
+  var info = agencyInfo(agency);
+  var img = document.getElementById('loginLogo'), wrap = document.getElementById('loginLogoWrap');
+  if(info.logo){
+    img.style.display = 'block';
+    document.getElementById('loginLock').style.display = 'none';
+    img.src = 'logo_' + info.logo + '.png';
+  }
+  wrap.classList.add('verified');
+  document.getElementById('loginTitle').textContent = info.name.toUpperCase();
+  document.getElementById('loginSub').innerHTML = '<span class="login-ok">✅ Password verified — opening dashboard…</span>';
+}
+// Back to the CMG logo and the normal prompt (logout, expired session, wrong password)
+function resetLoginIdentity(){
+  var img = document.getElementById('loginLogo');
+  document.getElementById('loginLogoWrap').classList.remove('verified');
+  document.getElementById('loginLock').style.display = 'none';
+  img.style.display = 'block';
+  img.src = 'logo_cmg.png';
+  document.getElementById('loginTitle').textContent = 'ADMIN DASHBOARD';
+  document.getElementById('loginSub').innerHTML = LOGIN_SUB_DEFAULT;
+  var btn = document.querySelector('.login-box button'); if(btn){ btn.disabled = false; }
+  document.getElementById('pwInput').disabled = false;
+}
+
 // ── LOGIN (verified server-side by Apps Script — never trust the client) ──
 function doLogin(){
   var pw  = document.getElementById('pwInput').value;
@@ -750,14 +851,24 @@ function doLogin(){
   var origLabel = btn.textContent;
   btn.textContent = '⏳ Checking…';
 
-  fetch(APPS_SCRIPT_URL + '?action=adminLogin&password=' + encodeURIComponent(pw))
+  fetch(APPS_SCRIPT_URL + '?action=adminLogin&vid=' + encodeURIComponent(cmgVid()) + '&password=' + encodeURIComponent(pw))
   .then(function(r){ return r.json(); })
   .then(function(res){
     btn.disabled = false; btn.textContent = origLabel;
     if(res && res.ok && res.token){
       sessionStorage.setItem(TOKEN_KEY, res.token);
-      document.getElementById('loginOverlay').style.display = 'none';
-      runLoginLoadingSequence();
+      try{ sessionStorage.setItem('cmgAdminAgency', res.agency || ''); }catch(e){}
+      applyAgencyUI();
+      // Show the agency's logo in the login box for 3 seconds, then open.
+      btn.disabled = true;
+      document.getElementById('pwInput').disabled = true;
+      document.getElementById('pwInput').value = '';
+      showLoginIdentity(res.agency);
+      setTimeout(function(){
+        document.getElementById('loginOverlay').style.display = 'none';
+        resetLoginIdentity();
+        runLoginLoadingSequence();
+      }, 3000);
     } else {
       err.textContent = '❌ Incorrect password. Try again.';
       err.style.display = 'block';
@@ -828,6 +939,8 @@ function doLogout(){
   document.getElementById('dashboard').style.display    = 'none';
   document.getElementById('pwInput').value = '';
   document.getElementById('loginErr').style.display = 'none';
+  try{ sessionStorage.removeItem('cmgAdminAgency'); }catch(e){}
+  resetLoginIdentity();
 }
 
 // If we already have a token from earlier this tab session, skip straight
@@ -846,6 +959,7 @@ function forceReLogin(message){
   sessionStorage.removeItem(TOKEN_KEY);
   document.getElementById('dashboard').style.display    = 'none';
   document.getElementById('loginOverlay').style.display = 'flex';
+  resetLoginIdentity();
   var err = document.getElementById('loginErr');
   err.textContent = message || '⏳ Session expired. Please log in again.';
   err.style.display = 'block';
@@ -905,6 +1019,70 @@ function switchTab(name, el){
   document.getElementById('panel-' + name).classList.add('active');
   if(name === 'charts') renderCharts();
   if(name === 'live')   loadLiveActivity();
+  if(name === 'visitors') loadVisitors();
+}
+
+// ── Only the MASTER login sees Settings (Wipe All Data) ──
+function applyAgencyUI(){
+  var ag = '';
+  try{ ag = sessionStorage.getItem('cmgAdminAgency') || ''; }catch(e){}
+  var isMaster = (ag === 'MASTER');
+  document.querySelectorAll('.tab').forEach(function(t){
+    if((t.getAttribute('onclick') || '').indexOf("'settings'") > -1) t.style.display = isMaster ? '' : 'none';
+  });
+}
+applyAgencyUI();
+
+// ── VISITOR ID + ADMIN-PAGE OPEN TRACKING ──────────
+function cmgVid(){
+  var vid = null;
+  try{ vid = localStorage.getItem('cmgVisitorId'); }catch(e){}
+  if(!vid){
+    vid = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+    try{ localStorage.setItem('cmgVisitorId', vid); }catch(e){}
+  }
+  return vid;
+}
+(function(){
+  try{
+    if(sessionStorage.getItem('cmgAdminOpenLogged')) return;
+    sessionStorage.setItem('cmgAdminOpenLogged','1');
+    if(!navigator.onLine) return;
+    fetch(APPS_SCRIPT_URL + '?action=logVisit&vid=' + encodeURIComponent(cmgVid()) + '&page=admin.html', {mode:'no-cors', keepalive:true}).catch(function(){});
+  }catch(e){}
+})();
+
+// ── VISITORS ───────────────────────────────────────
+function loadVisitors(){
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  fetch(APPS_SCRIPT_URL + '?action=adminGetVisits&token=' + encodeURIComponent(token || ''))
+    .then(function(r){ return r.json(); })
+    .then(function(v){
+      if(v && v.error === 'unauthorized'){ forceReLogin(); return; }
+      if(!v || v.status !== 'ok') throw new Error('bad response');
+      document.getElementById('visTotal').textContent = v.total;
+      document.getElementById('visUnique').textContent = v.unique;
+      document.getElementById('visToday').textContent = v.today;
+      document.getElementById('visTodayUnique').textContent = v.todayUnique;
+      var ad = v.admin || {};
+      document.getElementById('admOpens').textContent = ad.opens || 0;
+      document.getElementById('admLogins').textContent = ad.logins || 0;
+      document.getElementById('admLoginsUnique').textContent = ad.loginsUnique || 0;
+      document.getElementById('admFailed').textContent = ad.failed || 0;
+      document.getElementById('admAgenciesTbody').innerHTML = (ad.agencies && ad.agencies.length) ? ad.agencies.map(function(a){
+        return '<tr><td>' + String(a.agency).replace(/[<>&"]/g,'') + '</td><td>' + a.logins + '</td><td>' + a.devices + '</td><td>' + String(a.lastLogin).replace(/[<>&"]/g,'') + '</td></tr>';
+      }).join('') : '<tr><td colspan="4">No logins yet.</td></tr>';
+      document.getElementById('visDaysTbody').innerHTML = v.last7.slice().reverse().map(function(d){
+        return '<tr><td>' + d.date + '</td><td>' + d.visits + '</td><td>' + d.unique + '</td></tr>';
+      }).join('');
+      document.getElementById('visPagesTbody').innerHTML = v.pages.length ? v.pages.map(function(p){
+        return '<tr><td>' + String(p.page).replace(/[<>&"]/g,'') + '</td><td>' + p.visits + '</td><td>' + p.unique + '</td></tr>';
+      }).join('') : '<tr><td colspan="3">No visits recorded yet.</td></tr>';
+    })
+    .catch(function(){
+      document.getElementById('visDaysTbody').innerHTML =
+        '<tr><td colspan="3">Could not load visitor data. Make sure the latest Code.gs is deployed.</td></tr>';
+    });
 }
 
 // ── LIVE ACTIVITY ──────────────────────────────────
@@ -1040,10 +1218,6 @@ function loadData(){
   // Always show cached data immediately if available
   var cached = localStorage.getItem(CACHE_KEY);
   var cachedTS = localStorage.getItem(CACHE_TS_KEY);
-  var cachedHistory = localStorage.getItem(HISTORY_CACHE_KEY);
-  if(cachedHistory){
-    try{ allProgramHistory = JSON.parse(cachedHistory); }catch(e){}
-  }
   if(cached){
     try{
       mergedData = JSON.parse(cached);
@@ -1065,23 +1239,18 @@ function loadData(){
   var token = sessionStorage.getItem(TOKEN_KEY);
   Promise.all([
     fetch(APPS_SCRIPT_URL + '?action=adminGetAllData&token=' + encodeURIComponent(token || '')).then(function(r){ return r.json(); }),
-    fetch(APPS_SCRIPT_URL + '?action=adminGetCodes&token=' + encodeURIComponent(token || '')).then(function(r){ return r.json(); }),
-    fetch(APPS_SCRIPT_URL + '?action=adminGetProgramHistory&token=' + encodeURIComponent(token || '')).then(function(r){ return r.json(); })
+    fetch(APPS_SCRIPT_URL + '?action=adminGetCodes&token=' + encodeURIComponent(token || '')).then(function(r){ return r.json(); })
   ])
     .then(function(results){
       var rows  = results[0];
       var codes = results[1];
-      var history = results[2];
       if(rows && rows.error === 'unauthorized'){ forceReLogin(); return; }
       if(codes && codes.error === 'unauthorized'){ forceReLogin(); return; }
-      if(history && history.error === 'unauthorized'){ forceReLogin(); return; }
       allResults = rows;
-      allProgramHistory = Array.isArray(history) ? history : [];
       mergedData = mergeWithCodes(buildMerged(rows), Array.isArray(codes) ? codes : []);
       // Cache it
       localStorage.setItem(CACHE_KEY,    JSON.stringify(mergedData));
       localStorage.setItem(CACHE_TS_KEY, new Date().toISOString());
-      localStorage.setItem(HISTORY_CACHE_KEY, JSON.stringify(allProgramHistory));
       renderAll();
       setBadge('online');
     })
@@ -1111,9 +1280,6 @@ function mergeWithCodes(submittedList, codesList){
     if(c){
       r.photo = c.photoUrl || '';
       if(!r.district) r.district = c.district || '';
-      r.accountId = c.accountId || r.code;
-    } else {
-      r.accountId = r.code; // no matching Codes row found — fall back to the quiz code itself
     }
   });
 
@@ -1129,8 +1295,7 @@ function mergeWithCodes(submittedList, codesList){
       return {
         name: c.name, gender: c.gender, school: c.school, region: c.region,
         district: c.district || '', code: c.code, date: c.actDate, badge: '',
-        total: 0, submitted: false, raw: null, photo: c.photoUrl || '',
-        accountId: c.accountId || c.code
+        total: 0, submitted: false, raw: null, photo: c.photoUrl || ''
       };
     })
     .filter(function(r){ return r.name; });
@@ -1556,94 +1721,9 @@ function computeStrengthWeakness(raw){
   return { strongest: strongest, weakest: weakest, topAreas: topAreas };
 }
 
-// ── CROSS-PROGRAM RECORD (NAAD Program History) ─────────────────────
-// Every NAAD program a student has ever done — this quiz, Cadet
-// Personality Awards, Cadet Register, Cadet Drill Star, whatever comes
-// next — all tagged to the same AccountID. This is the "one continuous
-// CV" view inside the student profile modal.
-var currentProfileAccountId = null;
-
-function getProgramHistoryFor(accountId){
-  if(!accountId) return [];
-  return allProgramHistory
-    .filter(function(row){ return String(row.AccountID || '').trim() === String(accountId).trim(); })
-    .sort(function(a,b){ return new Date(a.ActivatedAt || 0) - new Date(b.ActivatedAt || 0); });
-}
-
-function renderProgramHistoryHtml(accountId){
-  var rows = getProgramHistoryFor(accountId);
-  if(!rows.length){
-    return '<div class="empty" style="padding:10px 0;">No other NAAD program records yet for this student.</div>';
-  }
-  return '<div class="module-grid">' + rows.map(function(row){
-    var meta = [row.Level, row.Year].filter(Boolean).join(' · ');
-    var result = row.Result ? esc(row.Result) : 'Pending';
-    return '<div class="module-row"><span>' + esc(row.Program || 'Unknown program') +
-      (meta ? ' <span style="opacity:.6;">(' + esc(meta) + ')</span>' : '') + '</span>' +
-      '<span class="score">' + result + '</span></div>';
-  }).join('') + '</div>';
-}
-
-function toggleOtherProgramInput(){
-  var sel = document.getElementById('newProgramSelect');
-  var other = document.getElementById('newProgramOther');
-  if (sel && other) other.style.display = (sel.value === '__other__') ? 'block' : 'none';
-}
-
-// Manually attaches a program result to the currently open student's
-// account — for results that never went through a pendrive code at all
-// (e.g. an external Personality Award result), or ordinary backfills.
-function saveProgramResult(){
-  var sel      = document.getElementById('newProgramSelect');
-  var program  = sel.value === '__other__'
-    ? document.getElementById('newProgramOther').value.trim()
-    : sel.value;
-  var result   = document.getElementById('newProgramResult').value.trim();
-  var level    = document.getElementById('newProgramLevel').value.trim();
-  var year     = document.getElementById('newProgramYear').value.trim();
-  var statusEl = document.getElementById('programResultStatus');
-
-  if(!currentProfileAccountId){ statusEl.textContent = '❌ No student selected.'; return; }
-  if(!program){ statusEl.textContent = '❌ Choose or type a program name.'; return; }
-  if(!result){ statusEl.textContent = '❌ Enter a result or award.'; return; }
-  if(!navigator.onLine){ statusEl.textContent = '❌ Needs an internet connection to save.'; return; }
-
-  statusEl.textContent = 'Saving…';
-  var token = sessionStorage.getItem(TOKEN_KEY);
-  var url = APPS_SCRIPT_URL + '?action=adminRecordProgramResult'
-    + '&token='     + encodeURIComponent(token || '')
-    + '&accountId=' + encodeURIComponent(currentProfileAccountId)
-    + '&program='   + encodeURIComponent(program)
-    + '&result='    + encodeURIComponent(result)
-    + '&level='     + encodeURIComponent(level)
-    + '&year='      + encodeURIComponent(year);
-
-  fetch(url).then(function(r){ return r.json(); }).then(function(data){
-    if(data && data.status === 'ok'){
-      statusEl.textContent = '✅ Saved.';
-      allProgramHistory.push({
-        AccountID: currentProfileAccountId, Program: program, Code: 'MANUAL',
-        Level: level, Year: year, Result: result,
-        ActivatedAt: new Date().toISOString(), SubmittedAt: new Date().toISOString()
-      });
-      localStorage.setItem(HISTORY_CACHE_KEY, JSON.stringify(allProgramHistory));
-      document.getElementById('programHistoryList').innerHTML = renderProgramHistoryHtml(currentProfileAccountId);
-      document.getElementById('newProgramResult').value = '';
-      document.getElementById('newProgramLevel').value  = '';
-      document.getElementById('newProgramYear').value   = '';
-    } else {
-      statusEl.textContent = '❌ ' + ((data && data.message) || 'Could not save.');
-    }
-  }).catch(function(){
-    statusEl.textContent = '❌ Network error — check your connection and try again.';
-  });
-}
-
 function openStudentProfile(idx){
   var r = studentTableRows[idx];
   if(!r) return;
-
-  currentProfileAccountId = r.accountId || r.code || null;
 
   var raw = r.raw || {};
   var certId = r.code || '—';
@@ -1735,26 +1815,6 @@ function openStudentProfile(idx){
         '<div class="profile-section-title">📝 Assessment Results — ' + (r.submitted ? r.total + '%' : 'Pending') + '</div>' +
         assessmentSection +
       '</div>' +
-    '</div>' +
-    '<div class="profile-section-title">📚 NAAD Program History</div>' +
-    '<div id="programHistoryList">' + renderProgramHistoryHtml(currentProfileAccountId) + '</div>' +
-    '<div class="profile-section-title">➕ Record a Program Result</div>' +
-    '<div style="display:flex;flex-direction:column;gap:8px;max-width:340px;">' +
-      '<select id="newProgramSelect" onchange="toggleOtherProgramInput()" style="padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:13px;">' +
-        '<option value="">Select program…</option>' +
-        '<option value="Cadet TV Personality Awards">Cadet TV Personality Awards</option>' +
-        '<option value="Cadet Drill Star">Cadet Drill Star</option>' +
-        '<option value="Fire Service Tales">Fire Service Tales</option>' +
-        '<option value="__other__">Other…</option>' +
-      '</select>' +
-      '<input type="text" id="newProgramOther" placeholder="Program name" style="display:none;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:13px;">' +
-      '<input type="text" id="newProgramResult" placeholder="Result / Award (e.g. Gold, Winner — Best Cadet)" style="padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:13px;">' +
-      '<div style="display:flex;gap:8px;">' +
-        '<input type="text" id="newProgramLevel" placeholder="Class / Level (optional)" style="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:13px;">' +
-        '<input type="text" id="newProgramYear" placeholder="Year (optional)" style="flex:1;padding:9px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(0,0,0,0.3);color:#fff;font-size:13px;">' +
-      '</div>' +
-      '<button onclick="saveProgramResult()" style="padding:10px;border:none;border-radius:8px;background:linear-gradient(45deg,#f2c300,#e6a800);color:#000;font-weight:bold;font-size:13px;cursor:pointer;">Save Result</button>' +
-      '<div id="programResultStatus" style="font-size:12px;min-height:16px;"></div>' +
     '</div>';
 
   document.getElementById('profileContent').innerHTML = html;
