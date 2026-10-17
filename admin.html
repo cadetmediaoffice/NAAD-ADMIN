@@ -512,6 +512,7 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
     <button class="tab active" onclick="switchTab('students',this)">👤 All Students</button>
     <button class="tab" onclick="switchTab('schools',this)">🏫 Schools</button>
     <button class="tab" onclick="switchTab('regions',this)">🌍 Regions</button>
+    <button class="tab" onclick="switchTab('me',this)">🎯 M&amp;E</button>
     <button class="tab" onclick="switchTab('charts',this)">📊 Charts</button>
     <button class="tab" onclick="switchTab('visitors',this)">📈 Visitors</button>
     <button class="tab" onclick="switchTab('live',this)">🟢 Live Activity</button>
@@ -654,6 +655,40 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
     <div style="margin-top:12px;font-size:12px;opacity:.7;">
       A visit is counted once per page per browser session. Each login is counted every time someone signs in, under the agency whose password was used; "devices" counts different browsers. Unique visitors are counted by an anonymous ID stored on each device — no names or contact details are recorded. Visits are only counted when the device is online.
     </div>
+  </div>
+
+  <!-- M&E PANEL: segment performance by region / district / school -->
+  <div class="panel" id="panel-me">
+    <div class="sec-title">🎯 M&amp;E — Segment Performance</div>
+    <div class="filter-bar">
+      <select id="meModule" onchange="renderMe()"></select>
+      <button class="refresh-btn" onclick="exportMeCsv()">⬇ Export CSV</button>
+    </div>
+    <div id="meScope" style="font-size:12px;color:var(--muted);margin:-6px 0 14px;"></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">🧑‍🎓</div><div class="stat-val" id="meTakers">—</div><div class="stat-lbl">Students Assessed</div></div>
+      <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-val" id="meAvg">—</div><div class="stat-lbl">Segment Average</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val" id="meStrong">—</div><div class="stat-lbl">Strong &amp; Above (50%+)</div></div>
+      <div class="stat-card"><div class="stat-icon">🏅</div><div class="stat-val" id="meExc">—</div><div class="stat-lbl">Exceptional (85%+)</div></div>
+    </div>
+    <div class="sec-title" style="font-size:14px;">Performance Levels &amp; Gender</div>
+    <div id="meTiers" style="margin-bottom:22px;"></div>
+    <div class="sec-title" style="font-size:14px;">🌍 By Region</div>
+    <div class="tbl-wrap" style="margin-bottom:22px;"><table>
+      <thead><tr><th>#</th><th>Region</th><th>Assessed</th><th>Avg %</th><th>Strong+ %</th><th>Best %</th><th>Level</th></tr></thead>
+      <tbody id="meRegionTbody"></tbody></table></div>
+    <div class="sec-title" style="font-size:14px;">📍 By District</div>
+    <div class="tbl-wrap" style="margin-bottom:22px;"><table>
+      <thead><tr><th>#</th><th>District</th><th>Assessed</th><th>Avg %</th><th>Strong+ %</th><th>Best %</th><th>Level</th></tr></thead>
+      <tbody id="meDistrictTbody"></tbody></table></div>
+    <div class="sec-title" style="font-size:14px;">🏫 By School</div>
+    <div class="tbl-wrap" style="margin-bottom:22px;"><table>
+      <thead><tr><th>#</th><th>School</th><th>Assessed</th><th>Avg %</th><th>Strong+ %</th><th>Best %</th><th>Level</th></tr></thead>
+      <tbody id="meSchoolTbody"></tbody></table></div>
+    <div class="sec-title" style="font-size:14px;">🆘 Needs Support — Lowest Schools (3+ students assessed)</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>#</th><th>School</th><th>Region</th><th>Assessed</th><th>Avg %</th></tr></thead>
+      <tbody id="meLowTbody"></tbody></table></div>
   </div>
 
   <!-- LIVE ACTIVITY PANEL -->
@@ -855,17 +890,17 @@ function generateOpportunityComment(sw){
 // ── AGENCY IDENTITY (logo + full name shown for 3s after a correct password) ──
 var AGENCY_INFO = {
   master:      { logo: 'cmg',         name: 'Cadet Media Ghana (Master Admin)' },
-  fire:        { logo: 'fire',        name: 'Ghana National Fire Service' },
-  police:      { logo: 'police',      name: 'Ghana Police Service' },
-  ambulance:   { logo: 'ambulance',   name: 'National Ambulance Service' },
-  prisons:     { logo: 'prisons',     name: 'Ghana Prisons Service' },
-  nadmo:       { logo: 'nadmo',       name: 'NADMO Ghana' },
-  immigration: { logo: 'immigration', name: 'Ghana Immigration Service' },
-  customs:     { logo: 'customs',     name: 'Customs Division' },
-  tourism:     { logo: 'tourism',     name: 'Ghana Tourism Authority' },
-  forestry:    { logo: 'forestry',    name: 'Forestry Commission' },
-  gaf:         { logo: 'gaf',         name: 'Ghana Armed Forces' },
-  nacoc:       { logo: 'nacoc',       name: 'Narcotics Control Commission' }
+  fire:        { logo: 'fire',        name: 'Ghana National Fire Service', mod: 'Fire Safety Quiz Score' },
+  police:      { logo: 'police',      name: 'Ghana Police Service', mod: 'Community Safety (Police) Quiz Score' },
+  ambulance:   { logo: 'ambulance',   name: 'National Ambulance Service', mod: 'Health & Ambulance Quiz Score' },
+  prisons:     { logo: 'prisons',     name: 'Ghana Prisons Service', mod: 'Prisons Service Quiz Score' },
+  nadmo:       { logo: 'nadmo',       name: 'NADMO Ghana', mod: 'Disaster Preparedness (NADMO) Quiz Score' },
+  immigration: { logo: 'immigration', name: 'Ghana Immigration Service', mod: 'Immigration Service Quiz Score' },
+  customs:     { logo: 'customs',     name: 'Customs Division', mod: 'Customs Division Quiz Score' },
+  tourism:     { logo: 'tourism',     name: 'Ghana Tourism Authority', mod: 'Tourism & Creative Arts Quiz Score' },
+  forestry:    { logo: 'forestry',    name: 'Forestry Commission', mod: 'Forest Conservation Quiz Score' },
+  gaf:         { logo: 'gaf',         name: 'Ghana Armed Forces', mod: 'National Defence (GAF) Quiz Score' },
+  nacoc:       { logo: 'nacoc',       name: 'Narcotics Control Commission', mod: 'Narcotics Control Quiz Score' }
 };
 var AGENCY_ALIAS = { forest:'forestry', fc:'forestry', narcotics:'nacoc', armedforces:'gaf', army:'gaf',
   gnfs:'fire', gps:'police', nas:'ambulance', gis:'immigration', cmg:'master' };
@@ -995,6 +1030,7 @@ function runLoginLoadingSequence(onDone){
 
 function doLogout(){
   stopPresence(true);
+  meAutoOpened = false;
   sessionStorage.removeItem(TOKEN_KEY);
   document.getElementById('loginOverlay').style.display = 'flex';
   document.getElementById('dashboard').style.display    = 'none';
@@ -1018,6 +1054,7 @@ function tryAutoLogin(){
 // Called whenever a data fetch comes back unauthorized (expired/invalid token)
 function forceReLogin(message){
   stopPresence(false);
+  meAutoOpened = false;
   sessionStorage.removeItem(TOKEN_KEY);
   document.getElementById('dashboard').style.display    = 'none';
   document.getElementById('loginOverlay').style.display = 'flex';
@@ -1122,6 +1159,145 @@ function installApp(){
 updateInstallUI();
 if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
   window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
+
+// ── M&E: SEGMENT PERFORMANCE (region / district / school) ──
+// Each agency is locked to its own segment (module). The master login can
+// switch between all segments. Scores are read from the results rows the
+// same way as the school/aptitude profiles.
+function moduleIndexOf(key){
+  for(var i = 0; i < ASSESSMENT_MODULES.length; i++) if(ASSESSMENT_MODULES[i].key === key) return i;
+  return -1;
+}
+function segPct(r, key){
+  var idx = moduleIndexOf(key);
+  var raw = r.raw || {};
+  var v = raw[key];
+  if((v === undefined || v === '') && idx > -1) v = raw['__col' + (idx < 13 ? 7 + idx : 27)];
+  v = (v == null ? '' : String(v)).trim();
+  if(!v) return null;
+  var m = v.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+  if(m){ var t = parseFloat(m[2]); return t > 0 ? (parseFloat(m[1]) / t) * 100 : null; }
+  var n = parseFloat(v.replace('%', ''));
+  return (isNaN(n) || n < 0 || n > 100) ? null : n;
+}
+function myModuleKey(){ return agencyInfo(myAgencyName()).mod || null; }
+
+function meSetupSelector(){
+  var sel = document.getElementById('meModule');
+  if(sel.options.length) return;
+  var mine = myModuleKey();
+  sel.innerHTML = ASSESSMENT_MODULES.map(function(m){
+    return '<option value="' + esc(m.key) + '">' + m.icon + ' ' + esc(m.label) + '</option>';
+  }).join('');
+  if(mine){ sel.value = mine; sel.disabled = true; }
+  else { sel.value = ASSESSMENT_MODULES[2].key; sel.disabled = false; }
+}
+
+function meAggregate(rows, keyFn, key){
+  var map = {};
+  rows.forEach(function(r){
+    var p = segPct(r, key); if(p === null) return;
+    var k = keyFn(r) || 'Unknown';
+    if(!map[k]) map[k] = { name: k, n: 0, sum: 0, strong: 0, best: 0, region: r.region || '' };
+    var g = map[k]; g.n++; g.sum += p; if(p >= 50) g.strong++; if(p > g.best) g.best = p;
+  });
+  return Object.keys(map).map(function(k){
+    var g = map[k];
+    return { name: g.name, n: g.n, avg: Math.round(g.sum / g.n), strongPct: Math.round(g.strong / g.n * 100),
+             best: Math.round(g.best), region: g.region };
+  }).sort(function(a, b){ return b.avg - a.avg || b.n - a.n; });
+}
+
+function meRows(list, emptyCols){
+  if(!list.length) return '<tr><td colspan="' + emptyCols + '"><div class="empty">No assessed students in this segment yet.</div></td></tr>';
+  return list.map(function(g, i){
+    return '<tr><td><span class="rank-num">' + (i + 1) + '</span></td><td><strong>' + esc(g.name) + '</strong></td>' +
+      '<td style="color:var(--blue);font-weight:700;">' + g.n + '</td>' +
+      '<td style="color:var(--gold);font-weight:700;">' + g.avg + '%</td>' +
+      '<td>' + g.strongPct + '%</td><td>' + g.best + '%</td>' +
+      '<td class="muted">' + classifyPct(g.avg) + '</td></tr>';
+  }).join('');
+}
+
+var meLast = null;
+function renderMe(){
+  meSetupSelector();
+  var key = document.getElementById('meModule').value;
+  var mod = ASSESSMENT_MODULES[moduleIndexOf(key)] || ASSESSMENT_MODULES[0];
+  var rows = mergedData || [];
+  var assessed = rows.filter(function(r){ return segPct(r, key) !== null; });
+  var pcts = assessed.map(function(r){ return segPct(r, key); });
+
+  var n = pcts.length;
+  var avg = n ? Math.round(pcts.reduce(function(a, b){ return a + b; }, 0) / n) : 0;
+  var strong = pcts.filter(function(p){ return p >= 50; }).length;
+  var exc = pcts.filter(function(p){ return p >= 85; }).length;
+  var inst = agencyInfo(myAgencyName());
+  document.getElementById('meScope').textContent = (myModuleKey()
+      ? inst.name + ' — your segment: ' + mod.label
+      : 'Master view — ' + mod.label) +
+    ' · ' + n + ' of ' + rows.length + ' registered students assessed in this segment.';
+  document.getElementById('meTakers').textContent = n;
+  document.getElementById('meAvg').textContent = n ? avg + '%' : '—';
+  document.getElementById('meStrong').textContent = n ? Math.round(strong / n * 100) + '%' : '—';
+  document.getElementById('meExc').textContent = exc;
+
+  // Performance levels + gender
+  var tiers = [['Exceptional (85%+)', function(p){ return p >= 85; }, 'green'],
+               ['Very Strong (70–84%)', function(p){ return p >= 70 && p < 85; }, 'green'],
+               ['Strong (50–69%)', function(p){ return p >= 50 && p < 70; }, 'blue'],
+               ['Developing (below 50%)', function(p){ return p < 50; }, 'blue']];
+  var html = tiers.map(function(t){
+    var c = pcts.filter(t[1]).length, w = n ? Math.round(c / n * 100) : 0;
+    return '<div class="bar-item"><div class="bar-label"><span>' + t[0] + '</span><span>' + c + ' (' + w + '%)</span></div>' +
+      '<div class="bar-track"><div class="bar-fill ' + t[2] + '" style="width:' + w + '%"></div></div></div>';
+  }).join('');
+  ['Male', 'Female'].forEach(function(g){
+    var ps = assessed.filter(function(r){ return r.gender === g; }).map(function(r){ return segPct(r, key); });
+    html += '<div style="font-size:12px;color:var(--muted);margin-top:6px;">' + g + ': ' + ps.length + ' assessed' +
+      (ps.length ? ' · average ' + Math.round(ps.reduce(function(a, b){ return a + b; }, 0) / ps.length) + '%' : '') + '</div>';
+  });
+  document.getElementById('meTiers').innerHTML = html;
+
+  var byRegion = meAggregate(rows, function(r){ return r.region; }, key);
+  var byDistrict = meAggregate(rows, function(r){ return r.district; }, key);
+  var bySchool = meAggregate(rows, function(r){ return r.school; }, key);
+  document.getElementById('meRegionTbody').innerHTML = meRows(byRegion, 7);
+  document.getElementById('meDistrictTbody').innerHTML = meRows(byDistrict, 7);
+  document.getElementById('meSchoolTbody').innerHTML = meRows(bySchool, 7);
+  var low = bySchool.filter(function(s){ return s.n >= 3; }).sort(function(a, b){ return a.avg - b.avg; }).slice(0, 10);
+  document.getElementById('meLowTbody').innerHTML = low.length ? low.map(function(s, i){
+    return '<tr><td><span class="rank-num">' + (i + 1) + '</span></td><td><strong>' + esc(s.name) + '</strong></td>' +
+      '<td class="muted">' + esc(s.region || '—') + '</td><td>' + s.n + '</td>' +
+      '<td style="color:var(--red);font-weight:700;">' + s.avg + '%</td></tr>';
+  }).join('') : '<tr><td colspan="5"><div class="empty">No school has 3 or more assessed students yet.</div></td></tr>';
+  meLast = { mod: mod.label, region: byRegion, district: byDistrict, school: bySchool };
+}
+
+function exportMeCsv(){
+  if(!meLast) return;
+  function q(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+  var lines = [['Segment', 'Level', 'Name', 'Students Assessed', 'Average %', 'Strong+ %', 'Best %'].map(q).join(',')];
+  [['Region', meLast.region], ['District', meLast.district], ['School', meLast.school]].forEach(function(grp){
+    grp[1].forEach(function(g){ lines.push([meLast.mod, grp[0], g.name, g.n, g.avg, g.strongPct, g.best].map(q).join(',')); });
+  });
+  var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'NAAD_ME_' + meLast.mod.replace(/[^A-Za-z0-9]+/g, '_') + '.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+// Agencies land straight on their own segment after the first data load
+var meAutoOpened = false;
+function maybeOpenMeTab(){
+  if(meAutoOpened || !myModuleKey()) return;
+  meAutoOpened = true;
+  var btn = null;
+  document.querySelectorAll('.tab').forEach(function(t){ if((t.getAttribute('onclick') || '').indexOf("'me'") > -1) btn = t; });
+  switchTab('me', btn);
 }
 
 // ── PRESENCE: logo of the logged-in agency + agencies online now ──
@@ -1507,6 +1683,8 @@ function renderAll(){
   renderStudents();
   renderSchools();
   renderRegions();
+  renderMe();
+  maybeOpenMeTab();
 }
 
 // ── STATS ──────────────────────────────────────────
