@@ -25,6 +25,29 @@
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);
   min-height:100vh;overflow-x:hidden;}
 
+/* NOMINEES */
+.nom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:6px;}
+.nom-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;}
+.nom-top{display:flex;gap:12px;align-items:center;}
+.nom-photo{width:74px;height:74px;border-radius:12px;background:rgba(255,255,255,.06);border:1px dashed var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:10px;color:var(--muted);overflow:hidden;flex:none;line-height:1.2;}
+.nom-photo .icon{font-size:20px;}
+.nom-name{font-weight:700;font-size:15px;line-height:1.2;}
+.nom-sub{font-size:12px;color:var(--muted);}
+.nom-pct{font-family:'Orbitron',monospace;color:var(--gold);font-size:18px;font-weight:700;}
+.nom-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.nom-btn{background:rgba(255,215,0,.12);border:1px solid var(--border);color:var(--gold);padding:6px 11px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.nom-btn:hover{background:rgba(255,215,0,.22);}
+.nom-btn.ok{border-color:rgba(0,230,118,.4);color:var(--green);background:rgba(0,230,118,.1);}
+.nom-btn.no{border-color:rgba(255,82,82,.4);color:var(--red);background:rgba(255,82,82,.1);}
+.nom-chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.nom-chip.Pending{background:rgba(255,215,0,.14);color:var(--gold);}
+.nom-chip.Approved{background:rgba(0,230,118,.14);color:var(--green);}
+.nom-chip.Declined{background:rgba(255,82,82,.14);color:var(--red);}
+.nom-contact{font-size:12px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:8px;padding:7px 9px;word-break:break-all;}
+.nom-lock{font-size:11px;color:var(--muted);}
+.req-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;flex-direction:column;gap:6px;}
+.nom-note{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 9px;font-family:inherit;font-size:12px;}
 /* BG */
 .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
   background-image:linear-gradient(rgba(255,215,0,0.025) 1px,transparent 1px),
@@ -513,6 +536,8 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
     <button class="tab" onclick="switchTab('schools',this)">🏫 Schools</button>
     <button class="tab" onclick="switchTab('regions',this)">🌍 Regions</button>
     <button class="tab" onclick="switchTab('me',this)">🎯 M&amp;E</button>
+    <button class="tab" onclick="switchTab('nominees',this)">⭐ Nominees</button>
+    <button class="tab" onclick="switchTab('requests',this)">🤝 Requests <span id="reqBadge" style="display:none;background:var(--red);color:#fff;border-radius:9px;padding:0 6px;font-size:10px;margin-left:3px;"></span></button>
     <button class="tab" onclick="switchTab('charts',this)">📊 Charts</button>
     <button class="tab" onclick="switchTab('visitors',this)">📈 Visitors</button>
     <button class="tab" onclick="switchTab('live',this)">🟢 Live Activity</button>
@@ -658,6 +683,24 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
   </div>
 
   <!-- M&E PANEL: segment performance by region / district / school -->
+  <div class="panel" id="panel-nominees">
+    <div class="sec-title">⭐ Nominees — Top Performers in Your Segment</div>
+    <div class="filter-bar">
+      <select id="nomSeg" onchange="loadNominees()" style="display:none;"></select>
+      <button class="refresh-btn" onclick="loadNominees()">↻ Refresh</button>
+    </div>
+    <div id="nomIntro" style="font-size:12px;color:var(--muted);margin:-6px 0 14px;line-height:1.5;"></div>
+    <div id="nomList"><div style="color:var(--muted);padding:20px;">Open this tab to load nominees…</div></div>
+  </div>
+
+  <div class="panel" id="panel-requests">
+    <div class="sec-title">🤝 Agency Interest Requests</div>
+    <div class="filter-bar"><button class="refresh-btn" onclick="loadRequests()">↻ Refresh</button></div>
+    <div style="font-size:12px;color:var(--muted);margin:-6px 0 14px;line-height:1.5;">
+      Contact the student / guardian first. Approve only once they have agreed — the agency then sees the contact on the nominee card.</div>
+    <div id="reqList"></div>
+  </div>
+
   <div class="panel" id="panel-me">
     <div class="sec-title">🎯 M&amp;E — Segment Performance</div>
     <div class="filter-bar">
@@ -1121,6 +1164,8 @@ function switchTab(name, el){
   if(name === 'charts') renderCharts();
   if(name === 'live')   loadLiveActivity();
   if(name === 'visitors') loadVisitors();
+  if(name === 'nominees') loadNominees();
+  if(name === 'requests') loadRequests();
 }
 
 // ── Only the MASTER login sees Settings (Wipe All Data) ──
@@ -1129,7 +1174,8 @@ function applyAgencyUI(){
   try{ ag = sessionStorage.getItem('cmgAdminAgency') || ''; }catch(e){}
   var isMaster = (ag === 'MASTER');
   document.querySelectorAll('.tab').forEach(function(t){
-    if((t.getAttribute('onclick') || '').indexOf("'settings'") > -1) t.style.display = isMaster ? '' : 'none';
+    var oc = t.getAttribute('onclick') || '';
+    if(oc.indexOf("'settings'") > -1 || oc.indexOf("'requests'") > -1) t.style.display = isMaster ? '' : 'none';
   });
 }
 applyAgencyUI();
@@ -1302,6 +1348,115 @@ function maybeOpenMeTab(){
   switchTab('me', btn);
 }
 
+
+// ── NOMINEES (agencies) + REQUESTS (CMG master) ────
+function nApi(action, extra){
+  var token = sessionStorage.getItem(TOKEN_KEY) || '';
+  var q = '?action=' + action + '&token=' + encodeURIComponent(token);
+  Object.keys(extra || {}).forEach(function(k){ q += '&' + k + '=' + encodeURIComponent(extra[k]); });
+  return fetch(APPS_SCRIPT_URL + q).then(function(r){ return r.json(); }).then(function(res){
+    if(res && res.error === 'unauthorized'){ forceReLogin(); throw new Error('unauthorized'); }
+    return res;
+  });
+}
+var NOM_SEGS = [['fire','Fire'],['police','Police'],['ambulance','Ambulance'],['prisons','Prisons'],['nadmo','NADMO'],
+  ['immigration','Immigration'],['customs','Customs'],['tourism','Tourism'],['forestry','Forestry'],['gaf','GAF'],['nacoc','NACOC']];
+function nomIsMaster(){ return myAgencyName() === 'MASTER'; }
+function loadNominees(){
+  var list = document.getElementById('nomList'), sel = document.getElementById('nomSeg');
+  if(nomIsMaster()){
+    if(!sel.options.length){
+      sel.innerHTML = NOM_SEGS.map(function(x){ return '<option value="' + x[0] + '">' + x[1] + ' segment</option>'; }).join('');
+    }
+    sel.style.display = '';
+  }
+  if(!navigator.onLine){ list.innerHTML = '<div style="color:var(--muted);padding:20px;">Nominees need an internet connection.</div>'; return; }
+  list.innerHTML = '<div style="color:var(--muted);padding:20px;">Loading…</div>';
+  nApi('adminGetNominees', nomIsMaster() ? {seg: sel.value} : {}).then(function(res){
+    if(!res || res.status !== 'ok'){ list.innerHTML = '<div style="color:var(--red);padding:20px;">' + esc((res && res.message) || 'Could not load nominees.') + '</div>'; return; }
+    document.getElementById('nomIntro').innerHTML = esc(res.segment) + ' segment · top ' + (res.topPct || 10) + '% scoring <b>' + res.threshold + '%+</b>, who agreed to be shared. ' +
+      'Phone and email are locked. Tap <b>Express interest</b> and CMG will contact the student/guardian; details appear here only after they agree. Photos are watermarked and every view is logged.';
+    if(!res.nominees.length){ list.innerHTML = '<div style="color:var(--muted);padding:20px;">No nominees yet in this segment.</div>'; return; }
+    list.innerHTML = '<div class="nom-grid">' + res.nominees.map(function(n, i){ return nomCard(n, i, res.master); }).join('') + '</div>';
+  }).catch(function(){ list.innerHTML = '<div style="color:var(--red);padding:20px;">Could not load nominees.</div>'; });
+}
+function nomCard(n, i, master){
+  var photo = n.hasPhoto
+    ? '<div class="nom-photo" id="nomPh' + i + '" data-code="' + esc(n.code) + '"><button class="nom-btn" onclick="nomShowPhoto(' + i + ')">👁 View</button></div>'
+    : '<div class="nom-photo"><div class="icon">📷</div>No photo</div>';
+  var h = '<div class="nom-card"><div class="nom-top">' + photo + '<div style="min-width:0;">' +
+    '<div class="nom-name">' + esc(n.name) + '</div>' +
+    '<div class="nom-sub">' + esc(n.school || '—') + '</div>' +
+    '<div class="nom-sub">' + esc(n.district || '—') + ', ' + esc(n.region || '—') + ' · ' + esc(n.gender || '') + '</div></div></div>' +
+    '<div><span class="nom-pct">' + n.pct + '%</span> <span class="nom-sub">in segment</span>' +
+    (master ? (n.consent ? ' <span class="nom-sub">· ✅ consent given</span>' : ' <span class="nom-sub" style="color:var(--red)">· ⛔ no consent: hidden from agencies</span>') : '') + '</div>';
+  if(n.contact){
+    h += '<div class="nom-contact">📞 ' + esc(n.contact.phone || '—') + '<br>✉️ ' + esc(n.contact.email || '—') + '</div>';
+  } else {
+    h += '<div class="nom-lock">🔒 Contact locked</div>';
+  }
+  if(!master){
+    var it = n.interest;
+    if(!it){
+      h += '<input class="nom-note" id="nomNote' + i + '" maxlength="300" placeholder="Opportunity (e.g. internship, quota) — optional">' +
+           '<div class="nom-actions"><button class="nom-btn" onclick="nomInterest(' + i + ',\'' + esc(n.code) + '\',this)">🤝 Express interest</button></div>';
+    } else {
+      h += '<div class="nom-actions"><span class="nom-chip ' + esc(it.status) + '">' +
+        (it.status === 'Pending' ? '⏳ Awaiting CMG' : it.status === 'Approved' ? '✅ Approved' : '❌ Declined') + '</span></div>' +
+        (it.decisionNote ? '<div class="nom-sub">CMG: ' + esc(it.decisionNote) + '</div>' : '');
+    }
+  } else if(n.interest){
+    h += '<div class="nom-actions"><span class="nom-chip ' + esc(n.interest.status) + '">' + esc(n.interest.status) + '</span></div>';
+  }
+  return h + '</div>';
+}
+function nomShowPhoto(i){
+  var box = document.getElementById('nomPh' + i);
+  if(!box) return;
+  photoMsg(box, '⏳', 'Loading…');
+  loadSecurePhoto(box);
+}
+function nomInterest(i, code, btn){
+  var noteEl = document.getElementById('nomNote' + i);
+  btn.disabled = true; btn.textContent = 'Sending…';
+  nApi('adminExpressInterest', {code: code, note: noteEl ? noteEl.value : ''}).then(function(res){
+    if(res && res.status === 'ok'){ alert(res.message); loadNominees(); }
+    else { btn.disabled = false; btn.textContent = '🤝 Express interest'; alert((res && res.message) || 'Could not send request.'); }
+  }).catch(function(){ btn.disabled = false; btn.textContent = '🤝 Express interest'; });
+}
+
+function loadRequests(){
+  var box = document.getElementById('reqList');
+  if(!nomIsMaster()){ box.innerHTML = ''; return; }
+  box.innerHTML = '<div style="color:var(--muted);padding:20px;">Loading…</div>';
+  nApi('adminGetInterests').then(function(res){
+    if(!res || res.status !== 'ok'){ box.innerHTML = '<div style="color:var(--red);padding:20px;">' + esc((res && res.message) || 'Could not load.') + '</div>'; return; }
+    var pend = res.interests.filter(function(x){ return x.status === 'Pending'; }).length;
+    var b = document.getElementById('reqBadge'); b.textContent = pend; b.style.display = pend ? '' : 'none';
+    if(!res.interests.length){ box.innerHTML = '<div style="color:var(--muted);padding:20px;">No requests yet.</div>'; return; }
+    box.innerHTML = res.interests.map(function(x, i){
+      var h = '<div class="req-row"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">' +
+        '<b>' + esc(x.agency) + ' → ' + esc(x.name) + '</b><span class="nom-chip ' + esc(x.status) + '">' + esc(x.status) + '</span></div>' +
+        '<div class="nom-sub">' + esc(x.school) + ' · ' + esc(x.segment) + ' · ' + esc(new Date(x.ts).toLocaleString('en-GB')) + '</div>' +
+        (x.note ? '<div style="font-size:13px;">“' + esc(x.note) + '”</div>' : '') +
+        '<div class="nom-contact">Student contact (for CMG): 📞 ' + esc(x.phone || '—') + ' · ✉️ ' + esc(x.email || '—') + '</div>';
+      if(x.status === 'Pending'){
+        h += '<input class="nom-note" id="reqNote' + i + '" maxlength="300" placeholder="Note (e.g. guardian agreed on call) — optional">' +
+          '<div class="nom-actions"><button class="nom-btn ok" onclick="decideReq(\'' + esc(x.id) + '\',\'Approved\',' + i + ')">✅ Approve — release contact</button>' +
+          '<button class="nom-btn no" onclick="decideReq(\'' + esc(x.id) + '\',\'Declined\',' + i + ')">❌ Decline</button></div>';
+      } else if(x.decisionNote){ h += '<div class="nom-sub">Note: ' + esc(x.decisionNote) + '</div>'; }
+      return h + '</div>';
+    }).join('');
+  }).catch(function(){ box.innerHTML = '<div style="color:var(--red);padding:20px;">Could not load.</div>'; });
+}
+function decideReq(id, decision, i){
+  var n = document.getElementById('reqNote' + i);
+  if(decision === 'Approved' && !confirm('Release this student\'s phone and email to the agency? Only do this once the student/guardian has agreed.')) return;
+  nApi('adminDecideInterest', {id: id, decision: decision, note: n ? n.value : ''}).then(function(res){
+    if(res && res.status === 'ok') loadRequests(); else alert((res && res.message) || 'Failed.');
+  });
+}
+
 // ── PROTECTED STUDENT PHOTOS ───────────────────────
 // Photos are private on the server. They are fetched only with a valid login,
 // drawn onto a canvas and stamped with the viewing agency + time, so any
@@ -1334,8 +1489,8 @@ function paintSecurePhoto(box, p){
   img.onerror = function(){ photoMsg(box, '📷', 'Photo could not be displayed'); };
   img.src = 'data:' + p.mime + ';base64,' + p.data;
 }
-function loadSecurePhoto(){
-  var box = document.getElementById('securePhotoBox');
+function loadSecurePhoto(boxEl){
+  var box = boxEl || document.getElementById('securePhotoBox');
   if(!box) return;
   var code = box.getAttribute('data-code');
   if(photoCache[code]){ paintSecurePhoto(box, photoCache[code]); return; }
