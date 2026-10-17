@@ -1029,6 +1029,7 @@ function runLoginLoadingSequence(onDone){
 }
 
 function doLogout(){
+  photoCache = {};
   stopPresence(true);
   meAutoOpened = false;
   sessionStorage.removeItem(TOKEN_KEY);
@@ -1053,6 +1054,7 @@ function tryAutoLogin(){
 
 // Called whenever a data fetch comes back unauthorized (expired/invalid token)
 function forceReLogin(message){
+  photoCache = {};
   stopPresence(false);
   meAutoOpened = false;
   sessionStorage.removeItem(TOKEN_KEY);
@@ -1298,6 +1300,56 @@ function maybeOpenMeTab(){
   var btn = null;
   document.querySelectorAll('.tab').forEach(function(t){ if((t.getAttribute('onclick') || '').indexOf("'me'") > -1) btn = t; });
   switchTab('me', btn);
+}
+
+// ── PROTECTED STUDENT PHOTOS ───────────────────────
+// Photos are private on the server. They are fetched only with a valid login,
+// drawn onto a canvas and stamped with the viewing agency + time, so any
+// leaked screenshot can be traced back. Every fetch is logged server-side.
+var photoCache = {};
+function photoMsg(box, icon, text){
+  box.innerHTML = '<div class="icon">' + icon + '</div><div>' + esc(text) + '</div>';
+}
+function paintSecurePhoto(box, p){
+  var img = new Image();
+  img.onload = function(){
+    var W = Math.min(img.naturalWidth, 700), H = Math.round(img.naturalHeight * W / img.naturalWidth);
+    var c = document.createElement('canvas'); c.width = W; c.height = H;
+    var g = c.getContext('2d'); g.drawImage(img, 0, 0, W, H);
+    var label = agencyInfo(myAgencyName()).name + ' · ' + new Date().toLocaleString('en-GB');
+    var fs = Math.max(12, Math.round(W / 24));
+    g.save(); g.font = '700 ' + fs + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.globalAlpha = 0.32; g.lineWidth = Math.max(2, fs / 8); g.strokeStyle = '#000'; g.fillStyle = '#fff';
+    g.translate(W / 2, H / 2); g.rotate(-Math.PI / 6);
+    var step = fs * 3.2, reach = Math.ceil(Math.sqrt(W * W + H * H) / step) + 1;
+    for(var i = -reach; i <= reach; i++){
+      g.strokeText(label, 0, i * step); g.fillText(label, 0, i * step);
+    }
+    g.restore();
+    c.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;';
+    c.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+    c.setAttribute('draggable', 'false');
+    box.innerHTML = ''; box.appendChild(c);
+  };
+  img.onerror = function(){ photoMsg(box, '📷', 'Photo could not be displayed'); };
+  img.src = 'data:' + p.mime + ';base64,' + p.data;
+}
+function loadSecurePhoto(){
+  var box = document.getElementById('securePhotoBox');
+  if(!box) return;
+  var code = box.getAttribute('data-code');
+  if(photoCache[code]){ paintSecurePhoto(box, photoCache[code]); return; }
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  if(!navigator.onLine){ photoMsg(box, '📷', 'Photo needs an internet connection'); return; }
+  fetch(APPS_SCRIPT_URL + '?action=adminGetPhoto&token=' + encodeURIComponent(token || '') + '&code=' + encodeURIComponent(code))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.error === 'unauthorized'){ forceReLogin(); return; }
+      if(res && res.status === 'ok'){ photoCache[code] = res; paintSecurePhoto(box, res); }
+      else if(res && res.status === 'none'){ photoMsg(box, '📷', 'No photograph on file'); }
+      else { photoMsg(box, '📷', (res && res.message) || 'Photo failed to load'); }
+    })
+    .catch(function(){ photoMsg(box, '📷', 'Photo failed to load'); });
 }
 
 // ── PRESENCE: logo of the logged-in agency + agencies online now ──
@@ -2134,12 +2186,11 @@ function openStudentProfile(idx){
       '</div>';
   }
 
-  var photoBox = r.photo
-    ? '<div class="profile-photo-box" style="padding:0;overflow:hidden;">' +
-        '<img src="' + esc(toDrivePreviewUrl_(r.photo)) + '" alt="' + esc(r.name) + '" ' +
-          'style="width:100%;height:100%;object-fit:cover;" ' +
-          'onerror="this.parentNode.innerHTML=\'<div class=&quot;icon&quot;>📷</div><div>Photo failed to load</div>\';">' +
-      '</div>'
+  var photoBox = r.photo && r.code
+    ? '<div class="profile-photo-box" id="securePhotoBox" data-code="' + esc(r.code) + '" style="padding:0;overflow:hidden;position:relative;">' +
+        '<div class="icon">⏳</div><div>Loading protected photo…</div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin:-6px 0 14px;">🔒 Protected photo — stamped with your agency name. Every view is logged.</div>'
     : '<div class="profile-photo-box">' +
         '<div class="icon">📷</div>' +
         '<div>No photograph on file</div>' +
@@ -2167,6 +2218,7 @@ function openStudentProfile(idx){
     '</div>';
 
   document.getElementById('profileContent').innerHTML = html;
+  loadSecurePhoto();
   document.getElementById('profileOverlay').classList.add('open');
 }
 
