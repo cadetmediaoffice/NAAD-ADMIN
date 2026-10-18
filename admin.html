@@ -396,7 +396,7 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
 .bp-foot{padding:10px 14px;text-align:center;}
 .back-btn{display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;padding:7px 14px;border-radius:20px;border:1px solid rgba(255,215,0,.35);background:rgba(255,215,0,.08);color:var(--gold);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;}
 .back-btn:hover{background:rgba(255,215,0,.16);}
-#bellPanel .bp-tools{display:flex;gap:10px;align-items:center;}
+#bellPanel .bp-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
 #bellPanel .bp-tools button{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;}
 @media (max-width:700px){
   #bellPanel{position:fixed;left:50%;right:auto;top:84px;transform:translateX(-50%);width:min(94vw,380px);max-height:76vh;}
@@ -629,7 +629,7 @@ window.cmgAlert = (function(){
       <div class="bell-wrap" id="bellWrap" style="display:none;">
         <button class="refresh-btn" id="bellBtn" onclick="toggleBell(event)" title="Content Portal notifications">🔔<span id="bellBadge"></span></button>
         <div id="bellPanel">
-          <div class="bp-head"><span>🔔 Messages</span><span class="bp-tools"><button id="soundBtn" onclick="toggleSound()">🔊 Sound on</button><button onclick="cmgAlert.test()">Test</button><button onclick="markBellRead()">Mark all read</button></span></div>
+          <div class="bp-head"><span>🔔 Messages</span><span class="bp-tools"><button id="soundBtn" onclick="toggleSound()">🔊 Sound on</button><button onclick="cmgAlert.test()">Test</button><button data-cmg-push onclick="cmgPush.toggle()">📲 Alerts</button><button onclick="markBellRead()">Mark all read</button></span></div>
           <div id="bellList"></div>
           <div class="bp-send">
             <div class="bp-send-label" id="bellSendLabel">Message</div>
@@ -1335,7 +1335,9 @@ function doLogout(){
   document.getElementById('loginErr').style.display = 'none';
   try{ sessionStorage.removeItem('cmgAdminAgency'); }catch(e){}
   resetLoginIdentity();
-  setTimeout(function(){ location.reload(); }, 60); // fresh page for the next login, so nothing from the last agency lingers
+  var _rl = function(){ location.reload(); }, _done = false; function _once(){ if(!_done){ _done = true; _rl(); } }
+  try{ cmgPush.leave().then(_once, _once); }catch(e){}
+  setTimeout(_once, 1800); // fresh page for the next login, so nothing from the last agency lingers
 }
 
 // If we already have a token from earlier this tab session, skip straight
@@ -1797,6 +1799,7 @@ function startNotifs(){
   document.getElementById('bellMsg').placeholder = isM ? 'Type a broadcast for every agency…' : 'Type a message to CMG…';
   pollNotifs();
   notifTimer = setInterval(function(){ pollNotifs(); }, 15000);
+  try{ cmgPush.init({ url: APPS_SCRIPT_URL, home: 'admin.html', getToken: function(){ return sessionStorage.getItem(TOKEN_KEY); }, onWake: function(){ pollNotifs(); } }); }catch(e){}
 }
 function stopNotifs(){
   clearInterval(notifTimer); notifTimer = null; notifList = [];
@@ -3087,6 +3090,179 @@ function runBootSequence(){
 // ── AUTO-LOGIN if this tab already has a valid session token ─
 // (runs after the boot sequence finishes)
 runBootSequence();
+</script>
+<script>
+/* cmgPush — phone / laptop alerts even when the app is closed (Web Push + icon badge). */
+(function(){
+  if(window.cmgPush) return;
+  var cfg = {}, reg = null, pt = null, busy = false;
+  function lget(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  function supported(){ return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window) && /^https?:$/.test(location.protocol); }
+  function perm(){ try{ return Notification.permission; }catch(e){ return 'denied'; } }
+  function state(){
+    if(!supported()) return 'unsupported';
+    if(perm() === 'denied') return 'denied';
+    return (perm() === 'granted' && lget('cmgPushOn') === '1') ? 'on' : 'off';
+  }
+  function api(action, extra){
+    var u = cfg.url + '?action=' + action + (extra || '') + '&t=' + Date.now();
+    return fetch(u, {cache:'no-store'}).then(function(r){ return r.json(); });
+  }
+  function b64ToU8(s){
+    s = s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length % 4) s += '=';
+    var raw = atob(s), a = new Uint8Array(raw.length); for(var i=0;i<raw.length;i++) a[i] = raw.charCodeAt(i); return a;
+  }
+  function sameKey(sub, keyU8){
+    try{
+      var cur = sub.options && sub.options.applicationServerKey; if(!cur) return true;
+      var a = new Uint8Array(cur); if(a.length !== keyU8.length) return false;
+      for(var i=0;i<a.length;i++) if(a[i] !== keyU8[i]) return false; return true;
+    }catch(e){ return true; }
+  }
+  function getReg(){
+    if(reg) return Promise.resolve(reg);
+    return navigator.serviceWorker.register('sw.js').then(function(){ return navigator.serviceWorker.ready; }).then(function(r){ reg = r; return r; });
+  }
+  function toSW(msg){
+    return getReg().then(function(r){ var w = r.active || navigator.serviceWorker.controller; if(w) w.postMessage(msg); }).catch(function(){});
+  }
+  // Register (or refresh) this device for the logged-in agency.
+  function register(){
+    var token = cfg.getToken && cfg.getToken();
+    if(!token) return Promise.reject(new Error('Please log in first.'));
+    var keyU8;
+    return getReg().then(function(r){
+      return api('pushKey').then(function(k){
+        if(!k || !k.key) throw new Error('Alerts are not set up on the server yet.');
+        keyU8 = b64ToU8(k.key);
+        return r.pushManager.getSubscription().then(function(sub){
+          if(sub && !sameKey(sub, keyU8)) return sub.unsubscribe().then(function(){ return null; });
+          return sub;
+        });
+      }).then(function(sub){
+        return sub || r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyU8 });
+      });
+    }).then(function(sub){
+      return api('pushSubscribe', '&token=' + encodeURIComponent(token) + '&home=' + encodeURIComponent(cfg.home || 'admin.html') +
+                 '&endpoint=' + encodeURIComponent(sub.endpoint));
+    }).then(function(d){
+      if(!d || d.status !== 'ok' || !d.pt) throw new Error((d && d.message) || (d && d.error === 'unauthorized' ? 'Please log in again.' : 'The server did not accept this device.'));
+      pt = d.pt; lset('cmgPushPt', pt); lset('cmgPushOn', '1');
+      return toSW({ type:'cfg', url: cfg.url, pt: pt, home: cfg.home || 'admin.html', seen: 0 }).then(markSeen);
+    });
+  }
+  // The user is looking at the app: clear the icon badge and tell the worker.
+  function markSeen(){
+    try{ if(navigator.clearAppBadge) navigator.clearAppBadge().catch(function(){}); }catch(e){}
+    pt = pt || lget('cmgPushPt'); if(!pt || !cfg.url) return Promise.resolve();
+    return api('pushPeek', '&pt=' + encodeURIComponent(pt) + '&since=9999999999999').then(function(d){
+      if(d && d.status === 'ok') return toSW({ type:'seen', ts: d.now });
+      if(d && d.message === 'unknown device') lset('cmgPushOn', '0');
+    }).catch(function(){});
+  }
+  function enable(){
+    if(busy) return Promise.resolve({ok:false, msg:'Please wait…'});
+    if(!supported()){
+      return Promise.resolve({ ok:false, msg: isIOS && !standalone
+        ? 'On iPhone/iPad: tap Share → "Add to Home Screen", open NAAD from that icon, then switch alerts on.'
+        : 'This browser does not support background alerts. Use Chrome, Edge or Safari (installed to the home screen).' });
+    }
+    busy = true; paint();
+    var ask = perm() === 'granted' ? Promise.resolve('granted') : Notification.requestPermission();
+    return Promise.resolve(ask).then(function(p){
+      if(p !== 'granted') throw new Error('Permission was not given. Allow notifications for this site in the browser settings, then try again.');
+      return register();
+    }).then(function(){ busy = false; paint(); return { ok:true, msg:'✅ Alerts are on for this device.' }; })
+      .catch(function(e){ busy = false; lset('cmgPushOn','0'); paint(); return { ok:false, msg:(e && e.message) || 'Could not turn alerts on.' }; });
+  }
+  function disable(){
+    pt = pt || lget('cmgPushPt');
+    var done = function(){ lset('cmgPushOn','0'); lset('cmgPushPt',''); paint(); };
+    var p = pt ? api('pushUnsubscribe', '&pt=' + encodeURIComponent(pt)).catch(function(){}) : Promise.resolve();
+    return p.then(function(){ return getReg(); }).then(function(r){ return r.pushManager.getSubscription(); })
+      .then(function(s){ return s ? s.unsubscribe() : null; }).catch(function(){}).then(function(){ pt = null; done(); toSW({type:'clear'}); });
+  }
+  function leave(){  // used on logout: this device stops receiving the previous agency's alerts
+    var p = lget('cmgPushPt'), had = lget('cmgPushOn') === '1';
+    lset('cmgPushOn','0'); lset('cmgPushPt','');
+    try{ if(navigator.clearAppBadge) navigator.clearAppBadge().catch(function(){}); }catch(e){}
+    if(!p || !cfg.url) return Promise.resolve();
+    toSW({type:'clear'});
+    return api('pushUnsubscribe', '&pt=' + encodeURIComponent(p)).catch(function(){}).then(function(){
+      return supported() ? getReg().then(function(r){ return r.pushManager.getSubscription(); }).then(function(s){ return s ? s.unsubscribe() : null; }).catch(function(){}) : null;
+    });
+  }
+  function test(){
+    var token = cfg.getToken && cfg.getToken(); pt = pt || lget('cmgPushPt');
+    if(state() !== 'on' || !pt) return Promise.resolve({ ok:false, msg:'Switch alerts on first.' });
+    return api('pushSelfTest', '&token=' + encodeURIComponent(token || '') + '&pt=' + encodeURIComponent(pt))
+      .then(function(d){ return { ok: !!(d && d.status === 'ok'), msg: (d && d.message) || 'No answer from the server.' }; })
+      .catch(function(){ return { ok:false, msg:'No internet connection.' }; });
+  }
+
+  // ---- small UI: banner + button label ----
+  var bar = null;
+  function css(){
+    var st = document.createElement('style');
+    st.textContent = '#cmgPushBar{position:fixed;left:50%;bottom:58px;transform:translateX(-50%);z-index:2147482500;display:none;width:min(92vw,420px);box-sizing:border-box;background:#0b1626;color:#eef2ff;border:1px solid rgba(255,215,0,.5);border-radius:14px;padding:10px 12px;font:13px/1.35 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.6);}' +
+      '#cmgPushBar b{color:#FFD700}#cmgPushBar .pb-r{display:flex;gap:8px;margin-top:8px}' +
+      '#cmgPushBar button{flex:1;border:1px solid rgba(255,215,0,.55);background:rgba(255,215,0,.16);color:#FFD700;font-weight:800;border-radius:9px;padding:9px;font-size:13px;cursor:pointer}' +
+      '#cmgPushBar button.pb-no{flex:0 0 auto;background:transparent;color:#9fb0cf;border-color:rgba(255,255,255,.2);font-weight:600}' +
+      '#cmgPushBar .pb-m{margin-top:6px;color:#9fb0cf;font-size:12px}';
+    document.head.appendChild(st);
+    bar = document.createElement('div'); bar.id = 'cmgPushBar';
+    bar.innerHTML = '<div><b>📲 Get alerts even when the app is closed</b><br>Sound, pop-up and a number on the app icon whenever a message arrives.</div>' +
+      '<div class="pb-r"><button class="pb-yes">Turn on alerts</button><button class="pb-no">Not now</button></div><div class="pb-m" style="display:none"></div>';
+    document.body.appendChild(bar);
+    bar.querySelector('.pb-yes').onclick = function(){ toggle(); };
+    bar.querySelector('.pb-no').onclick = function(){ bar.style.display = 'none'; try{ sessionStorage.setItem('cmgPushDismiss','1'); }catch(e){} };
+  }
+  function say(m){ if(!bar) return; var el = bar.querySelector('.pb-m'); el.textContent = m; el.style.display = m ? 'block' : 'none'; }
+  function label(){
+    var s = state();
+    return busy ? '📲 Working…' : s === 'on' ? '📲 Alerts on' : s === 'denied' ? '📲 Alerts blocked' : s === 'unsupported' ? (isIOS && !standalone ? '📲 Alerts: install app' : '📲 Alerts n/a') : '📲 Turn on alerts';
+  }
+  function paint(){
+    var s = state(), btns = document.querySelectorAll('[data-cmg-push]');
+    for(var i=0;i<btns.length;i++){ btns[i].textContent = label(); btns[i].style.opacity = s === 'on' ? '1' : '.9'; }
+    if(bar){
+      var dismissed = false; try{ dismissed = sessionStorage.getItem('cmgPushDismiss') === '1'; }catch(e){}
+      var loggedIn = !!(cfg.getToken && cfg.getToken());
+      bar.style.display = (loggedIn && !dismissed && (s === 'off' || (s === 'unsupported' && isIOS && !standalone))) ? 'block' : 'none';
+    }
+  }
+  function toggle(){
+    var s = state();
+    if(s === 'on'){ return disable().then(function(){ say('Alerts are off for this device.'); }); }
+    return enable().then(function(r){
+      say(r.msg);
+      if(r.ok){ setTimeout(function(){ if(bar) bar.style.display = 'none'; }, 1800); }
+      if(cfg.onMessage) cfg.onMessage(r.msg, r.ok);
+    });
+  }
+  function init(c){
+    cfg = c || {};
+    if(!bar) css();
+    paint();
+    if(!supported()) return;
+    getReg().then(function(){
+      navigator.serviceWorker.addEventListener('message', function(e){
+        if(e.data && e.data.type === 'push-wake' && cfg.onWake) cfg.onWake();
+      });
+    }).catch(function(){});
+    // already allowed before: quietly keep this device registered for whoever is logged in now
+    if(perm() === 'granted' && lget('cmgPushOn') === '1' && cfg.getToken && cfg.getToken()){
+      register().then(paint).catch(function(){ paint(); });
+    }
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden && state() === 'on') markSeen(); });
+    window.addEventListener('focus', function(){ if(state() === 'on') markSeen(); });
+  }
+  window.cmgPush = { init:init, enable:enable, disable:disable, toggle:toggle, test:test, leave:leave, state:state, paint:paint, markSeen:markSeen, refresh:paint };
+})();
+
 </script>
 </body>
 </html>
