@@ -1440,25 +1440,17 @@ function enterPortal(key){
 
 function restoreSession(){
   try{
-    var raw=sessionStorage.getItem('naad_session');
-    if(!raw){
-      // Signed in on the admin dashboard in this tab? Reuse that login — no second password.
-      var at=sessionStorage.getItem('cmgAdminToken'),aa=sessionStorage.getItem('cmgAdminAgency');
-      var ak=agencyKeyOf(aa);
-      if(at&&aa&&AGENCIES[ak]){
-        PORTAL_TOKEN=at;
-        sessionStorage.setItem('naad_session',JSON.stringify({key:ak,token:at,ts:Date.now()}));
-        enterPortal(ak);return true;
-      }
-      return false;
+    // The login shared with the admin dashboard is the single source of truth, so the portal always
+    // shows the agency that is logged in NOW (never one left over from an earlier login in this tab).
+    var at=sessionStorage.getItem('cmgAdminToken'),aa=sessionStorage.getItem('cmgAdminAgency');
+    var ak=agencyKeyOf(aa);
+    if(at&&aa&&AGENCIES[ak]){
+      PORTAL_TOKEN=at;
+      sessionStorage.setItem('naad_session',JSON.stringify({key:ak,token:at,ts:Date.now()}));
+      enterPortal(ak);return true;
     }
-    var sess=JSON.parse(raw);
-    // Server sessions last 6 hours
-    if(!sess.token||!sess.key||Date.now()-sess.ts > 6*60*60*1000){sessionStorage.removeItem('naad_session');return false;}
-    if(!AGENCIES[sess.key])return false;
-    PORTAL_TOKEN=sess.token;
-    enterPortal(sess.key);
-    return true;
+    sessionStorage.removeItem('naad_session');
+    return false;
   }catch(e){return false;}
 }
 function doLogout(){U=null;PORTAL_TOKEN='';setTimeout(function(){location.reload();},60);try{sessionStorage.removeItem('naad_session');sessionStorage.removeItem('cmgAdminToken');sessionStorage.removeItem('cmgAdminAgency');}catch(e){}document.getElementById('loginScreen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('pwInput').value='';document.getElementById('loginErr').style.display='none';}

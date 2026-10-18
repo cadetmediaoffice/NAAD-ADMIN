@@ -384,6 +384,15 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
 .bp-send textarea{width:100%;box-sizing:border-box;resize:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:8px;}
 .bp-send button{margin-top:6px;width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,215,0,.4);background:rgba(255,215,0,.12);color:var(--gold);font-weight:700;cursor:pointer;font-size:12px;}
 #bellSendStatus{font-size:11px;margin-top:5px;color:var(--muted);min-height:14px;}
+.bc-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,215,0,.18);border-radius:14px;padding:14px;margin-bottom:12px;}
+.bc-card.unread{border-left:3px solid var(--gold);}
+.bc-h{font-weight:700;color:var(--gold);font-size:14px;margin-bottom:8px;}
+.bc-card textarea,.bc-reply input{width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;padding:9px;}
+.bc-btn{padding:9px 18px;border-radius:8px;border:1px solid rgba(255,215,0,.4);background:rgba(255,215,0,.12);color:var(--gold);font-weight:700;cursor:pointer;font-size:12px;}
+.bc-meta{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.bc-msg{font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+.bc-reply{display:flex;gap:8px;margin-top:10px;}
+.bc-rep-item{border-left:2px solid rgba(79,195,247,.35);padding:6px 10px;margin-top:8px;font-size:12px;}
 .bp-foot{padding:10px 14px;text-align:center;}
 .bp-foot a{color:var(--gold);font-size:12px;text-decoration:none;font-weight:700;}
 </style>
@@ -573,6 +582,7 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
     <button class="tab" onclick="switchTab('schools',this)">🏫 Schools</button>
     <button class="tab" onclick="switchTab('regions',this)">🌍 Regions</button>
     <button class="tab" onclick="switchTab('me',this)">🎯 M&amp;E</button>
+    <button class="tab" onclick="switchTab('broadcast',this)">📢 Broadcasts <span id="bcTabBadge" style="display:none;background:var(--red);color:#fff;border-radius:9px;padding:0 6px;font-size:10px;margin-left:3px;"></span></button>
     <button class="tab" onclick="switchTab('nominees',this)">⭐ Nominees</button>
     <button class="tab" onclick="switchTab('requests',this)">🤝 Requests <span id="reqBadge" style="display:none;background:var(--red);color:#fff;border-radius:9px;padding:0 6px;font-size:10px;margin-left:3px;"></span></button>
     <button class="tab" onclick="switchTab('leaderboard',this)">🥇 Leaderboard</button>
@@ -867,6 +877,26 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
   </div>
 
   <!-- CHARTS PANEL -->
+  <div class="panel" id="panel-broadcast">
+    <div id="bcCompose" class="bc-card" style="display:none;">
+      <div class="bc-h">📢 Send a message</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <select id="bcTo" style="flex:1;min-width:200px;padding:9px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:var(--text);"></select>
+      </div>
+      <textarea id="bcText" rows="3" maxlength="400" placeholder="Type your message…"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+        <button class="bc-btn" id="bcSendBtn" onclick="sendBroadcastTab()">📤 Send</button>
+        <span id="bcStatus" style="font-size:12px;color:var(--muted);"></span>
+      </div>
+    </div>
+    <div class="bc-h" style="margin:18px 0 8px;">📢 Broadcast list <span id="bcCount" style="color:var(--muted);font-weight:400;font-size:12px;"></span></div>
+    <div id="bcList"></div>
+    <div id="bcRepliesWrap" style="display:none;">
+      <div class="bc-h" style="margin:22px 0 8px;">↩ Replies from agencies</div>
+      <div id="bcReplies"></div>
+    </div>
+  </div>
+
   <div class="panel" id="panel-leaderboard">
     <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#04090f;">
       <iframe id="lbFrame" style="width:100%;height:84vh;border:none;display:block;" title="Leaderboard"></iframe>
@@ -1057,6 +1087,7 @@ function doLogin(){
   .then(function(res){
     btn.disabled = false; btn.textContent = origLabel;
     if(res && res.ok && res.token){
+      try{ sessionStorage.removeItem('naad_session'); }catch(e){} // drop any earlier portal login
       sessionStorage.setItem(TOKEN_KEY, res.token);
       try{ sessionStorage.setItem('cmgAdminAgency', res.agency || ''); }catch(e){}
       applyAgencyUI();
@@ -1139,6 +1170,7 @@ function doLogout(){
   stopPresence(true);
   meAutoOpened = false;
   sessionStorage.removeItem(TOKEN_KEY);
+  try{ sessionStorage.removeItem('naad_session'); }catch(e){}
   document.getElementById('loginOverlay').style.display = 'flex';
   document.getElementById('dashboard').style.display    = 'none';
   document.getElementById('pwInput').value = '';
@@ -1230,6 +1262,7 @@ function switchTab(name, el){
   if(name === 'live')   loadLiveActivity();
   if(name === 'visitors') loadVisitors();
   if(name === 'nominees') loadNominees();
+  if(name === 'broadcast') openBroadcastTab();
   if(name === 'requests') loadRequests();
 }
 
@@ -1624,10 +1657,11 @@ function pollNotifs(){
           ((d && d.error === 'unauthorized') ? 'Please log in again.' : 'Messages could not be loaded. Check your connection, and that the latest Code.gs is deployed.') + '</div>';
         return;
       }
-      var list = (d.notifications || []).slice().sort(function(a,b){ return b.ts - a.ts; }).slice(0, 30);
+      var list = (d.notifications || []).slice().sort(function(a,b){ return b.ts - a.ts; }).slice(0, 100);
       var seen = notifSeen();
       var fresh = list.filter(function(n){ return n.ts > seen && n.ts > notifTopSeen; });
       notifList = list;
+      renderBroadcasts();
       if(!notifFirst && fresh.length){
         var btn = document.getElementById('bellBtn'); btn.classList.remove('ring'); void btn.offsetWidth; btn.classList.add('ring');
         showNotifToast(fresh[0], fresh.length);
@@ -1644,12 +1678,85 @@ function renderBell(){
   b.style.display = unread ? 'block' : 'none'; b.textContent = unread > 99 ? '99+' : unread;
   var box = document.getElementById('bellList');
   if(!notifList.length){ box.innerHTML = '<div class="bp-empty">No messages yet.</div>'; return; }
-  box.innerHTML = notifList.map(function(n){
+  box.innerHTML = notifList.slice(0, 30).map(function(n){
     return '<button class="bp-item' + (n.ts > seen ? ' unread' : '') + '" onclick="openNotif()">' +
       '<div class="bp-title">' + esc(n.title || 'Message') + '</div><div class="bp-msg">' + esc(n.msg || '') + '</div>' +
       '<div class="bp-time">' + esc(new Date(n.ts).toLocaleString()) + '</div></button>';
   }).join('');
 }
+// ── Broadcast tab ────────────────────────────────────────────────
+function bcSeenKey(){ return 'naad_admin_bcseen_' + (myAgencyName() || 'x'); }
+function isBroadcastItem(n){ return n.type === 'type-broadcast' || /^✉/.test(n.title || ''); }
+function isReplyItem(n){ return /^↩/.test(n.title || ''); }
+function renderBroadcasts(){
+  var isM = myAgencyName() === 'MASTER';
+  var bcs = notifList.filter(isBroadcastItem);
+  var seen = 0; try{ seen = parseInt(localStorage.getItem(bcSeenKey()) || '0', 10) || 0; }catch(e){}
+  var unread = bcs.filter(function(n){ return n.ts > seen; }).length;
+  var tb = document.getElementById('bcTabBadge');
+  var onTab = document.getElementById('panel-broadcast').classList.contains('active');
+  tb.style.display = (unread && !onTab) ? 'inline-block' : 'none'; tb.textContent = unread;
+  var box = document.getElementById('bcList');
+  document.getElementById('bcCount').textContent = bcs.length ? '(' + bcs.length + ')' : '';
+  if(!bcs.length) box.innerHTML = '<div class="bp-empty" style="border:1px dashed rgba(255,255,255,.15);border-radius:12px;">No broadcasts yet.' + (isM ? ' Use the box above to send the first one.' : '') + '</div>';
+  else box.innerHTML = bcs.map(function(n, i){
+    var direct = /^✉/.test(n.title || '');
+    return '<div class="bc-card' + (n.ts > seen ? ' unread' : '') + '">' +
+      '<div class="bc-meta">' + (direct ? '✉️ Message from CMG' : '📢 Broadcast from Cadet Media Ghana') + ' · ' + esc(new Date(n.ts).toLocaleString()) + '</div>' +
+      '<div class="bc-msg">' + esc(n.msg || '') + '</div>' +
+      (isM ? '' : '<div class="bc-reply"><input id="bcRep' + i + '" maxlength="300" placeholder="Reply to CMG…"><button class="bc-btn" onclick="replyBroadcast(' + i + ')">↩ Reply</button></div>') +
+      '</div>';
+  }).join('');
+  document.getElementById('bcRepliesWrap').style.display = isM ? 'block' : 'none';
+  if(isM){
+    var reps = notifList.filter(isReplyItem);
+    document.getElementById('bcReplies').innerHTML = reps.length ? reps.map(function(n){
+      return '<div class="bc-card"><div class="bc-meta">' + esc((n.title || '').replace(/^↩\s*/, '')) + ' · ' + esc(new Date(n.ts).toLocaleString()) + '</div><div class="bc-msg">' + esc(n.msg || '') + '</div></div>';
+    }).join('') : '<div class="bp-empty">No replies yet.</div>';
+  }
+}
+function openBroadcastTab(){
+  var isM = myAgencyName() === 'MASTER';
+  document.getElementById('bcCompose').style.display = isM ? 'block' : 'none';
+  var to = document.getElementById('bcTo');
+  if(isM && !to.options.length){
+    var h = '<option value="ALL">📢 All agencies (broadcast)</option>';
+    Object.keys(PORTAL_NAMES).forEach(function(k){ if(k !== 'master') h += '<option value="' + esc(PORTAL_NAMES[k].n) + '">✉️ ' + esc(PORTAL_NAMES[k].f) + ' only</option>'; });
+    to.innerHTML = h;
+  }
+  var bcs = notifList.filter(isBroadcastItem);
+  if(bcs.length){ try{ localStorage.setItem(bcSeenKey(), String(bcs[0].ts)); }catch(e){} }
+  renderBroadcasts(); pollNotifs();
+}
+function sendBroadcastTab(){
+  var msg = document.getElementById('bcText').value.trim(), st = document.getElementById('bcStatus');
+  var token = sessionStorage.getItem(TOKEN_KEY), target = document.getElementById('bcTo').value;
+  if(!msg){ st.textContent = 'Type a message first.'; return; }
+  var all = target === 'ALL';
+  var q = '&targetAgency=' + encodeURIComponent(target) + '&type=' + (all ? 'type-broadcast' : 'type-info') +
+          '&title=' + encodeURIComponent(all ? '📢 Message from CMG' : '✉ Message from CMG');
+  var btn = document.getElementById('bcSendBtn'); btn.disabled = true; st.textContent = 'Sending…';
+  fetch(APPS_SCRIPT_URL + '?action=pushNotification&token=' + encodeURIComponent(token) + q + '&msg=' + encodeURIComponent(msg) + '&t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false;
+      if(d && d.status === 'ok'){ document.getElementById('bcText').value = ''; st.textContent = all ? '✅ Sent to all agencies' : '✅ Sent'; setTimeout(pollNotifs, 800); }
+      else st.textContent = '❌ Could not send.';
+    }).catch(function(){ btn.disabled = false; st.textContent = '❌ No connection.'; });
+}
+function replyBroadcast(i){
+  var bcs = notifList.filter(isBroadcastItem), n = bcs[i], inp = document.getElementById('bcRep' + i);
+  if(!n || !inp) return;
+  var text = inp.value.trim(); if(!text){ inp.focus(); return; }
+  var pn = portalNames(), token = sessionStorage.getItem(TOKEN_KEY);
+  var msg = 'Re "' + (n.msg || '').slice(0, 50) + '": ' + text;
+  fetch(APPS_SCRIPT_URL + '?action=pushNotification&token=' + encodeURIComponent(token) + '&targetAgency=Admin&type=type-info&title=' +
+        encodeURIComponent('↩ Reply from ' + (pn.f || myAgencyName())) + '&msg=' + encodeURIComponent(msg) + '&t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(d){ inp.value = ''; inp.placeholder = (d && d.status === 'ok') ? '✅ Reply sent to CMG' : '❌ Could not send'; })
+    .catch(function(){ inp.placeholder = '❌ No connection'; });
+}
+
 function sendBellMsg(){
   var box = document.getElementById('bellMsg'), st = document.getElementById('bellSendStatus');
   var msg = box.value.trim(), token = sessionStorage.getItem(TOKEN_KEY);
