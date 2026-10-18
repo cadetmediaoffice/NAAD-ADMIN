@@ -1683,5 +1683,53 @@ const _origRenderIndividuals = renderIndividuals;
   window.addEventListener('online',  showOnline);
 })();
 </script>
+<script>
+/* CMG visitor counter: anonymous ID + page name only */
+(function(){try{var URL='https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';var vid=localStorage.getItem('cmgVisitorId');
+if(!vid){vid='v'+Date.now().toString(36)+Math.random().toString(36).slice(2,10);localStorage.setItem('cmgVisitorId',vid);}
+var page=(location.pathname.split('/').pop()||'index.html');var key='cmgVisit_'+page;
+if(/[?&]admin=1/.test(location.search))return;if(sessionStorage.getItem(key))return;sessionStorage.setItem(key,'1');if(!navigator.onLine)return;
+fetch(URL+'?action=logVisit&vid='+encodeURIComponent(vid)+'&page='+encodeURIComponent(page),{mode:'no-cors',keepalive:true}).catch(function(){});}catch(e){}})();
+</script>
+
+<!-- CMG background sync: uploads saved progress and any unsent final results whenever the device is online -->
+<script>
+(function(){
+  var URL='https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
+  var KEYS=['general','studentSafety','fire','police','ambulance','prisons','nadmo','immigration','customs','tourism','forest','gaf','narcotics'];
+  var busy=false;
+  function ls(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+  function lset(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+  function ldel(k){try{localStorage.removeItem(k);}catch(e){}}
+  window.cmgSyncNow=function(){
+    if(busy||!navigator.onLine) return;
+    busy=true; setTimeout(function(){busy=false;},15000);
+    try{
+      var pr=ls('cmgPendingResults');
+      if(pr){
+        fetch(pr,{keepalive:true}).then(function(r){return r.json();}).then(function(d){
+          if(d&&(d.status==='ok'||d.status==='already_submitted'||d.status==='code_mismatch')) ldel('cmgPendingResults');
+        }).catch(function(){});
+      }
+      var code=ls('cmgCode');
+      if(code&&ls('cmgActivated')==='true'){
+        var scores={}; KEYS.forEach(function(k){var v=ls(k+'Score'); if(v) scores[k]=v;});
+        var q='&code='+encodeURIComponent(code)+'&name='+encodeURIComponent(ls('cadetName')||'')+
+          '&school='+encodeURIComponent(ls('cadetSchool')||'')+'&level='+encodeURIComponent(ls('cadetLevel')||'')+
+          '&region='+encodeURIComponent(ls('cadetRegion')||'')+'&scores='+encodeURIComponent(JSON.stringify(scores))+
+          '&submitted='+encodeURIComponent(ls('cmgResultsSubmitted')||'false')+'&lastSeen='+encodeURIComponent(new Date().toISOString());
+        var sig=JSON.stringify(scores)+'|'+(ls('cmgResultsSubmitted')||'');
+        if(ls('cmgSyncSig')!==sig){
+          fetch(URL+'?action=syncProgress'+q).then(function(r){return r.json();}).then(function(d){
+            if(d&&d.status==='ok') lset('cmgSyncSig',sig);
+          }).catch(function(){});
+        }
+      }
+    }catch(e){}
+  };
+  window.addEventListener('online',function(){setTimeout(window.cmgSyncNow,800);});
+  setTimeout(window.cmgSyncNow,2500);
+})();
+</script>
 </body>
 </html>

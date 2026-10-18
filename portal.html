@@ -1314,9 +1314,8 @@ var PORTAL_TOKEN='';
 function portalSessionExpired(){
   if(!U)return;
   PORTAL_TOKEN='';try{sessionStorage.removeItem('naad_session');}catch(e){}
+  try{sessionStorage.setItem('naad_expired','1');}catch(e){}
   doLogout();
-  var er=document.getElementById('loginErr');
-  if(er){er.textContent='⏱ Your session ended. Please sign in again.';er.style.display='block';}
 }
 var MODS=['Fire Safety','Police','Ambulance','Prisons','NADMO','Immigration','Customs','Tourism','Forest','GAF','Narcotics','General Safety','Student Safety'];
 // Agency logos — embedded base64
@@ -1353,7 +1352,7 @@ var AGENCIES={
 // Keys above are agency ids, NOT passwords. Passwords live only on the server (Script Properties:
 // ADMIN_PASSWORD and PW_<Agency>) and are checked by the server at login.
 var AGENCY_ALIAS={forest:'forestry',narcotics:'nacoc',armedforces:'gaf',army:'gaf',gnfs:'fire',gps:'police',nas:'ambulance',gis:'immigration',cmg:'master'};
-function agencyKeyOf(name){var k=String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(AGENCY_ALIAS[k])return AGENCY_ALIAS[k];if(AGENCIES[k])return k;var all=Object.keys(AGENCIES).concat(Object.keys(AGENCY_ALIAS));for(var i=0;i<all.length;i++){if(k.indexOf(all[i])>-1)return AGENCY_ALIAS[all[i]]||all[i];}return k;}
+function agencyKeyOf(name){var k=String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(AGENCY_ALIAS[k])return AGENCY_ALIAS[k];if(AGENCIES[k])return k;var all=Object.keys(AGENCIES).concat(['forest','narcotics','armedforces']);for(var i=0;i<all.length;i++){if(all[i]!=='master'&&k.indexOf(all[i])>-1)return AGENCY_ALIAS[all[i]]||all[i];}return k;}
 
 // Module ownership rules
 var MODULE_RULES={
@@ -1462,12 +1461,14 @@ function restoreSession(){
     return true;
   }catch(e){return false;}
 }
-function doLogout(){U=null;PORTAL_TOKEN='';try{sessionStorage.removeItem('naad_session');sessionStorage.removeItem('cmgAdminToken');sessionStorage.removeItem('cmgAdminAgency');}catch(e){}document.getElementById('loginScreen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('pwInput').value='';document.getElementById('loginErr').style.display='none';}
+function doLogout(){U=null;PORTAL_TOKEN='';setTimeout(function(){location.reload();},60);try{sessionStorage.removeItem('naad_session');sessionStorage.removeItem('cmgAdminToken');sessionStorage.removeItem('cmgAdminAgency');}catch(e){}document.getElementById('loginScreen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('pwInput').value='';document.getElementById('loginErr').style.display='none';}
 document.getElementById('pwInput').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 // Auto-restore session on page load/refresh.
 // Runs AFTER the whole page script has loaded (init() relies on variables defined further down the file).
 function startupSession(){
+  var wasExpired=false;try{wasExpired=sessionStorage.getItem('naad_expired')==='1';sessionStorage.removeItem('naad_expired');}catch(e){}
   if(!restoreSession()){
+    if(wasExpired){var er=document.getElementById('loginErr');if(er){er.textContent='⏱ Your session ended. Please sign in again.';er.style.display='block';}}
     var cv=document.getElementById('ssoCover');if(cv)cv.style.display='none';
     document.getElementById('loginScreen').style.display='flex';
   }

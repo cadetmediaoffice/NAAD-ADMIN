@@ -379,6 +379,11 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
 .bp-msg{font-size:12px;color:var(--muted);line-height:1.4;}
 .bp-time{font-size:10px;color:var(--muted);margin-top:4px;opacity:.8;}
 .bp-empty{padding:22px 14px;text-align:center;font-size:12px;color:var(--muted);}
+.bp-send{padding:10px 14px;border-top:1px solid rgba(255,255,255,.08);}
+.bp-send-label{font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px;}
+.bp-send textarea{width:100%;box-sizing:border-box;resize:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:8px;}
+.bp-send button{margin-top:6px;width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,215,0,.4);background:rgba(255,215,0,.12);color:var(--gold);font-weight:700;cursor:pointer;font-size:12px;}
+#bellSendStatus{font-size:11px;margin-top:5px;color:var(--muted);min-height:14px;}
 .bp-foot{padding:10px 14px;text-align:center;}
 .bp-foot a{color:var(--gold);font-size:12px;text-decoration:none;font-weight:700;}
 </style>
@@ -459,6 +464,12 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
         <div id="bellPanel">
           <div class="bp-head"><span>🔔 Content Portal</span><button onclick="markBellRead()">Mark all read</button></div>
           <div id="bellList"></div>
+          <div class="bp-send">
+            <div class="bp-send-label" id="bellSendLabel">Message</div>
+            <textarea id="bellMsg" rows="2" maxlength="400" placeholder="Type a message…"></textarea>
+            <button onclick="sendBellMsg()" id="bellSendBtn">Send</button>
+            <div id="bellSendStatus"></div>
+          </div>
           <div class="bp-foot"><a href="portal.html">📝 Open Content Portal →</a></div>
         </div>
       </div>
@@ -564,6 +575,7 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
     <button class="tab" onclick="switchTab('me',this)">🎯 M&amp;E</button>
     <button class="tab" onclick="switchTab('nominees',this)">⭐ Nominees</button>
     <button class="tab" onclick="switchTab('requests',this)">🤝 Requests <span id="reqBadge" style="display:none;background:var(--red);color:#fff;border-radius:9px;padding:0 6px;font-size:10px;margin-left:3px;"></span></button>
+    <button class="tab" onclick="switchTab('leaderboard',this)">🥇 Leaderboard</button>
     <button class="tab" onclick="switchTab('charts',this)">📊 Charts</button>
     <button class="tab" onclick="switchTab('visitors',this)">📈 Visitors</button>
     <button class="tab" onclick="switchTab('live',this)">🟢 Live Activity</button>
@@ -855,6 +867,12 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
   </div>
 
   <!-- CHARTS PANEL -->
+  <div class="panel" id="panel-leaderboard">
+    <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#04090f;">
+      <iframe id="lbFrame" style="width:100%;height:84vh;border:none;display:block;" title="Leaderboard"></iframe>
+    </div>
+  </div>
+
   <div class="panel" id="panel-charts">
     <div class="charts-grid">
       <div class="chart-card">
@@ -974,11 +992,29 @@ var AGENCY_INFO = {
 };
 var AGENCY_ALIAS = { forest:'forestry', fc:'forestry', narcotics:'nacoc', armedforces:'gaf', army:'gaf',
   gnfs:'fire', gps:'police', nas:'ambulance', gis:'immigration', cmg:'master' };
-function agencyInfo(name){
+function agencyKeyOf(name){
   var k = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-  if(AGENCY_ALIAS[k]) k = AGENCY_ALIAS[k];
-  return AGENCY_INFO[k] || { logo: '', name: String(name || '') };
+  if(AGENCY_ALIAS[k]) return AGENCY_ALIAS[k];
+  if(AGENCY_INFO[k]) return k;
+  // tolerate longer names such as 'Ghana_Police' or 'Fire_Service'
+  var names = Object.keys(AGENCY_INFO).concat(['forest','narcotics','armedforces']);
+  for(var i = 0; i < names.length; i++){
+    if(names[i] !== 'master' && k.indexOf(names[i]) > -1) return AGENCY_ALIAS[names[i]] || names[i];
+  }
+  return k;
 }
+function agencyInfo(name){
+  return AGENCY_INFO[agencyKeyOf(name)] || { logo: '', name: String(name || '') };
+}
+// short + full names the content portal uses for each agency (for notifications)
+var PORTAL_NAMES = {
+  master:{n:'Admin',f:'Cadet Media Ghana (Administrator)'}, fire:{n:'GNFS',f:'Ghana National Fire Service'},
+  police:{n:'Police',f:'Ghana Police Service'}, ambulance:{n:'NAS',f:'National Ambulance Service'},
+  prisons:{n:'Prisons',f:'Ghana Prisons Service'}, nadmo:{n:'NADMO',f:'Nat. Disaster Mgmt Org.'},
+  immigration:{n:'GIS',f:'Ghana Immigration Service'}, customs:{n:'Customs',f:'Ghana Customs Division'},
+  tourism:{n:'Tourism',f:'Ministry of Tourism'}, forestry:{n:'Forest',f:'Forestry Commission'},
+  gaf:{n:'GAF',f:'Ghana Armed Forces'}, nacoc:{n:'NACOC',f:'Narcotic Control Commission'} };
+function portalNames(){ return PORTAL_NAMES[agencyKeyOf(myAgencyName())] || {n:'',f:''}; }
 var LOGIN_SUB_DEFAULT = 'Cadet Media Ghana · NAAD Safety Edition<br>Enter your agency password to continue.';
 function showLoginIdentity(agency){
   var info = agencyInfo(agency);
@@ -1109,6 +1145,7 @@ function doLogout(){
   document.getElementById('loginErr').style.display = 'none';
   try{ sessionStorage.removeItem('cmgAdminAgency'); }catch(e){}
   resetLoginIdentity();
+  setTimeout(function(){ location.reload(); }, 60); // fresh page for the next login, so nothing from the last agency lingers
 }
 
 // If we already have a token from earlier this tab session, skip straight
@@ -1189,6 +1226,7 @@ function switchTab(name, el){
   else document.querySelectorAll('.tab')[0].classList.add('active');
   document.getElementById('panel-' + name).classList.add('active');
   if(name === 'charts') renderCharts();
+  if(name === 'leaderboard'){ var lf = document.getElementById('lbFrame'); if(!lf.getAttribute('src')) lf.src = 'leaderboard.html?admin=1'; }
   if(name === 'live')   loadLiveActivity();
   if(name === 'visitors') loadVisitors();
   if(name === 'nominees') loadNominees();
@@ -1260,13 +1298,14 @@ function myModuleKey(){ return agencyInfo(myAgencyName()).mod || null; }
 
 function meSetupSelector(){
   var sel = document.getElementById('meModule');
-  if(sel.options.length) return;
-  var mine = myModuleKey();
+  var mine = myModuleKey(), isMaster = myAgencyName() === 'MASTER';
+  var prev = sel.value;
   sel.innerHTML = ASSESSMENT_MODULES.map(function(m){
     return '<option value="' + esc(m.key) + '">' + m.icon + ' ' + esc(m.label) + '</option>';
   }).join('');
-  if(mine){ sel.value = mine; sel.disabled = true; }
-  else { sel.value = ASSESSMENT_MODULES[2].key; sel.disabled = false; }
+  if(mine){ sel.value = mine; sel.disabled = true; }            // an agency is locked to its OWN segment
+  else if(isMaster){ sel.value = prev && moduleIndexOf(prev) > -1 ? prev : ASSESSMENT_MODULES[2].key; sel.disabled = false; }
+  else { sel.disabled = true; }                                  // unrecognised agency: no segment (see renderMe)
 }
 
 function meAggregate(rows, keyFn, key){
@@ -1298,6 +1337,11 @@ function meRows(list, emptyCols){
 var meLast = null;
 function renderMe(){
   meSetupSelector();
+  if(myAgencyName() !== 'MASTER' && !myModuleKey()){
+    document.getElementById('meScope').textContent = 'Your login (' + myAgencyName() + ') is not linked to an assessment segment yet. Please contact CMG.';
+    ['meTakers','meAvg','meStrong','meExc'].forEach(function(id){ document.getElementById(id).textContent = '—'; });
+    return;
+  }
   var key = document.getElementById('meModule').value;
   var mod = ASSESSMENT_MODULES[moduleIndexOf(key)] || ASSESSMENT_MODULES[0];
   var rows = mergedData || [];
@@ -1555,6 +1599,10 @@ function notifSeen(){ try{ return parseInt(localStorage.getItem(notifSeenKey()) 
 function startNotifs(){
   if(notifTimer) return;
   notifFirst = true; notifTopSeen = 0;
+  document.getElementById('bellWrap').style.display = 'inline-block';
+  var isM = myAgencyName() === 'MASTER';
+  document.getElementById('bellSendLabel').textContent = isM ? '📢 Message ALL agencies' : '↩ Reply to CMG';
+  document.getElementById('bellMsg').placeholder = isM ? 'Type a broadcast for every agency…' : 'Type a message to CMG…';
   pollNotifs();
   notifTimer = setInterval(function(){ if(!document.hidden) pollNotifs(); }, 45000);
 }
@@ -1566,15 +1614,20 @@ function stopNotifs(){
 function pollNotifs(){
   var token = sessionStorage.getItem(TOKEN_KEY);
   if(!token || !navigator.onLine) return;
-  fetch(APPS_SCRIPT_URL + '?action=getNotifications&since=0&token=' + encodeURIComponent(token) + '&t=' + Date.now(), {cache:'no-store'})
+  var pn = portalNames();
+  fetch(APPS_SCRIPT_URL + '?action=getNotifications&since=0&token=' + encodeURIComponent(token) +
+        '&agency=' + encodeURIComponent(pn.n) + '&fullname=' + encodeURIComponent(pn.f) + '&t=' + Date.now(), {cache:'no-store'})
     .then(function(r){ return r.json(); })
     .then(function(d){
-      if(!d || d.status !== 'ok'){ return; } // no portal access for this login: keep the bell hidden
+      if(!d || d.status !== 'ok'){
+        document.getElementById('bellList').innerHTML = '<div class="bp-empty">' +
+          ((d && d.error === 'unauthorized') ? 'Please log in again.' : 'Messages could not be loaded. Check your connection, and that the latest Code.gs is deployed.') + '</div>';
+        return;
+      }
       var list = (d.notifications || []).slice().sort(function(a,b){ return b.ts - a.ts; }).slice(0, 30);
       var seen = notifSeen();
       var fresh = list.filter(function(n){ return n.ts > seen && n.ts > notifTopSeen; });
       notifList = list;
-      document.getElementById('bellWrap').style.display = 'inline-block';
       if(!notifFirst && fresh.length){
         var btn = document.getElementById('bellBtn'); btn.classList.remove('ring'); void btn.offsetWidth; btn.classList.add('ring');
         showNotifToast(fresh[0], fresh.length);
@@ -1596,6 +1649,23 @@ function renderBell(){
       '<div class="bp-title">' + esc(n.title || 'Message') + '</div><div class="bp-msg">' + esc(n.msg || '') + '</div>' +
       '<div class="bp-time">' + esc(new Date(n.ts).toLocaleString()) + '</div></button>';
   }).join('');
+}
+function sendBellMsg(){
+  var box = document.getElementById('bellMsg'), st = document.getElementById('bellSendStatus');
+  var msg = box.value.trim(), token = sessionStorage.getItem(TOKEN_KEY);
+  if(!msg){ st.textContent = 'Type a message first.'; return; }
+  var isM = myAgencyName() === 'MASTER', pn = portalNames();
+  var q = isM
+    ? '&targetAgency=ALL&type=type-broadcast&title=' + encodeURIComponent('📢 Message from CMG')
+    : '&targetAgency=Admin&type=type-info&title=' + encodeURIComponent('↩ Reply from ' + (pn.f || myAgencyName()));
+  var btn = document.getElementById('bellSendBtn'); btn.disabled = true; st.textContent = 'Sending…';
+  fetch(APPS_SCRIPT_URL + '?action=pushNotification&token=' + encodeURIComponent(token) + q + '&msg=' + encodeURIComponent(msg) + '&t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false;
+      if(d && d.status === 'ok'){ box.value = ''; st.textContent = isM ? '✅ Sent to all agencies' : '✅ Sent to CMG'; setTimeout(pollNotifs, 800); }
+      else st.textContent = '❌ Could not send. Please try again.';
+    }).catch(function(){ btn.disabled = false; st.textContent = '❌ No connection.'; });
 }
 function toggleBell(ev){
   if(ev) ev.stopPropagation();
