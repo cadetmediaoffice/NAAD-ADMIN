@@ -363,6 +363,24 @@ td.muted{color:var(--muted);font-size:12px;}
 .profile-cert-link:hover{background:rgba(255,215,0,0.08);}
 tbody tr.clickable{cursor:pointer;}
 tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
+
+/* Notification bell */
+.bell-wrap{position:relative;display:inline-block;}
+#bellBadge{display:none;position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:10px;font-weight:700;line-height:18px;text-align:center;padding:0 4px;}
+#bellBtn.ring{animation:bellring .8s ease 2;}
+@keyframes bellring{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-12deg)}60%{transform:rotate(8deg)}80%{transform:rotate(-6deg)}}
+#bellPanel{display:none;position:absolute;right:0;top:calc(100% + 8px);width:340px;max-width:92vw;max-height:70vh;overflow:auto;z-index:600;background:rgba(8,20,36,.98);border:1px solid rgba(255,215,0,.25);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.6);}
+#bellPanel .bp-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);font-weight:700;font-size:13px;color:var(--gold);}
+#bellPanel .bp-head button{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;}
+.bp-item{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.06);padding:11px 14px;cursor:pointer;color:var(--text);font-family:inherit;}
+.bp-item:hover{background:rgba(255,215,0,.06);}
+.bp-item.unread{border-left:3px solid var(--gold);background:rgba(255,215,0,.05);}
+.bp-title{font-size:13px;font-weight:700;margin-bottom:2px;}
+.bp-msg{font-size:12px;color:var(--muted);line-height:1.4;}
+.bp-time{font-size:10px;color:var(--muted);margin-top:4px;opacity:.8;}
+.bp-empty{padding:22px 14px;text-align:center;font-size:12px;color:var(--muted);}
+.bp-foot{padding:10px 14px;text-align:center;}
+.bp-foot a{color:var(--gold);font-size:12px;text-decoration:none;font-weight:700;}
 </style>
 </head>
 <body>
@@ -435,6 +453,14 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
       <div class="me-badge" id="meBadge" style="display:none;">
         <img id="meLogo" src="logo_cmg.png" alt="">
         <div><div class="me-name" id="meName"></div><div class="me-sub">● LOGGED IN</div></div>
+      </div>
+      <div class="bell-wrap" id="bellWrap" style="display:none;">
+        <button class="refresh-btn" id="bellBtn" onclick="toggleBell(event)" title="Content Portal notifications">🔔<span id="bellBadge"></span></button>
+        <div id="bellPanel">
+          <div class="bp-head"><span>🔔 Content Portal</span><button onclick="markBellRead()">Mark all read</button></div>
+          <div id="bellList"></div>
+          <div class="bp-foot"><a href="portal.html">📝 Open Content Portal →</a></div>
+        </div>
       </div>
       <button class="refresh-btn" id="installBtn" style="display:none;" onclick="installApp()">📲 Install App</button>
       <button class="refresh-btn" onclick="loadData()">🔄 Refresh</button>
@@ -542,6 +568,7 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
     <button class="tab" onclick="switchTab('visitors',this)">📈 Visitors</button>
     <button class="tab" onclick="switchTab('live',this)">🟢 Live Activity</button>
     <button class="tab" onclick="switchTab('settings',this)">⚙️ Settings</button>
+    <a class="tab" href="portal.html" style="text-decoration:none;display:inline-block;">📝 Content Portal</a>
   </div>
 
   <!-- STUDENTS PANEL -->
@@ -1521,6 +1548,80 @@ function applyMeBadge(){
   badge.style.display = 'flex';
 }
 
+// ── Content Portal notifications (bell) ──────────────────────────────
+var notifTimer = null, notifList = [], notifFirst = true, notifTopSeen = 0;
+function notifSeenKey(){ return 'naad_admin_seen_' + (myAgencyName() || 'x'); }
+function notifSeen(){ try{ return parseInt(localStorage.getItem(notifSeenKey()) || '0', 10) || 0; }catch(e){ return 0; } }
+function startNotifs(){
+  if(notifTimer) return;
+  notifFirst = true; notifTopSeen = 0;
+  pollNotifs();
+  notifTimer = setInterval(function(){ if(!document.hidden) pollNotifs(); }, 45000);
+}
+function stopNotifs(){
+  clearInterval(notifTimer); notifTimer = null; notifList = [];
+  var w = document.getElementById('bellWrap'); if(w) w.style.display = 'none';
+  var pnl = document.getElementById('bellPanel'); if(pnl) pnl.style.display = 'none';
+}
+function pollNotifs(){
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  if(!token || !navigator.onLine) return;
+  fetch(APPS_SCRIPT_URL + '?action=getNotifications&since=0&token=' + encodeURIComponent(token) + '&t=' + Date.now(), {cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || d.status !== 'ok'){ return; } // no portal access for this login: keep the bell hidden
+      var list = (d.notifications || []).slice().sort(function(a,b){ return b.ts - a.ts; }).slice(0, 30);
+      var seen = notifSeen();
+      var fresh = list.filter(function(n){ return n.ts > seen && n.ts > notifTopSeen; });
+      notifList = list;
+      document.getElementById('bellWrap').style.display = 'inline-block';
+      if(!notifFirst && fresh.length){
+        var btn = document.getElementById('bellBtn'); btn.classList.remove('ring'); void btn.offsetWidth; btn.classList.add('ring');
+        showNotifToast(fresh[0], fresh.length);
+      }
+      if(list.length) notifTopSeen = Math.max(notifTopSeen, list[0].ts);
+      notifFirst = false;
+      renderBell();
+    }).catch(function(){});
+}
+function renderBell(){
+  var seen = notifSeen();
+  var unread = notifList.filter(function(n){ return n.ts > seen; }).length;
+  var b = document.getElementById('bellBadge');
+  b.style.display = unread ? 'block' : 'none'; b.textContent = unread > 99 ? '99+' : unread;
+  var box = document.getElementById('bellList');
+  if(!notifList.length){ box.innerHTML = '<div class="bp-empty">No messages yet.</div>'; return; }
+  box.innerHTML = notifList.map(function(n){
+    return '<button class="bp-item' + (n.ts > seen ? ' unread' : '') + '" onclick="openNotif()">' +
+      '<div class="bp-title">' + esc(n.title || 'Message') + '</div><div class="bp-msg">' + esc(n.msg || '') + '</div>' +
+      '<div class="bp-time">' + esc(new Date(n.ts).toLocaleString()) + '</div></button>';
+  }).join('');
+}
+function toggleBell(ev){
+  if(ev) ev.stopPropagation();
+  var p = document.getElementById('bellPanel');
+  p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+}
+function markBellRead(){
+  if(notifList.length){ try{ localStorage.setItem(notifSeenKey(), String(notifList[0].ts)); }catch(e){} }
+  renderBell();
+}
+function openNotif(){ markBellRead(); window.location.href = 'portal.html'; }
+function showNotifToast(n, count){
+  var box = document.getElementById('toastBox');
+  var t = document.createElement('div'); t.className = 'toast'; t.style.cursor = 'pointer';
+  t.innerHTML = '<div style="font-size:22px">🔔</div><div>' + (count > 1 ? count + ' new portal messages' : 'New portal message') +
+    '<br><b>' + esc(n.title || '') + '</b><br><span style="font-size:11px;opacity:.75">' + esc((n.msg || '').slice(0, 90)) + '</span></div>';
+  t.onclick = function(){ openNotif(); };
+  box.appendChild(t);
+  setTimeout(function(){ t.classList.add('out'); }, 8000);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 8600);
+}
+document.addEventListener('click', function(e){
+  var p = document.getElementById('bellPanel');
+  if(p && p.style.display === 'block' && !e.target.closest('#bellWrap')) p.style.display = 'none';
+});
+
 function showToast(info){
   var box = document.getElementById('toastBox');
   var t = document.createElement('div'); t.className = 'toast';
@@ -1571,12 +1672,14 @@ function pollPresence(){
 }
 function startPresence(){
   applyMeBadge();
+  startNotifs();
   if(presenceTimer) return;
   presenceKnown = null;
   pollPresence();
   presenceTimer = setInterval(function(){ if(!document.hidden) pollPresence(); }, 25000);
 }
 function stopPresence(tellServer){
+  stopNotifs();
   clearInterval(presenceTimer); presenceTimer = null; presenceKnown = null;
   var token = sessionStorage.getItem(TOKEN_KEY);
   if(tellServer && token){
