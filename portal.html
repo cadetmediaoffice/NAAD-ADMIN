@@ -819,6 +819,7 @@ window.cmgAlert = (function(){
               <span>Notifications</span>
               <div style="display:flex;gap:6px;align-items:center;">
                 <span data-cmg-push onclick="cmgPush.toggle()" style="font-size:10px;color:var(--gold);cursor:pointer;padding:2px 6px;border-radius:5px;background:rgba(255,215,0,0.12);">📲 Turn on alerts</span>
+                <span onclick="cmgPush.testUI()" style="font-size:10px;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,0.05);">Test alert</span>
                 <span id="pSoundBtn" onclick="pToggleSound()" style="font-size:10px;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,0.05);">🔊 Sound on</span>
                 <span id="notifPermBtn" onclick="requestNotifPermission()" title="Enable browser notifications" style="font-size:10px;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,0.05);display:none;">🔔 Enable alerts</span>
                 <span class="notif-clear" onclick="clearNotifs()">Clear all</span>
@@ -5628,7 +5629,10 @@ go=function(name,el){
     document.addEventListener('visibilitychange', function(){ if(!document.hidden && state() === 'on') markSeen(); });
     window.addEventListener('focus', function(){ if(state() === 'on') markSeen(); });
   }
-  window.cmgPush = { init:init, enable:enable, disable:disable, toggle:toggle, test:test, leave:leave, state:state, paint:paint, markSeen:markSeen, refresh:paint };
+  function testUI(){
+    return test().then(function(r){ try{ alert((r.ok ? '✅ ' : '⚠ ') + r.msg); }catch(e){} return r; });
+  }
+  window.cmgPush = { testUI:testUI, init:init, enable:enable, disable:disable, toggle:toggle, test:test, leave:leave, state:state, paint:paint, markSeen:markSeen, refresh:paint };
 })();
 
 </script>

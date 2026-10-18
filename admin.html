@@ -629,7 +629,7 @@ window.cmgAlert = (function(){
       <div class="bell-wrap" id="bellWrap" style="display:none;">
         <button class="refresh-btn" id="bellBtn" onclick="toggleBell(event)" title="Content Portal notifications">🔔<span id="bellBadge"></span></button>
         <div id="bellPanel">
-          <div class="bp-head"><span>🔔 Messages</span><span class="bp-tools"><button id="soundBtn" onclick="toggleSound()">🔊 Sound on</button><button onclick="cmgAlert.test()">Test</button><button data-cmg-push onclick="cmgPush.toggle()">📲 Alerts</button><button onclick="markBellRead()">Mark all read</button></span></div>
+          <div class="bp-head"><span>🔔 Messages</span><span class="bp-tools"><button id="soundBtn" onclick="toggleSound()">🔊 Sound on</button><button onclick="cmgAlert.test()">Test</button><button data-cmg-push onclick="cmgPush.toggle()">📲 Alerts</button><button onclick="cmgPush.testUI()">Test alert</button><button onclick="markBellRead()">Mark all read</button></span></div>
           <div id="bellList"></div>
           <div class="bp-send">
             <div class="bp-send-label" id="bellSendLabel">Message</div>
@@ -3260,7 +3260,10 @@ runBootSequence();
     document.addEventListener('visibilitychange', function(){ if(!document.hidden && state() === 'on') markSeen(); });
     window.addEventListener('focus', function(){ if(state() === 'on') markSeen(); });
   }
-  window.cmgPush = { init:init, enable:enable, disable:disable, toggle:toggle, test:test, leave:leave, state:state, paint:paint, markSeen:markSeen, refresh:paint };
+  function testUI(){
+    return test().then(function(r){ try{ alert((r.ok ? '✅ ' : '⚠ ') + r.msg); }catch(e){} return r; });
+  }
+  window.cmgPush = { testUI:testUI, init:init, enable:enable, disable:disable, toggle:toggle, test:test, leave:leave, state:state, paint:paint, markSeen:markSeen, refresh:paint };
 })();
 
 </script>
