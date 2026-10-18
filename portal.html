@@ -613,10 +613,13 @@ body{font-family:var(--fb);background:var(--navy);color:var(--text);min-height:1
 </style>
 </head>
 <body>
+<div id="ssoCover" style="display:none;position:fixed;inset:0;z-index:2000;background:#060f1e;color:#FFD700;align-items:center;justify-content:center;flex-direction:column;font-family:sans-serif;gap:10px;">
+  <div style="font-size:34px;">🛡️</div><div style="font-size:14px;letter-spacing:1px;">Signing you in…</div></div>
+<script>try{if(sessionStorage.getItem('naad_session')||sessionStorage.getItem('cmgAdminToken'))document.getElementById('ssoCover').style.display='flex';}catch(e){}</script>
 <div class="bg"></div><div class="bg-grid"></div>
 
 <!-- LOGIN -->
-<div id="loginScreen">
+<div id="loginScreen" style="display:none;">
   <!-- Left: splash -->
   <div class="lsplash">
     <div class="lsplash-overlay"></div>
@@ -1350,7 +1353,7 @@ var AGENCIES={
 // Keys above are agency ids, NOT passwords. Passwords live only on the server (Script Properties:
 // ADMIN_PASSWORD and PW_<Agency>) and are checked by the server at login.
 var AGENCY_ALIAS={forest:'forestry',narcotics:'nacoc',armedforces:'gaf',army:'gaf',gnfs:'fire',gps:'police',nas:'ambulance',gis:'immigration',cmg:'master'};
-function agencyKeyOf(name){var k=String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');return AGENCY_ALIAS[k]||k;}
+function agencyKeyOf(name){var k=String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');if(AGENCY_ALIAS[k])return AGENCY_ALIAS[k];if(AGENCIES[k])return k;var all=Object.keys(AGENCIES).concat(Object.keys(AGENCY_ALIAS));for(var i=0;i<all.length;i++){if(k.indexOf(all[i])>-1)return AGENCY_ALIAS[all[i]]||all[i];}return k;}
 
 // Module ownership rules
 var MODULE_RULES={
@@ -1428,6 +1431,7 @@ function doLogin(){
     .catch(function(){_loginBusy=false;showLoginErr('📶 Could not reach the CMG server. Check your internet and try again.');});
 }
 function enterPortal(key){
+  var cv=document.getElementById('ssoCover');if(cv)cv.style.display='none';
   var ag=AGENCIES[key];
   U={pw:key,module:ag.m,n:ag.n,f:ag.f,m:ag.m,e:ag.e,admin:ag.admin};
   document.getElementById('loginScreen').style.display='none';
@@ -1460,12 +1464,17 @@ function restoreSession(){
 }
 function doLogout(){U=null;PORTAL_TOKEN='';try{sessionStorage.removeItem('naad_session');sessionStorage.removeItem('cmgAdminToken');sessionStorage.removeItem('cmgAdminAgency');}catch(e){}document.getElementById('loginScreen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('pwInput').value='';document.getElementById('loginErr').style.display='none';}
 document.getElementById('pwInput').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
-// Auto-restore session on page load/refresh
-(function(){
+// Auto-restore session on page load/refresh.
+// Runs AFTER the whole page script has loaded (init() relies on variables defined further down the file).
+function startupSession(){
   if(!restoreSession()){
+    var cv=document.getElementById('ssoCover');if(cv)cv.style.display='none';
     document.getElementById('loginScreen').style.display='flex';
   }
-})();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',startupSession);
+else setTimeout(startupSession,0);
+
 
 // ── INIT ──
 function init(){
