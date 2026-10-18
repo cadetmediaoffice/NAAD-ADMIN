@@ -394,10 +394,167 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
 .bc-reply{display:flex;gap:8px;margin-top:10px;}
 .bc-rep-item{border-left:2px solid rgba(79,195,247,.35);padding:6px 10px;margin-top:8px;font-size:12px;}
 .bp-foot{padding:10px 14px;text-align:center;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;padding:7px 14px;border-radius:20px;border:1px solid rgba(255,215,0,.35);background:rgba(255,215,0,.08);color:var(--gold);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;}
+.back-btn:hover{background:rgba(255,215,0,.16);}
+#bellPanel .bp-tools{display:flex;gap:10px;align-items:center;}
+#bellPanel .bp-tools button{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;}
+@media (max-width:700px){
+  #bellPanel{position:fixed;left:50%;right:auto;top:84px;transform:translateX(-50%);width:min(94vw,380px);max-height:76vh;}
+}
 .bp-foot a{color:var(--gold);font-size:12px;text-decoration:none;font-weight:700;}
 </style>
 </head>
 <body>
+<script>
+/* CMG message alerts: sound + vibration + title flash + pop-up with quick reply.
+   Shared by the admin dashboard and the content portal. */
+window.cmgAlert = (function(){
+  var ctx = null, unlocked = false, queue = [], current = null, flashTimer = null, baseTitle = document.title;
+  function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  var muted = ls('cmgSoundOff') === '1';
+
+  // ---------- styles ----------
+  var css = document.createElement('style');
+  css.textContent =
+    '#cmgPop{position:fixed;left:50%;top:14px;transform:translateX(-50%);width:min(94vw,430px);z-index:2147483000;display:none;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}' +
+    '#cmgPop .cp-card{background:#0b1626;color:#eef2ff;border:1px solid rgba(255,215,0,.55);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.75);padding:14px 14px 12px;animation:cpIn .28s ease;}' +
+    '@keyframes cpIn{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}' +
+    '#cmgPop .cp-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}' +
+    '#cmgPop .cp-ico{font-size:22px;animation:cpRing .9s ease 2;}@keyframes cpRing{0%,100%{transform:rotate(0)}25%{transform:rotate(16deg)}50%{transform:rotate(-14deg)}75%{transform:rotate(8deg)}}' +
+    '#cmgPop .cp-title{font-weight:800;font-size:14px;color:#FFD700;flex:1;min-width:0;}' +
+    '#cmgPop .cp-x{background:none;border:none;color:#9fb0cf;font-size:22px;line-height:1;cursor:pointer;padding:2px 6px;}' +
+    '#cmgPop .cp-msg{font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:32vh;overflow:auto;margin:2px 0 10px;}' +
+    '#cmgPop .cp-meta{font-size:11px;color:#9fb0cf;margin-bottom:8px;}' +
+    '#cmgPop .cp-row{display:flex;gap:8px;}' +
+    '#cmgPop input{flex:1;min-width:0;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;font-size:16px;padding:10px;font-family:inherit;}' +
+    '#cmgPop .cp-btn{border:1px solid rgba(255,215,0,.55);background:rgba(255,215,0,.16);color:#FFD700;font-weight:800;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:14px;white-space:nowrap;}' +
+    '#cmgPop .cp-btn:disabled{opacity:.5}' +
+    '#cmgPop .cp-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;}' +
+    '#cmgPop .cp-link{background:none;border:none;color:#9fb0cf;text-decoration:underline;cursor:pointer;font-size:12px;padding:2px;}' +
+    '#cmgPop .cp-st{font-size:12px;color:#9fb0cf;min-height:15px;margin-top:6px;}' +
+    '#cmgSoundHint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:2147482000;display:none;background:#0b1626;color:#FFD700;border:1px solid rgba(255,215,0,.5);border-radius:22px;padding:9px 16px;font-size:13px;font-family:system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.6);cursor:pointer;max-width:92vw;text-align:center;}';
+  document.head.appendChild(css);
+
+  var pop = document.createElement('div'); pop.id = 'cmgPop';
+  var hint = document.createElement('div'); hint.id = 'cmgSoundHint'; hint.textContent = '🔇 Tap here to turn on message sounds';
+  function mount(){ document.body.appendChild(pop); document.body.appendChild(hint); }
+  if(document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
+
+  // ---------- sound ----------
+  function ensureCtx(){
+    if(ctx) return ctx;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    try{ ctx = new AC(); }catch(e){ ctx = null; }
+    return ctx;
+  }
+  function unlock(){
+    var c = ensureCtx(); if(!c) return;
+    try{
+      if(c.state === 'suspended' && c.resume) c.resume();
+      var b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); // silent tick wakes iOS audio
+    }catch(e){}
+    if(c.state === 'running' || c.state === 'suspended'){ unlocked = true; hint.style.display = 'none'; }
+  }
+  ['pointerdown','touchstart','touchend','mousedown','keydown','click'].forEach(function(ev){
+    document.addEventListener(ev, unlock, {passive:true});
+  });
+  hint.addEventListener('click', function(){ unlock(); chime('message'); });
+
+  function tone(c, freq, start, dur, gain, type){
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(freq, start);
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(gain, start + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+    o.connect(g); g.connect(c.destination); o.start(start); o.stop(start + dur + 0.05);
+  }
+  function chime(kind){
+    if(muted) return;
+    var c = ensureCtx(); if(!c) return;
+    try{ if(c.state === 'suspended' && c.resume) c.resume(); }catch(e){}
+    var t = c.currentTime + 0.02;
+    if(kind === 'soft'){ tone(c, 700, t, 0.35, 0.28); return; }
+    // clear three-note "ding-ding-dong" — deliberately easy to hear
+    tone(c, 988, t,        0.30, 0.5, 'triangle');
+    tone(c, 1319, t + 0.16, 0.30, 0.5, 'triangle');
+    tone(c, 784,  t + 0.34, 0.55, 0.55, 'triangle');
+  }
+  function buzz(){ try{ if(navigator.vibrate) navigator.vibrate([220,90,220]); }catch(e){} }
+
+  // ---------- title flash + OS notification ----------
+  function flash(n){
+    clearInterval(flashTimer); var on = false;
+    flashTimer = setInterval(function(){ on = !on; document.title = on ? '🔔 (' + n + ') New message' : baseTitle; }, 1000);
+  }
+  function stopFlash(){ clearInterval(flashTimer); flashTimer = null; document.title = baseTitle; }
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) stopFlash(); });
+  window.addEventListener('focus', stopFlash);
+  function osNotify(title, body){
+    try{
+      if(!('Notification' in window) || Notification.permission !== 'granted' || !document.hidden) return;
+      var n = new Notification(title, { body: body, tag: 'cmg-msg' });
+      n.onclick = function(){ try{ window.focus(); n.close(); }catch(e){} };
+    }catch(e){}
+  }
+
+  // ---------- pop-up ----------
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function close(){ pop.style.display = 'none'; current = null; if(queue.length) show(queue.shift()); }
+  function show(item){
+    current = item;
+    var more = queue.length ? ' · +' + queue.length + ' more' : '';
+    var html = '<div class="cp-card"><div class="cp-top"><span class="cp-ico">' + esc(item.icon || '🔔') + '</span><span class="cp-title">' +
+      esc(item.title || 'New message') + '</span><button class="cp-x" aria-label="Close">×</button></div>' +
+      '<div class="cp-meta">' + esc(new Date(item.ts || Date.now()).toLocaleString()) + more + '</div>' +
+      '<div class="cp-msg">' + esc(item.msg || '') + '</div>';
+    if(item.onReply){
+      html += '<div class="cp-row"><input type="text" maxlength="300" placeholder="' + esc(item.replyLabel || 'Type a reply…') + '"><button class="cp-btn cp-send">↩ Reply</button></div><div class="cp-st"></div>';
+    }
+    html += '<div class="cp-foot"><button class="cp-link cp-open">Open all messages</button><button class="cp-link cp-later">Dismiss</button></div></div>';
+    pop.innerHTML = html; pop.style.display = 'block';
+    pop.querySelector('.cp-x').onclick = close;
+    pop.querySelector('.cp-later').onclick = close;
+    pop.querySelector('.cp-open').onclick = function(){ close(); if(item.onOpen) item.onOpen(); };
+    if(item.onReply){
+      var inp = pop.querySelector('input'), btn = pop.querySelector('.cp-send'), st = pop.querySelector('.cp-st');
+      function send(){
+        var text = inp.value.trim(); if(!text){ inp.focus(); return; }
+        btn.disabled = true; st.textContent = 'Sending…';
+        item.onReply(text, function(ok){
+          btn.disabled = false;
+          if(ok){ st.textContent = '✅ Sent'; setTimeout(close, 900); }
+          else st.textContent = '❌ Could not send. Try again.';
+        });
+      }
+      btn.onclick = send;
+      inp.addEventListener('keydown', function(e){ if(e.key === 'Enter') send(); });
+    }
+  }
+
+  // ---------- public ----------
+  function notify(item){
+    if(!item.silent){
+      chime(item.sound || 'message'); buzz();
+      flash(1 + queue.length + (current ? 1 : 0));
+      osNotify(item.title || 'New message', String(item.msg || '').slice(0, 140));
+    }
+    if(current) queue.push(item); else show(item);
+    if(!unlocked && !muted){ hint.style.display = 'block'; setTimeout(function(){ if(unlocked) hint.style.display = 'none'; }, 100); }
+  }
+  setTimeout(function(){ if(!unlocked && !muted) hint.style.display = 'block'; }, 2500);
+  return {
+    notify: notify,
+    test: function(){ unlock(); chime('message'); },
+    isMuted: function(){ return muted; },
+    setMuted: function(m){ muted = !!m; lset('cmgSoundOff', muted ? '1' : '0'); if(muted) hint.style.display = 'none'; },
+    enableOsAlerts: function(){ try{ if('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); }catch(e){} }
+  };
+})();
+
+</script>
+
 <div class="bg-grid"></div>
 
 <!-- BOOT OVERLAY (shown on initial page load, before login) -->
@@ -460,6 +617,7 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
   <!-- HEADER -->
   <div class="header">
     <div class="header-left">
+      <button class="back-btn" onclick="goBack()">← Back</button>
       <h1>⚙️ ADMIN DASHBOARD</h1>
       <p><span class="live-dot"></span>CADET MEDIA GHANA · NAAD SAFETY EDITION 2026</p>
     </div>
@@ -471,7 +629,7 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
       <div class="bell-wrap" id="bellWrap" style="display:none;">
         <button class="refresh-btn" id="bellBtn" onclick="toggleBell(event)" title="Content Portal notifications">🔔<span id="bellBadge"></span></button>
         <div id="bellPanel">
-          <div class="bp-head"><span>🔔 Content Portal</span><button onclick="markBellRead()">Mark all read</button></div>
+          <div class="bp-head"><span>🔔 Messages</span><span class="bp-tools"><button id="soundBtn" onclick="toggleSound()">🔊 Sound on</button><button onclick="cmgAlert.test()">Test</button><button onclick="markBellRead()">Mark all read</button></span></div>
           <div id="bellList"></div>
           <div class="bp-send">
             <div class="bp-send-label" id="bellSendLabel">Message</div>
@@ -1251,7 +1409,7 @@ function confirmWipe(){
 }
 
 // ── TAB SWITCH ─────────────────────────────────────
-function switchTab(name, el){
+function switchTab(name, el, noPush){
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
   document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
   if(el) el.classList.add('active');
@@ -1264,6 +1422,7 @@ function switchTab(name, el){
   if(name === 'nominees') loadNominees();
   if(name === 'broadcast') openBroadcastTab();
   if(name === 'requests') loadRequests();
+  if(!noPush){ try{ history.pushState({ tab: name }, '', '#' + name); }catch(e){} }
 }
 
 // ── Only the MASTER login sees Settings (Wipe All Data) ──
@@ -1637,7 +1796,7 @@ function startNotifs(){
   document.getElementById('bellSendLabel').textContent = isM ? '📢 Message ALL agencies' : '↩ Reply to CMG';
   document.getElementById('bellMsg').placeholder = isM ? 'Type a broadcast for every agency…' : 'Type a message to CMG…';
   pollNotifs();
-  notifTimer = setInterval(function(){ if(!document.hidden) pollNotifs(); }, 45000);
+  notifTimer = setInterval(function(){ pollNotifs(); }, 15000);
 }
 function stopNotifs(){
   clearInterval(notifTimer); notifTimer = null; notifList = [];
@@ -1664,7 +1823,9 @@ function pollNotifs(){
       renderBroadcasts();
       if(!notifFirst && fresh.length){
         var btn = document.getElementById('bellBtn'); btn.classList.remove('ring'); void btn.offsetWidth; btn.classList.add('ring');
-        showNotifToast(fresh[0], fresh.length);
+        var isM = myAgencyName() === 'MASTER';
+        var toShow = fresh.filter(function(n){ return !(isM && n.type === 'type-broadcast'); }).slice(0, 4); // CMG does not get an alert for its own broadcast
+        toShow.forEach(function(n, i){ alertFor(n, i === 0); });
       }
       if(list.length) notifTopSeen = Math.max(notifTopSeen, list[0].ts);
       notifFirst = false;
@@ -1679,7 +1840,7 @@ function renderBell(){
   var box = document.getElementById('bellList');
   if(!notifList.length){ box.innerHTML = '<div class="bp-empty">No messages yet.</div>'; return; }
   box.innerHTML = notifList.slice(0, 30).map(function(n){
-    return '<button class="bp-item' + (n.ts > seen ? ' unread' : '') + '" onclick="openNotif()">' +
+    return '<button class="bp-item' + (n.ts > seen ? ' unread' : '') + '" onclick="openNotifItem(' + notifList.indexOf(n) + ')">' +
       '<div class="bp-title">' + esc(n.title || 'Message') + '</div><div class="bp-msg">' + esc(n.msg || '') + '</div>' +
       '<div class="bp-time">' + esc(new Date(n.ts).toLocaleString()) + '</div></button>';
   }).join('');
@@ -1756,6 +1917,65 @@ function replyBroadcast(i){
     .then(function(d){ inp.value = ''; inp.placeholder = (d && d.status === 'ok') ? '✅ Reply sent to CMG' : '❌ Could not send'; })
     .catch(function(){ inp.placeholder = '❌ No connection'; });
 }
+
+// ── Alerts: sound + pop-up with quick reply ─────────────────────
+function replyTargetFor(n){
+  if(myAgencyName() === 'MASTER'){
+    var m = /^↩\s*Reply from\s+(.*)$/.exec(n.title || '');
+    if(!m) return null;
+    var f = m[1].trim();
+    for(var k in PORTAL_NAMES){ if(k !== 'master' && PORTAL_NAMES[k].f === f) return { n: PORTAL_NAMES[k].n, label: f }; }
+    return null;
+  }
+  return /^(✉|↩|📢)/.test(n.title || '') ? { n: 'Admin', label: 'CMG' } : null;
+}
+function sendReplyTo(target, text, done){
+  var token = sessionStorage.getItem(TOKEN_KEY), isM = myAgencyName() === 'MASTER', pn = portalNames();
+  var title = isM ? '✉ Message from CMG' : '↩ Reply from ' + (pn.f || myAgencyName());
+  fetch(APPS_SCRIPT_URL + '?action=pushNotification&token=' + encodeURIComponent(token) + '&targetAgency=' + encodeURIComponent(target.n) +
+        '&type=type-info&title=' + encodeURIComponent(title) + '&msg=' + encodeURIComponent(text) + '&t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(d){ done(!!(d && d.status === 'ok')); if(d && d.status === 'ok') setTimeout(pollNotifs, 800); })
+    .catch(function(){ done(false); });
+}
+function alertItemFor(n, silent, first){
+  var target = replyTargetFor(n);
+  var icon = n.type === 'type-broadcast' ? '📢' : n.type === 'type-approved' ? '✅' : n.type === 'type-rejected' ? '❌' : /^↩/.test(n.title || '') ? '↩' : '🔔';
+  var it = { title: n.title, msg: n.msg, ts: n.ts, icon: icon, silent: !!silent, sound: first ? 'message' : 'soft',
+             onOpen: function(){ goBroadcastTab(); } };
+  if(target){ it.replyLabel = 'Reply to ' + target.label + '…'; it.onReply = function(text, done){ sendReplyTo(target, text, done); }; }
+  return it;
+}
+function alertFor(n, first){ cmgAlert.notify(alertItemFor(n, false, first)); }
+function openNotifItem(i){
+  var n = notifList[i]; if(!n) return;
+  document.getElementById('bellPanel').style.display = 'none';
+  cmgAlert.notify(alertItemFor(n, true, true));
+  markBellRead();
+}
+function goBroadcastTab(){
+  var btn = null;
+  document.querySelectorAll('.tab').forEach(function(t){ if((t.getAttribute('onclick') || '').indexOf("'broadcast'") > -1) btn = t; });
+  switchTab('broadcast', btn);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function toggleSound(){
+  cmgAlert.setMuted(!cmgAlert.isMuted()); updateSoundBtn();
+  if(!cmgAlert.isMuted()) cmgAlert.test();
+}
+function updateSoundBtn(){ var b = document.getElementById('soundBtn'); if(b) b.textContent = cmgAlert.isMuted() ? '🔇 Sound off' : '🔊 Sound on'; }
+
+// ── Back button + tab history (works with the phone's back gesture too) ──
+function goBack(){
+  if(history.length > 1) history.back();
+  else window.location.href = 'portal.html';
+}
+window.addEventListener('popstate', function(e){
+  var t = (e.state && e.state.tab) || 'students';
+  var btn = null;
+  document.querySelectorAll('.tab').forEach(function(x){ if((x.getAttribute('onclick') || '').indexOf("'" + t + "'") > -1) btn = x; });
+  if(document.getElementById('panel-' + t)) switchTab(t, btn, true);
+});
 
 function sendBellMsg(){
   var box = document.getElementById('bellMsg'), st = document.getElementById('bellSendStatus');

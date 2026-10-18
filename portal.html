@@ -124,6 +124,15 @@ body{font-family:var(--fb);background:var(--navy);color:var(--text);min-height:1
 .apill.admin{background:var(--red2);border-color:rgba(255,100,100,0.3);color:#ff9090;}
 .tbr{margin-left:auto;display:flex;align-items:center;gap:10px;}
 .lout{padding:7px 14px;border:1px solid var(--border2);border-radius:8px;background:transparent;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--fb);transition:all .2s;}
+@media(max-width:700px){
+.topbar{padding:0 8px;gap:6px;overflow:hidden}
+.topbar-logo span{display:none}
+.apill{font-size:9px;padding:3px 7px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbr{gap:4px}
+#clk{display:none}
+.tbr .lout,.tbr .back-btn{padding:6px 8px;font-size:11px;margin-right:0!important}
+html,body{overflow-x:hidden}
+}
 .lout:hover{border-color:rgba(255,100,100,0.4);color:#ff9090;}
 
 .layout{display:flex;min-height:calc(100vh - 56px);}
@@ -445,6 +454,11 @@ body{font-family:var(--fb);background:var(--navy);color:var(--text);min-height:1
   background:rgba(10,18,32,0.99);border:1px solid rgba(255,215,0,0.2);border-radius:12px;
   box-shadow:0 12px 40px rgba(0,0,0,0.6);z-index:2000;display:none;}
 .notif-panel.open{display:block;}
+@media (max-width:700px){
+  .notif-panel{position:fixed;left:50%;right:auto;top:64px;transform:translateX(-50%);width:min(94vw,380px);max-height:76vh;}
+}
+.back-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:18px;border:1px solid rgba(255,215,0,.35);background:rgba(255,215,0,.08);color:var(--gold);font-family:var(--fh);font-size:11px;font-weight:800;cursor:pointer;white-space:nowrap;}
+.back-btn:hover{background:rgba(255,215,0,.16);}
 .notif-hdr{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
 .notif-hdr span{font-family:var(--fh);font-size:12px;font-weight:800;color:var(--gold);}
 .notif-clear{font-size:10px;color:var(--muted);cursor:pointer;padding:3px 7px;border-radius:6px;background:rgba(255,255,255,0.05);}
@@ -613,6 +627,155 @@ body{font-family:var(--fb);background:var(--navy);color:var(--text);min-height:1
 </style>
 </head>
 <body>
+<script>
+/* CMG message alerts: sound + vibration + title flash + pop-up with quick reply.
+   Shared by the admin dashboard and the content portal. */
+window.cmgAlert = (function(){
+  var ctx = null, unlocked = false, queue = [], current = null, flashTimer = null, baseTitle = document.title;
+  function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  var muted = ls('cmgSoundOff') === '1';
+
+  // ---------- styles ----------
+  var css = document.createElement('style');
+  css.textContent =
+    '#cmgPop{position:fixed;left:50%;top:14px;transform:translateX(-50%);width:min(94vw,430px);z-index:2147483000;display:none;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}' +
+    '#cmgPop .cp-card{background:#0b1626;color:#eef2ff;border:1px solid rgba(255,215,0,.55);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.75);padding:14px 14px 12px;animation:cpIn .28s ease;}' +
+    '@keyframes cpIn{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}' +
+    '#cmgPop .cp-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}' +
+    '#cmgPop .cp-ico{font-size:22px;animation:cpRing .9s ease 2;}@keyframes cpRing{0%,100%{transform:rotate(0)}25%{transform:rotate(16deg)}50%{transform:rotate(-14deg)}75%{transform:rotate(8deg)}}' +
+    '#cmgPop .cp-title{font-weight:800;font-size:14px;color:#FFD700;flex:1;min-width:0;}' +
+    '#cmgPop .cp-x{background:none;border:none;color:#9fb0cf;font-size:22px;line-height:1;cursor:pointer;padding:2px 6px;}' +
+    '#cmgPop .cp-msg{font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:32vh;overflow:auto;margin:2px 0 10px;}' +
+    '#cmgPop .cp-meta{font-size:11px;color:#9fb0cf;margin-bottom:8px;}' +
+    '#cmgPop .cp-row{display:flex;gap:8px;}' +
+    '#cmgPop input{flex:1;min-width:0;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;font-size:16px;padding:10px;font-family:inherit;}' +
+    '#cmgPop .cp-btn{border:1px solid rgba(255,215,0,.55);background:rgba(255,215,0,.16);color:#FFD700;font-weight:800;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:14px;white-space:nowrap;}' +
+    '#cmgPop .cp-btn:disabled{opacity:.5}' +
+    '#cmgPop .cp-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;}' +
+    '#cmgPop .cp-link{background:none;border:none;color:#9fb0cf;text-decoration:underline;cursor:pointer;font-size:12px;padding:2px;}' +
+    '#cmgPop .cp-st{font-size:12px;color:#9fb0cf;min-height:15px;margin-top:6px;}' +
+    '#cmgSoundHint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:2147482000;display:none;background:#0b1626;color:#FFD700;border:1px solid rgba(255,215,0,.5);border-radius:22px;padding:9px 16px;font-size:13px;font-family:system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.6);cursor:pointer;max-width:92vw;text-align:center;}';
+  document.head.appendChild(css);
+
+  var pop = document.createElement('div'); pop.id = 'cmgPop';
+  var hint = document.createElement('div'); hint.id = 'cmgSoundHint'; hint.textContent = '🔇 Tap here to turn on message sounds';
+  function mount(){ document.body.appendChild(pop); document.body.appendChild(hint); }
+  if(document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
+
+  // ---------- sound ----------
+  function ensureCtx(){
+    if(ctx) return ctx;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    try{ ctx = new AC(); }catch(e){ ctx = null; }
+    return ctx;
+  }
+  function unlock(){
+    var c = ensureCtx(); if(!c) return;
+    try{
+      if(c.state === 'suspended' && c.resume) c.resume();
+      var b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); // silent tick wakes iOS audio
+    }catch(e){}
+    if(c.state === 'running' || c.state === 'suspended'){ unlocked = true; hint.style.display = 'none'; }
+  }
+  ['pointerdown','touchstart','touchend','mousedown','keydown','click'].forEach(function(ev){
+    document.addEventListener(ev, unlock, {passive:true});
+  });
+  hint.addEventListener('click', function(){ unlock(); chime('message'); });
+
+  function tone(c, freq, start, dur, gain, type){
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(freq, start);
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(gain, start + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+    o.connect(g); g.connect(c.destination); o.start(start); o.stop(start + dur + 0.05);
+  }
+  function chime(kind){
+    if(muted) return;
+    var c = ensureCtx(); if(!c) return;
+    try{ if(c.state === 'suspended' && c.resume) c.resume(); }catch(e){}
+    var t = c.currentTime + 0.02;
+    if(kind === 'soft'){ tone(c, 700, t, 0.35, 0.28); return; }
+    // clear three-note "ding-ding-dong" — deliberately easy to hear
+    tone(c, 988, t,        0.30, 0.5, 'triangle');
+    tone(c, 1319, t + 0.16, 0.30, 0.5, 'triangle');
+    tone(c, 784,  t + 0.34, 0.55, 0.55, 'triangle');
+  }
+  function buzz(){ try{ if(navigator.vibrate) navigator.vibrate([220,90,220]); }catch(e){} }
+
+  // ---------- title flash + OS notification ----------
+  function flash(n){
+    clearInterval(flashTimer); var on = false;
+    flashTimer = setInterval(function(){ on = !on; document.title = on ? '🔔 (' + n + ') New message' : baseTitle; }, 1000);
+  }
+  function stopFlash(){ clearInterval(flashTimer); flashTimer = null; document.title = baseTitle; }
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) stopFlash(); });
+  window.addEventListener('focus', stopFlash);
+  function osNotify(title, body){
+    try{
+      if(!('Notification' in window) || Notification.permission !== 'granted' || !document.hidden) return;
+      var n = new Notification(title, { body: body, tag: 'cmg-msg' });
+      n.onclick = function(){ try{ window.focus(); n.close(); }catch(e){} };
+    }catch(e){}
+  }
+
+  // ---------- pop-up ----------
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function close(){ pop.style.display = 'none'; current = null; if(queue.length) show(queue.shift()); }
+  function show(item){
+    current = item;
+    var more = queue.length ? ' · +' + queue.length + ' more' : '';
+    var html = '<div class="cp-card"><div class="cp-top"><span class="cp-ico">' + esc(item.icon || '🔔') + '</span><span class="cp-title">' +
+      esc(item.title || 'New message') + '</span><button class="cp-x" aria-label="Close">×</button></div>' +
+      '<div class="cp-meta">' + esc(new Date(item.ts || Date.now()).toLocaleString()) + more + '</div>' +
+      '<div class="cp-msg">' + esc(item.msg || '') + '</div>';
+    if(item.onReply){
+      html += '<div class="cp-row"><input type="text" maxlength="300" placeholder="' + esc(item.replyLabel || 'Type a reply…') + '"><button class="cp-btn cp-send">↩ Reply</button></div><div class="cp-st"></div>';
+    }
+    html += '<div class="cp-foot"><button class="cp-link cp-open">Open all messages</button><button class="cp-link cp-later">Dismiss</button></div></div>';
+    pop.innerHTML = html; pop.style.display = 'block';
+    pop.querySelector('.cp-x').onclick = close;
+    pop.querySelector('.cp-later').onclick = close;
+    pop.querySelector('.cp-open').onclick = function(){ close(); if(item.onOpen) item.onOpen(); };
+    if(item.onReply){
+      var inp = pop.querySelector('input'), btn = pop.querySelector('.cp-send'), st = pop.querySelector('.cp-st');
+      function send(){
+        var text = inp.value.trim(); if(!text){ inp.focus(); return; }
+        btn.disabled = true; st.textContent = 'Sending…';
+        item.onReply(text, function(ok){
+          btn.disabled = false;
+          if(ok){ st.textContent = '✅ Sent'; setTimeout(close, 900); }
+          else st.textContent = '❌ Could not send. Try again.';
+        });
+      }
+      btn.onclick = send;
+      inp.addEventListener('keydown', function(e){ if(e.key === 'Enter') send(); });
+    }
+  }
+
+  // ---------- public ----------
+  function notify(item){
+    if(!item.silent){
+      chime(item.sound || 'message'); buzz();
+      flash(1 + queue.length + (current ? 1 : 0));
+      osNotify(item.title || 'New message', String(item.msg || '').slice(0, 140));
+    }
+    if(current) queue.push(item); else show(item);
+    if(!unlocked && !muted){ hint.style.display = 'block'; setTimeout(function(){ if(unlocked) hint.style.display = 'none'; }, 100); }
+  }
+  setTimeout(function(){ if(!unlocked && !muted) hint.style.display = 'block'; }, 2500);
+  return {
+    notify: notify,
+    test: function(){ unlock(); chime('message'); },
+    isMuted: function(){ return muted; },
+    setMuted: function(m){ muted = !!m; lset('cmgSoundOff', muted ? '1' : '0'); if(muted) hint.style.display = 'none'; },
+    enableOsAlerts: function(){ try{ if('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); }catch(e){} }
+  };
+})();
+
+</script>
 <div id="ssoCover" style="display:none;position:fixed;inset:0;z-index:2000;background:#060f1e;color:#FFD700;align-items:center;justify-content:center;flex-direction:column;font-family:sans-serif;gap:10px;">
   <div style="font-size:34px;">🛡️</div><div style="font-size:14px;letter-spacing:1px;">Signing you in…</div></div>
 <script>try{if(sessionStorage.getItem('naad_session')||sessionStorage.getItem('cmgAdminToken'))document.getElementById('ssoCover').style.display='flex';}catch(e){}</script>
@@ -655,10 +818,12 @@ body{font-family:var(--fb);background:var(--navy);color:var(--text);min-height:1
       <div style="position:relative;"><div class="notif-panel" id="notifPanel"><div class="notif-hdr">
               <span>Notifications</span>
               <div style="display:flex;gap:6px;align-items:center;">
+                <span id="pSoundBtn" onclick="pToggleSound()" style="font-size:10px;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,0.05);">🔊 Sound on</span>
                 <span id="notifPermBtn" onclick="requestNotifPermission()" title="Enable browser notifications" style="font-size:10px;color:var(--muted);cursor:pointer;padding:2px 6px;border-radius:5px;background:rgba(255,255,255,0.05);display:none;">🔔 Enable alerts</span>
                 <span class="notif-clear" onclick="clearNotifs()">Clear all</span>
               </div>
             </div><div id="notifList"><div class="notif-empty">No notifications yet.</div></div></div></div>
+      <button class="back-btn" onclick="goBack()">← Back</button>
       <a class="lout" href="admin.html" style="text-decoration:none;display:inline-block;margin-right:6px;">📊 Dashboard</a>
       <button class="lout" onclick="doLogout()">🚪 Logout</button>
     </div>
@@ -2164,7 +2329,8 @@ async function saveToGist(token,questions,filename){
 }
 
 // ── NAV ──
-function go(name,el){
+function go(name,el,noPush){
+  if(!noPush){try{history.pushState({ptab:name},'','#'+name);}catch(e){}}
   document.querySelectorAll('.panel').forEach(function(p){p.classList.remove('active');});
   document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('active');});
   var p=document.getElementById('panel-'+name);if(p)p.classList.add('active');
@@ -2180,6 +2346,17 @@ function go(name,el){
   if(name==='analytics'){injectFrame('analyticsFrame','dash');}
   if(name==='export'){renderExportModules();}
 }
+// Back button + phone back gesture: step back through the portal's pages, then out to the page you came from
+function goBack(){
+  if(history.length>1)history.back();
+  else window.location.href='admin.html';
+}
+window.addEventListener('popstate',function(e){
+  var t=(e.state&&e.state.ptab)||'dashboard';if(!U)return;
+  var el=null;
+  document.querySelectorAll('.ni').forEach(function(n){if((n.getAttribute('onclick')||'').indexOf("go('"+t+"'")>-1)el=n;});
+  if(document.getElementById('panel-'+t))go(t,el,true);
+});
 function stab(n,el){document.querySelectorAll('.stab').forEach(function(t){t.classList.remove('active');});el.classList.add('active');document.getElementById('sp-manual').style.display=n==='manual'?'block':'none';document.getElementById('sp-upload').style.display=n==='upload'?'block':'none';}
 function fq(s,el,t){el.parentElement.querySelectorAll('.fp').forEach(function(p){p.classList.remove('active');});el.classList.add('active');if(t==='m'){FMY=s;renderM();}else{FAD=s;renderA();}}
 
@@ -3355,25 +3532,49 @@ async function reloadQSilent(){
 function receiveRealTimeNotif(notif){
   if(!notif)return;
   // Add to list if not duplicate
-  var alreadyHave=_notifs.some(function(n){return n.id===notif.id;});
+  var alreadyHave=_notifs.some(function(n){return n.id===notif.id||(n.type===notif.type&&n.msg===notif.msg&&n.title.replace(/Cadet Media Ghana/,'CMG')===String(notif.title||'').replace(/Cadet Media Ghana/,'CMG')&&Math.abs((n.ts||0)-(notif.ts||0))<120000);});
   if(alreadyHave)return;
   notif.unread=true;
   _notifs.unshift(notif);
   saveNotifs();
   renderNotifCount();
   renderNotifList();
-  // 1. Play in-app sound
-  playNotifSound(notif.type||'default');
-  // 2. In-app toast popup
-  var icon=notif.type==='type-approved'?'✅':notif.type==='type-rejected'?'❌':notif.type==='type-broadcast'?'📢':'🔔';
-  toast(icon+' '+(notif.title||'New notification')+': '+((notif.msg||'').substring(0,80)));
   updateNavBadges();
-  // 3. OS-level browser notification (shows even when minimized)
-  showBrowserNotif(
-    'NAAD Portal — '+(notif.title||'New Notification'),
-    (notif.msg||'').substring(0,120),
-    icon
-  );
+  // Sound + vibration + pop-up with quick reply (and a system notification when the tab is in the background).
+  // Messages older than 2 minutes (back-filled when the page opens) are only listed, not announced.
+  var recent=!notif.ts||(Date.now()-notif.ts)<120000;
+  var ownBroadcast=U&&U.admin&&notif.type==='type-broadcast'; // CMG does not get an alert for its own broadcast
+  if(recent&&!ownBroadcast){
+    var icon=notif.type==='type-approved'?'✅':notif.type==='type-rejected'?'❌':notif.type==='type-broadcast'?'📢':/^↩/.test(notif.title||'')?'↩':'🔔';
+    var tgt=portalReplyTarget(notif);
+    var item={title:notif.title,msg:notif.msg,ts:notif.ts,icon:icon,sound:'message',onOpen:function(){toggleNotifPanel();}};
+    if(tgt){item.replyLabel='Reply to '+tgt.label+'…';item.onReply=function(text,done){portalSendReply(tgt,text,done);};}
+    cmgAlert.notify(item);
+  }
+}
+// Who can this message be answered to?
+function portalReplyTarget(n){
+  if(!U)return null;
+  if(U.admin){
+    var m=/^↩\s*Reply from\s+(.*)$/.exec(n.title||'');
+    if(!m)return null;
+    var f=m[1].trim();
+    for(var k in AGENCIES){if(!AGENCIES[k].admin&&AGENCIES[k].f===f)return {n:AGENCIES[k].n,label:f};}
+    return null;
+  }
+  return /^(✉|↩|📢)/.test(n.title||'')?{n:'Admin',label:'CMG'}:null;
+}
+function portalSendReply(tgt,text,done){
+  var title=U.admin?'✉ Message from CMG':'↩ Reply from '+U.f;
+  fetch(QB+'?action=pushNotification&targetAgency='+encodeURIComponent(tgt.n)+'&type=type-info&title='+encodeURIComponent(title)+'&msg='+encodeURIComponent(text)+'&t='+Date.now())
+    .then(function(r){return r.json();})
+    .then(function(d){done(!!(d&&d.status==='ok'));})
+    .catch(function(){done(false);});
+}
+function pToggleSound(){
+  cmgAlert.setMuted(!cmgAlert.isMuted());
+  var b=document.getElementById('pSoundBtn');if(b)b.textContent=cmgAlert.isMuted()?'🔇 Sound off':'🔊 Sound on';
+  if(!cmgAlert.isMuted())cmgAlert.test();
 }
 
 // Patch pushNotif to also broadcast via BroadcastChannel
@@ -3543,7 +3744,14 @@ function renderNotifList(){
     var d=new Date(n.ts);
     var ts=d.toLocaleDateString('en-GB',{day:'2-digit',month:'short'})+' '+d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
     div.innerHTML='<div class="notif-title">'+esc(n.title)+'</div><div class="notif-sub">'+esc(n.msg)+'</div><div class="notif-time">'+ts+'</div>';
-    div.onclick=function(){n.unread=false;saveNotifs();renderNotifCount();renderNotifList();};
+    div.onclick=function(){
+      n.unread=false;saveNotifs();renderNotifCount();renderNotifList();
+      var tgt=portalReplyTarget(n);
+      var item={title:n.title,msg:n.msg,ts:n.ts,silent:true,icon:'🔔',onOpen:function(){}};
+      if(tgt){item.replyLabel='Reply to '+tgt.label+'…';item.onReply=function(text,done){portalSendReply(tgt,text,done);};}
+      document.getElementById('notifPanel').classList.remove('open');
+      cmgAlert.notify(item);
+    };
     list.appendChild(div);
   });
 }
