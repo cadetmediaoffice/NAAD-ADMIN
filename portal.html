@@ -1736,7 +1736,7 @@ function loadQ(){
     ? QB+'?action=getAllQuestions'
     : QB+'?action=getMyQuestions&agency='+encodeURIComponent(U.n);
   fetch(url).then(function(r){return r.json();}).then(function(res){
-    AQ=res.questions||[];
+    AQ=(res.questions||[]).map(function(q){q.status=normStatus(q.status);return q;});
     stats();renderM();
     if(U.admin){renderA();renderAg();}
   }).catch(function(err){
@@ -1806,11 +1806,12 @@ function stats(){
 }
 
 
+function normStatus(s){var t=String(s==null?'':s).trim().toLowerCase();if(t.indexOf('approv')===0)return 'Approved';if(t.indexOf('reject')===0||t.indexOf('declin')===0)return 'Rejected';return 'Pending';}
 function cards(list,admin){
   if(!list.length)return '<div class="empty"><div style="font-size:36px;margin-bottom:8px;">📭</div><p>No questions found.</p></div>';
   var L=['A','B','C','D'];
   return list.map(function(q,i){
-    var st=q.status||'Pending';
+    var st=normStatus(q.status);
     var ans=((q.answers||q.a)||[]).map(function(a,j){return '<div class="qa'+(j===(q.correct||q.c)?' c':'')+'"><strong>'+L[j]+'.</strong> '+esc(String(a==null?'':a))+'</div>';}).join('');
     var realIdx=AQ.indexOf(q);
     var canEdit=U&&(U.admin||st!=='Approved');
@@ -1819,8 +1820,9 @@ function cards(list,admin){
     var replaceBtn=U&&U.admin?'<button class="brej" style="background:rgba(255,165,0,0.08);color:#ffaa44;border-color:rgba(255,165,0,0.25);" onclick="replaceQ('+realIdx+')">🔄 Replace</button>':'';
     var delBtn=canDelete?'<button class="brej" style="background:rgba(255,82,82,0.08);color:#ff6b6b;border-color:rgba(255,82,82,0.25);" onclick="deleteQ('+realIdx+')">🗑 Delete</button>':'';
     var chk=admin&&st==='Pending'?'<input type="checkbox" class="qcard-check" onchange="toggleBulkSelect('+realIdx+',this.checked)" title="Select for bulk action">':'';
-    var act=admin&&st==='Pending'
-      ?'<div class="qact">'+chk+'<button class="bapp" onclick="appQ('+realIdx+')">✅ Approve</button><button class="brej" onclick="rejQ('+realIdx+')">❌ Reject</button>'+editBtn+replaceBtn+delBtn+'</div>'
+    var appLbl=st==='Rejected'?'✅ Approve anyway':'✅ Approve';
+    var act=admin
+      ?'<div class="qact">'+chk+(st!=='Approved'?'<button class="bapp" onclick="appQ('+realIdx+')">'+appLbl+'</button>':'')+(st!=='Rejected'?'<button class="brej" onclick="rejQ('+realIdx+')">❌ Reject</button>':'')+editBtn+replaceBtn+delBtn+'</div>'
       :'<div class="qact">'+editBtn+replaceBtn+delBtn+'</div>';
     var rn=q.rejectNote?'<div class="rn">Reason: '+esc(q.rejectNote)+'</div>':'';
     var imgHtml=q.imageData?'<div style="text-align:center;margin:10px 0;"><img src="'+q.imageData+'" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid var(--border2);">'+( q.imageLabel?'<div style="font-size:11px;color:var(--muted);margin-top:4px;">'+esc(q.imageLabel)+'</div>':'' )+'</div>':'';
@@ -3478,7 +3480,7 @@ async function reloadQSilent(){
     var oldStatuses={};
     AQ.forEach(function(q){if(q.rowIndex)oldStatuses[q.rowIndex]=q.status;});
 
-    AQ=data.questions;
+    AQ=(data.questions||[]).map(function(q){q.status=normStatus(q.status);return q;});
 
     var newApproved=0,newRejected=0;
     AQ.forEach(function(q){
