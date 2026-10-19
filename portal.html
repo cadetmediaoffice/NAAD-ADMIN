@@ -5493,7 +5493,7 @@ go=function(name,el){
   }
   function getReg(){
     if(reg) return Promise.resolve(reg);
-    return navigator.serviceWorker.register('sw.js').then(function(){ return navigator.serviceWorker.ready; }).then(function(r){ reg = r; return r; });
+    return navigator.serviceWorker.register('sw.js').then(function(){ return navigator.serviceWorker.ready; }).then(function(r){ reg = r; try{ r.update().catch(function(){}); }catch(e){} return r; });
   }
   function toSW(msg){
     return getReg().then(function(r){ var w = r.active || navigator.serviceWorker.controller; if(w) w.postMessage(msg); }).catch(function(){});
@@ -5629,10 +5629,39 @@ go=function(name,el){
     document.addEventListener('visibilitychange', function(){ if(!document.hidden && state() === 'on') markSeen(); });
     window.addEventListener('focus', function(){ if(state() === 'on') markSeen(); });
   }
-  function testUI(){
-    return test().then(function(r){ try{ alert((r.ok ? '✅ ' : '⚠ ') + r.msg); }catch(e){} return r; });
+  function swVersion(){
+    return getReg().then(function(r){
+      return new Promise(function(res){
+        var w = r.active || navigator.serviceWorker.controller; if(!w) return res('no active worker');
+        var ch = new MessageChannel(), done = false;
+        ch.port1.onmessage = function(e){ done = true; res(e.data && e.data.v ? e.data.v + (e.data.hasCfg ? ' (device registered)' : ' (device NOT registered in worker)') : 'unknown'); };
+        try{ w.postMessage({type:'ping'}, [ch.port2]); }catch(e){ return res('error'); }
+        setTimeout(function(){ if(!done) res('OLD worker (no push support) — close the app fully and reopen it'); }, 2500);
+      });
+    }).catch(function(e){ return 'error: ' + e; });
   }
-  window.cmgPush = { testUI:testUI, init:init, enable:enable, disable:disable, toggle:toggle, test:test, leave:leave, state:state, paint:paint, markSeen:markSeen, refresh:paint };
+  function diagnose(){
+    var L = [];
+    L.push('Browser alerts: ' + (supported() ? 'supported' : 'NOT supported here'));
+    L.push('Permission: ' + perm());
+    L.push('Installed app: ' + (standalone ? 'yes' : 'no (opened in a browser tab)'));
+    L.push('Alerts switch: ' + state());
+    if(!supported()) return Promise.resolve(L.join('\n'));
+    return swVersion().then(function(v){
+      L.push('Service worker: ' + v);
+      return getReg().then(function(r){ return r.pushManager.getSubscription(); });
+    }).then(function(s){
+      L.push('Push subscription in browser: ' + (s ? 'yes' : 'NO'));
+      return test();
+    }).then(function(t){
+      L.push('Server test: ' + t.msg);
+      return L.join('\n');
+    }).catch(function(e){ L.push('Error: ' + e); return L.join('\n'); });
+  }
+  function testUI(){
+    return diagnose().then(function(txt){ try{ alert('Alert check\n\n' + txt); }catch(e){} return txt; });
+  }
+  window.cmgPush = { diagnose:diagnose, testUI:testUI, init:init, enable:enable, disable:disable, toggle:toggle, test:test, leave:leave, state:state, paint:paint, markSeen:markSeen, refresh:paint };
 })();
 
 </script>

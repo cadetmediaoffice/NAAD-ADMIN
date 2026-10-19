@@ -3,7 +3,8 @@
 // fast and shows its screen even with a weak connection. Student data and
 // every call to the CMG server (Apps Script) always go to the network and are
 // never stored here.
-var CACHE = 'naad-admin-v3';
+var CACHE = 'naad-admin-v4';
+var SW_VERSION = 'push-4';
 var SHELL = [
   './', 'admin.html', 'manifest.webmanifest',
   'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png',
@@ -101,6 +102,13 @@ function setBadge(n) {
 
 self.addEventListener('message', function (e) {
   var d = e.data || {};
+  if (d.type === 'ping') {
+    e.waitUntil(kvGet('cfg').then(function (c) {
+      var reply = { v: SW_VERSION, hasCfg: !!(c && c.pt), perm: (self.Notification && Notification.permission) || '?' };
+      if (e.ports && e.ports[0]) e.ports[0].postMessage(reply); else if (e.source) e.source.postMessage({ type: 'pong', info: reply });
+    }));
+    return;
+  }
   if (d.type === 'cfg') {            // page tells us who this device is
     e.waitUntil(kvGet('cfg').then(function (old) {
       var keepSeen = old && old.pt === d.pt ? old.seen : 0;
