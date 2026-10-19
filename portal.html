@@ -1620,7 +1620,7 @@ function restoreSession(){
     return false;
   }catch(e){return false;}
 }
-function doLogout(){U=null;PORTAL_TOKEN='';var _d=false,_o=function(){if(!_d){_d=true;location.reload();}};try{cmgPush.leave().then(_o,_o);}catch(e){}setTimeout(_o,1800);try{sessionStorage.removeItem('naad_session');sessionStorage.removeItem('cmgAdminToken');sessionStorage.removeItem('cmgAdminAgency');}catch(e){}document.getElementById('loginScreen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('pwInput').value='';document.getElementById('loginErr').style.display='none';}
+function doLogout(){try{var _pt=PORTAL_TOKEN||sessionStorage.getItem('cmgAdminToken');if(_pt)fetch(QB+'?action=adminLeave&token='+encodeURIComponent(_pt),{mode:'no-cors',keepalive:true}).catch(function(){});}catch(e){}U=null;PORTAL_TOKEN='';var _d=false,_o=function(){if(!_d){_d=true;location.reload();}};try{cmgPush.leave().then(_o,_o);}catch(e){}setTimeout(_o,1800);try{sessionStorage.removeItem('naad_session');sessionStorage.removeItem('cmgAdminToken');sessionStorage.removeItem('cmgAdminAgency');}catch(e){}document.getElementById('loginScreen').style.display='flex';document.getElementById('app').style.display='none';document.getElementById('pwInput').value='';document.getElementById('loginErr').style.display='none';}
 document.getElementById('pwInput').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
 // Auto-restore session on page load/refresh.
 // Runs AFTER the whole page script has loaded (init() relies on variables defined further down the file).
@@ -3371,6 +3371,7 @@ function startNotifPolling(){
   if(_pollInterval)clearInterval(_pollInterval);
   // Poll server every 5 seconds
   _pollInterval=setInterval(pollServerNotifs,5000);
+  if(!window._portalPresence){window._portalPresence=setInterval(function(){var t=PORTAL_TOKEN||sessionStorage.getItem('cmgAdminToken');if(t&&navigator.onLine)fetch(QB+'?action=adminPresence&token='+encodeURIComponent(t),{cache:'no-store'}).catch(function(){});},25000);var _t0=PORTAL_TOKEN||sessionStorage.getItem('cmgAdminToken');if(_t0)fetch(QB+'?action=adminPresence&token='+encodeURIComponent(_t0),{cache:'no-store'}).catch(function(){});}
   try{cmgPush.init({url:QB,home:'portal.html',getToken:function(){return PORTAL_TOKEN||sessionStorage.getItem('cmgAdminToken');},onWake:function(){pollServerNotifs();}});}catch(e){}
   showLiveDot();
   // Immediate first poll after 1s

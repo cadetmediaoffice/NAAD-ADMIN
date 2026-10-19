@@ -2076,7 +2076,7 @@ function startPresence(){
   if(presenceTimer) return;
   presenceKnown = null;
   pollPresence();
-  presenceTimer = setInterval(function(){ if(!document.hidden) pollPresence(); }, 25000);
+  presenceTimer = setInterval(function(){ pollPresence(); }, 25000);  // keeps going while minimized, so the agency stays shown as online
 }
 function stopPresence(tellServer){
   stopNotifs();
@@ -2086,7 +2086,7 @@ function stopPresence(tellServer){
     try{ fetch(APPS_SCRIPT_URL + '?action=adminLeave&token=' + encodeURIComponent(token), {mode:'no-cors', keepalive:true}).catch(function(){}); }catch(e){}
   }
 }
-window.addEventListener('pagehide', function(){ if(presenceTimer) stopPresence(true); });
+// (No 'leave' on page hide: minimizing the app or opening the Content Portal must not mark you offline. Logout does.)
 document.addEventListener('visibilitychange', function(){ if(!document.hidden && presenceTimer) pollPresence(); });
 
 // ── VISITOR ID + ADMIN-PAGE OPEN TRACKING ──────────
