@@ -4,7 +4,7 @@
 // every call to the CMG server (Apps Script) always go to the network and are
 // never stored here.
 var CACHE = 'naad-admin-v4';
-var SW_VERSION = 'push-4';
+var SW_VERSION = 'push-5';
 var SHELL = [
   './', 'admin.html', 'manifest.webmanifest',
   'icon-192.png', 'icon-512.png', 'icon-maskable-512.png', 'apple-touch-icon.png',
@@ -154,7 +154,8 @@ function handlePush() {
             icon: 'icon-192.png', badge: 'icon-192.png',
             tag: 'naad-msg', renotify: true, requireInteraction: true, silent: false,
             vibrate: [250, 120, 250, 120, 500],
-            data: { url: (cfg && cfg.home) || 'admin.html' }
+            actions: [{ action: 'reply', title: '↩ Reply', type: 'text', placeholder: 'Type your reply…' }, { action: 'open', title: 'Open' }],
+            data: { url: (cfg && cfg.home) || 'admin.html', replyTo: top ? top.title : '' }
           })
         ]);
       });
@@ -163,12 +164,33 @@ function handlePush() {
 }
 
 self.addEventListener('notificationclick', function (e) {
-  e.notification.close();
-  var target = (e.notification.data && e.notification.data.url) || 'admin.html';
-  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (cl) {
-    for (var i = 0; i < cl.length; i++) {
-      if ('focus' in cl[i]) { cl[i].postMessage({ type: 'push-wake' }); return cl[i].focus(); }
-    }
-    return self.clients.openWindow(target);
-  }));
+  var n = e.notification, d = n.data || {};
+  n.close();
+  var target = (d.url || 'admin.html');
+  var openApp = function () {
+    return self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(function (cl) {
+      for (var i = 0; i < cl.length; i++) {
+        if ('focus' in cl[i]) { cl[i].postMessage({ type: 'push-open' }); return cl[i].focus(); }
+      }
+      return self.clients.openWindow(target + (target.indexOf('?') < 0 ? '?push=1' : '&push=1'));
+    });
+  };
+  if (e.action === 'reply' && e.reply) {            // typed straight into the notification
+    e.waitUntil(kvGet('cfg').then(function (cfg) {
+      if (!cfg || !cfg.pt) return openApp();
+      return fetch(cfg.url + '?action=pushReply&pt=' + encodeURIComponent(cfg.pt) + '&text=' + encodeURIComponent(e.reply) +
+                   '&to=' + encodeURIComponent(d.replyTo || '') + '&t=' + Date.now(), { cache: 'no-store' })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+          var ok = res && res.status === 'ok';
+          return self.registration.showNotification(ok ? '✅ Reply sent' : '⚠ Reply not sent', {
+            body: ok ? String(e.reply).slice(0, 100) : ((res && res.message) || 'Open the app to reply.'),
+            tag: 'naad-reply', silent: true, icon: 'icon-192.png', badge: 'icon-192.png', data: { url: target }
+          }).then(function () { setTimeout(function () { self.registration.getNotifications({ tag: 'naad-reply' }).then(function (a) { a.forEach(function (x) { x.close(); }); }); }, 3500); });
+        })
+        .catch(function () { return openApp(); });
+    }));
+    return;
+  }
+  e.waitUntil(openApp());
 });

@@ -3546,7 +3546,8 @@ function receiveRealTimeNotif(notif){
   updateNavBadges();
   // Sound + vibration + pop-up with quick reply (and a system notification when the tab is in the background).
   // Messages older than 2 minutes (back-filled when the page opens) are only listed, not announced.
-  var recent=!notif.ts||(Date.now()-notif.ts)<120000;
+  var fromPush=window.__cmgFromPush&&(Date.now()-window.__cmgFromPush)<60000;
+  var recent=!notif.ts||(Date.now()-notif.ts)<120000||(fromPush&&(Date.now()-notif.ts)<86400000);
   var ownBroadcast=U&&U.admin&&notif.type==='type-broadcast'; // CMG does not get an alert for its own broadcast
   if(recent&&!ownBroadcast){
     var icon=notif.type==='type-approved'?'✅':notif.type==='type-rejected'?'❌':notif.type==='type-broadcast'?'📢':/^↩/.test(notif.title||'')?'↩':'🔔';
@@ -5466,6 +5467,7 @@ go=function(name,el){
 (function(){
   if(window.cmgPush) return;
   var cfg = {}, reg = null, pt = null, busy = false;
+  try{ if(/[?&]push=1/.test(location.search)){ window.__cmgFromPush = Date.now(); history.replaceState(null,'',location.pathname + location.hash); } }catch(e){}
   function lget(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
   function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
   var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -5620,7 +5622,7 @@ go=function(name,el){
     if(!supported()) return;
     getReg().then(function(){
       navigator.serviceWorker.addEventListener('message', function(e){
-        if(e.data && e.data.type === 'push-wake' && cfg.onWake) cfg.onWake();
+        if(e.data && (e.data.type === 'push-wake' || e.data.type === 'push-open')){ if(e.data.type === 'push-open') window.__cmgFromPush = Date.now(); if(cfg.onWake) cfg.onWake(); }
       });
     }).catch(function(){});
     // already allowed before: quietly keep this device registered for whoever is logged in now
