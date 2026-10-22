@@ -635,6 +635,26 @@ html,body{overflow-x:hidden}
   min-width:16px;height:16px;border-radius:8px;display:inline-flex;
   align-items:center;justify-content:center;padding:0 4px;margin-left:6px;vertical-align:middle;}
 
+/* GUIDED TOUR */
+#tourShade{position:fixed;inset:0;z-index:100001;display:none}
+#tourShade.show{display:block}
+#tourHole{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(3,8,20,.78);border:2px solid var(--gold);transition:all .25s ease;pointer-events:none}
+#tourCard{position:fixed;z-index:100002;width:min(360px,calc(100vw - 24px));background:linear-gradient(160deg,#0d1f3c,#0a1529);border:1px solid rgba(255,215,0,.45);border-radius:16px;padding:16px 16px 12px;box-shadow:0 12px 40px rgba(0,0,0,.6);color:var(--text);display:none}
+#tourCard.show{display:block}
+#tourCard .t-step{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
+#tourCard h3{font-family:var(--fh);font-size:16px;margin:0 0 6px;color:#fff}
+#tourCard .t-body{font-size:13px;line-height:1.65;color:rgba(238,242,255,.88)}
+#tourCard .t-body ul{margin:6px 0 0 16px;padding:0}
+#tourCard .t-body li{margin:3px 0}
+#tourCard .t-dots{display:flex;gap:4px;margin:12px 0 10px;flex-wrap:wrap}
+#tourCard .t-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18)}
+#tourCard .t-dots i.on{background:var(--gold)}
+#tourCard .t-dots i.done{background:rgba(255,215,0,.5)}
+#tourCard .t-row{display:flex;gap:8px;align-items:center}
+#tourCard .t-skip{margin-right:auto;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:8px 4px}
+#tourCard .t-back{padding:9px 14px;border-radius:9px;border:1px solid var(--border2);background:transparent;color:var(--text);font-weight:600;cursor:pointer;font-size:12px}
+#tourCard .t-next{padding:9px 18px;border-radius:9px;border:none;background:var(--gold);color:#1a1200;font-weight:800;cursor:pointer;font-size:13px}
+@media(max-width:700px){#tourCard{left:12px!important;right:12px;bottom:12px;top:auto!important;width:auto}#tourCard.ttop{top:12px!important;bottom:auto!important}}
 </style>
 </head>
 <body>
@@ -864,6 +884,8 @@ window.cmgAlert = (function(){
       </div>
       <div class="ssec">Help</div>
       <div class="ni" onclick="go('guide',this)"><span class="ni-icon">📖</span>Guidelines</div>
+      <div class="ni" onclick="TOUR.start()"><span class="ni-icon">🎓</span>Guided Tour</div>
+      <div id="verStamp" style="font-size:9px;color:var(--muted2);padding:8px 12px;white-space:nowrap;">Portal build 22-Oct-2026 · tour+builder+preview</div>
     </div>
     <div class="content">
 
@@ -888,6 +910,7 @@ window.cmgAlert = (function(){
             <button class="bsub" style="width:auto;padding:11px 22px;" onclick="go('submit',null)">✏️ Submit a Question</button>
             <button class="bout" onclick="go('export',null)">💾 Export My Quiz</button>
             <button class="bout" onclick="go('guide',null)">📖 Guidelines</button>
+            <button class="bout" onclick="TOUR.start()">🎓 Take the Tour</button>
             <button class="bout" onclick="showLatestBroadcast()" id="showBcBtn" style="display:none;">📢 View Message</button>
           </div>
         </div>
@@ -1758,6 +1781,7 @@ function init(){
   initBroadcastChannel();
   initStorageListener();
   startNotifPolling();
+  setTimeout(function(){try{TOUR.auto();}catch(e){}},1500);
   // Show analytics nav for admin
   if(U.admin){
     var an=document.getElementById('analyticsNav');
@@ -2392,6 +2416,101 @@ window.addEventListener('popstate',function(e){
   if(document.getElementById('panel-'+t))go(t,el,true);
 });
 function stab(n,el){document.querySelectorAll('.stab').forEach(function(t){t.classList.remove('active');});if(el)el.classList.add('active');['manual','upload','builder'].forEach(function(k){document.getElementById('sp-'+k).style.display=n===k?'block':'none';});if(n==='builder'&&window.NB)NB.init();}
+// ══════════ GUIDED TOUR (self-education for agencies & CMG) ══════════
+var TOUR=(function(){
+  var steps=[],i=0,on=false,rt=null;
+  function nav(n){return '.sidebar .ni[onclick*="go(\''+n+'\'"]';}
+  function agencySteps(){
+    var m=U.m||U.module||'your';
+    return [
+      {t:'Welcome, '+U.f+' 👋',b:'This 2-minute tour shows you how to add questions for the <b>'+esc(m)+'</b> module, how they get approved, and how to get your quiz. You can leave any time and restart it from <b>🎓 Guided Tour</b> in the menu.'},
+      {p:'dashboard',s:'.sgrid',t:'1 · Your numbers',b:'These four boxes show how many questions you have <b>submitted</b>, and how many are <b>approved ✅</b>, <b>pending ⏳</b> or <b>rejected ❌</b> by Cadet Media.'},
+      {p:'dashboard',s:'#agencyModProgress',t:'2 · Your target',b:'Your quiz needs at least <b>30 approved questions</b>: about 10 Easy, 12 Medium and 8 Hard. You may send up to <b>100</b> — each student quiz picks 30 at random, so more questions means fewer repeats.'},
+      {p:'submit',s:nav('submit'),t:'3 · Submit Questions',b:'This is where you add questions. There are three ways — let\'s look at each.'},
+      {p:'submit',pre:function(){stab('manual',document.querySelectorAll('.stab')[0]);},s:'#sp-manual .fcard',t:'4 · Type one question',b:'Fill in the details and the system checks your work as you go.<ul><li>Choose the <b>level</b> (1 Easy, 2 Medium, 3 Hard).</li><li>Write a clear question (ends with “?”).</li><li>Give <b>4 options</b> and tap the correct answer.</li><li>Add an <b>explanation</b> (20+ characters) saying <i>why</i> it is correct.</li><li>Avoid “all of the above” and trick wording.</li></ul>'},
+      {p:'submit',pre:function(){stab('manual',document.querySelectorAll('.stab')[0]);},s:'#imgZone',t:'5 · Add a picture',b:'If a question refers to a sign, diagram or scene, upload a picture here. It is automatically resized so it fits.'},
+      {p:'submit',pre:function(){stab('builder',document.querySelectorAll('.stab')[2]);},s:'#sp-builder .fcard',t:'6 · Question Builder (many at once)',b:'Best for lots of questions. Add as many question cards as you like, attach pictures, then:<ul><li><b>⬇️ Save as Excel</b> — keeps a copy with pictures.</li><li><b>🚀 Check &amp; Upload All</b> — checks every question and sends them together.</li></ul>Your work is saved on this device while you write.'},
+      {p:'submit',pre:function(){stab('upload',document.querySelectorAll('.stab')[1]);},s:'.stabs',t:'7 · Upload an Excel file',b:'Already have questions in Excel? Use the <b>Upload Excel</b> tab (or download the template at the top). You will see a report of any problems <i>before</i> anything is sent.'},
+      {p:'mine',s:nav('mine'),t:'8 · My Questions',b:'Track every question you sent. <b>Pending</b> = waiting for CMG. <b>Approved</b> = it will be in your quiz. <b>Rejected</b> = read the reason, tap <b>✏️ Edit</b>, fix it and it goes back for review.'},
+      {p:'dashboard',s:'#agencyDashView .bout[onclick*="export"]',t:'9 · Export &amp; Preview',b:'Once questions are approved you can <b>👁️ Preview</b> your quiz exactly as students will see it, and <b>💾 Export</b> the finished quiz file.'},
+      {s:'#notifBell',t:'10 · Notifications',b:'CMG messages and approvals appear here. Tap the bell, then <b>📲 Turn on alerts</b> so your phone buzzes even when the app is closed.'},
+      {p:'guide',s:nav('guide'),t:'11 · Guidelines',b:'Not sure how to write a good question? The Guidelines page has examples of good and bad questions.'},
+      {t:'You are ready! 🎉',b:'Start with <b>Submit Questions</b>. If you ever get stuck, open <b>🎓 Guided Tour</b> in the menu to see this again.'}
+    ];
+  }
+  function adminSteps(){
+    return [
+      {t:'Welcome, '+U.f+' 👋',b:'A quick tour of the CMG admin tools: reviewing, approving, tracking agencies and exporting quizzes. Restart it any time from <b>🎓 Guided Tour</b>.'},
+      {p:'dashboard',s:'.sgrid',t:'1 · Overview',b:'Totals of all questions: approved, pending and rejected across every agency.'},
+      {p:'review',s:nav('review'),t:'2 · Review All',b:'Every submitted question lands here. The red number is how many are waiting for you.'},
+      {p:'review',s:'#panel-review .bout',t:'3 · Approve or reject',b:'On each question use <b>✅ Approve</b>, <b>❌ Reject</b> (give a reason so the agency can fix it), <b>✏️ Edit</b>, <b>🔄 Replace</b> or <b>🗑 Delete</b>. Use <b>Approve All Pending</b> for a whole batch, or tick boxes for selected ones.'},
+      {p:'agencies',s:nav('agencies'),t:'4 · Agencies',b:'See each agency, who is online, and manage access.'},
+      {p:'progress',s:nav('progress'),t:'5 · Agency Progress',b:'Which agencies are ready (30+ approved) and which still need more questions.'},
+      {p:'deadlines',s:nav('deadlines'),t:'6 · Deadlines',b:'Set submission deadlines. Agencies see a countdown on their dashboard.'},
+      {p:'broadcast',s:nav('broadcast'),t:'7 · Broadcast',b:'Send a message to all agencies. It pops up on their screens and as a phone alert.'},
+      {p:'export',s:nav('export'),t:'8 · Export Quiz',b:'Each module has <b>👁️ Preview</b> and an export button. Quizzes pick 30 random questions from up to 100 approved ones.'},
+      {s:'#notifBell',t:'9 · Notifications',b:'New submissions arrive here. Turn on <b>📲 alerts</b> to be notified even when the app is closed.'},
+      {t:'All set ✅',b:'You can replay this tour from <b>🎓 Guided Tour</b> in the menu.'}
+    ];
+  }
+  var shade,hole,card;
+  function build(){
+    if(shade)return;
+    shade=document.createElement('div');shade.id='tourShade';
+    hole=document.createElement('div');hole.id='tourHole';shade.appendChild(hole);
+    card=document.createElement('div');card.id='tourCard';
+    document.body.appendChild(shade);document.body.appendChild(card);
+    shade.addEventListener('click',function(e){e.stopPropagation();});
+  }
+  function key(){return 'naad_tour_v1_'+(U&&U.n||'x');}
+  function mark(){try{localStorage.setItem(key(),'1');}catch(e){}}
+  function seen(){try{return !!localStorage.getItem(key());}catch(e){return false;}}
+  function target(st){if(!st.s)return null;var el=document.querySelector(st.s);if(!el)return null;var r=el.getBoundingClientRect();return (r.width>4&&r.height>4)?el:null;}
+  function show(){
+    var st=steps[i];
+    if(st.p){try{go(st.p,null,true);}catch(e){}}
+    if(st.pre){try{st.pre();}catch(e){}}
+    clearTimeout(rt);
+    rt=setTimeout(function(){
+      var el=target(st);
+      if(el){try{el.scrollIntoView({block:'center',inline:'center'});}catch(e){}}
+      setTimeout(function(){draw(st,target(st));},el?280:0);
+    },320);
+  }
+  function draw(st,el){
+    if(!on)return;
+    var mob=window.innerWidth<=700,vw=window.innerWidth,vh=window.innerHeight;
+    if(el){var r=el.getBoundingClientRect(),pad=6;
+      var h=Math.min(r.height+pad*2,vh-20),t=Math.max(6,r.top-pad),l=Math.max(4,r.left-pad),w=Math.min(r.width+pad*2,vw-8);
+      hole.style.cssText='display:block;top:'+t+'px;left:'+l+'px;width:'+w+'px;height:'+h+'px;';
+    }else hole.style.cssText='display:block;top:50%;left:50%;width:0;height:0;border-color:transparent;';
+    var dots=steps.map(function(_,k){return '<i class="'+(k===i?'on':k<i?'done':'')+'"></i>';}).join('');
+    card.innerHTML='<div class="t-step">Step '+(i+1)+' of '+steps.length+'</div><h3>'+st.t+'</h3><div class="t-body">'+st.b+'</div><div class="t-dots">'+dots+'</div><div class="t-row"><button class="t-skip" onclick="TOUR.end()">'+(i===steps.length-1?'':'Skip tour')+'</button>'+(i>0?'<button class="t-back" onclick="TOUR.prev()">← Back</button>':'')+'<button class="t-next" onclick="TOUR.next()">'+(i===steps.length-1?'Finish ✓':'Next →')+'</button></div>';
+    card.classList.add('show');shade.classList.add('show');
+    card.classList.toggle('ttop',!!(mob&&el&&(function(){var q=el.getBoundingClientRect();return (q.top+q.height/2)>vh*0.5&&q.height<vh*0.6;})()));
+    if(!mob){
+      var cw=card.offsetWidth,ch=card.offsetHeight,x,y;
+      if(el){var r2=el.getBoundingClientRect();
+        if(r2.bottom+ch+20<vh){y=r2.bottom+14;x=r2.left;}
+        else if(r2.top-ch-20>0){y=r2.top-ch-14;x=r2.left;}
+        else if(r2.right+cw+20<vw){x=r2.right+14;y=Math.max(10,r2.top);}
+        else{x=Math.max(10,r2.left-cw-14);y=Math.max(10,r2.top);}
+      }else{x=(vw-cw)/2;y=(vh-ch)/2;}
+      x=Math.max(10,Math.min(x,vw-cw-10));y=Math.max(10,Math.min(y,vh-ch-10));
+      card.style.left=x+'px';card.style.top=y+'px';
+    }else if(!el){card.style.left='12px';}
+  }
+  function onResize(){if(on){var st=steps[i];draw(st,target(st));}}
+  window.addEventListener('resize',onResize);
+  return {
+    start:function(){if(!U)return;build();steps=U.admin?adminSteps():agencySteps();i=0;on=true;try{go('dashboard',null,true);}catch(e){}show();},
+    auto:function(){if(U&&!seen()){TOUR.start();}},
+    next:function(){if(i>=steps.length-1){TOUR.end();return;}i++;show();},
+    prev:function(){if(i>0){i--;show();}},
+    end:function(){on=false;mark();clearTimeout(rt);if(shade){shade.classList.remove('show');hole.style.display='none';card.classList.remove('show');}try{go('dashboard',null,true);}catch(e){}}
+  };
+})();
+
 // ══════════ QUESTION BUILDER (Excel with pictures) ══════════
 var NB=(function(){
   var items=[],tmr=null;
