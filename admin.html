@@ -402,6 +402,26 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
   #bellPanel{position:fixed;left:50%;right:auto;top:84px;transform:translateX(-50%);width:min(94vw,380px);max-height:76vh;}
 }
 .bp-foot a{color:var(--gold);font-size:12px;text-decoration:none;font-weight:700;}
+/* GUIDED TOUR */
+#tourShade{position:fixed;inset:0;z-index:100001;display:none}
+#tourShade.show{display:block}
+#tourHole{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(3,8,20,.78);border:2px solid var(--gold);transition:all .25s ease;pointer-events:none}
+#tourCard{position:fixed;z-index:100002;width:min(360px,calc(100vw - 24px));background:linear-gradient(160deg,#0d1f3c,#0a1529);border:1px solid rgba(255,215,0,.45);border-radius:16px;padding:16px 16px 12px;box-shadow:0 12px 40px rgba(0,0,0,.6);color:var(--text);display:none}
+#tourCard.show{display:block}
+#tourCard .t-step{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
+#tourCard h3{font-family:var(--fh);font-size:16px;margin:0 0 6px;color:#fff}
+#tourCard .t-body{font-size:13px;line-height:1.65;color:rgba(238,242,255,.88)}
+#tourCard .t-body ul{margin:6px 0 0 16px;padding:0}
+#tourCard .t-body li{margin:3px 0}
+#tourCard .t-dots{display:flex;gap:4px;margin:12px 0 10px;flex-wrap:wrap}
+#tourCard .t-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18)}
+#tourCard .t-dots i.on{background:var(--gold)}
+#tourCard .t-dots i.done{background:rgba(255,215,0,.5)}
+#tourCard .t-row{display:flex;gap:8px;align-items:center}
+#tourCard .t-skip{margin-right:auto;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:8px 4px}
+#tourCard .t-back{padding:9px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:transparent;color:var(--text);font-weight:600;cursor:pointer;font-size:12px}
+#tourCard .t-next{padding:9px 18px;border-radius:9px;border:none;background:var(--gold);color:#1a1200;font-weight:800;cursor:pointer;font-size:13px}
+@media(max-width:700px){#tourCard{left:12px!important;right:12px;bottom:12px;top:auto!important;width:auto}}
 </style>
 </head>
 <body>
@@ -626,6 +646,7 @@ window.cmgAlert = (function(){
         <img id="meLogo" src="logo_cmg.png" alt="">
         <div><div class="me-name" id="meName"></div><div class="me-sub">● LOGGED IN</div></div>
       </div>
+      <button class="refresh-btn" onclick="TOUR.start()" title="Guided tour">🎓 Tour</button>
       <div class="bell-wrap" id="bellWrap" style="display:none;">
         <button class="refresh-btn" id="bellBtn" onclick="toggleBell(event)" title="Content Portal notifications">🔔<span id="bellBadge"></span></button>
         <div id="bellPanel">
@@ -2076,6 +2097,7 @@ function pollPresence(){
 function startPresence(){
   applyMeBadge();
   startNotifs();
+  setTimeout(function(){try{TOUR.auto();}catch(e){}},1800);
   if(presenceTimer) return;
   presenceKnown = null;
   pollPresence();
@@ -3299,6 +3321,86 @@ runBootSequence();
   window.cmgPush = { diagnose:diagnose, testUI:testUI, init:init, enable:enable, disable:disable, toggle:toggle, test:test, leave:leave, state:state, paint:paint, markSeen:markSeen, refresh:paint };
 })();
 
+
+// ══════════ ADMIN GUIDED TOUR ══════════
+var TOUR=(function(){
+  var steps=[],i=0,on=false,rt=null;
+  function tab(n){return '.tab[onclick*="switchTab(\''+n+'\'"]';}
+  function mk(){return [
+    {p:'students',t:'Welcome to the Admin Dashboard 👋',b:'This 2-minute tour shows what each part does so you can monitor students, schools, results and messages. Restart it any time with <b>🎓 Tour</b> at the top.'},
+    {p:'students',s:'.stats-grid',t:'1 · Live numbers',b:'The big boxes at the top show totals across the whole programme — activations, quizzes started, results submitted and more. They refresh when you reload.'},
+    {p:'students',s:'.tabs',t:'2 · The tabs',b:'Everything is organised in tabs. Swipe or scroll sideways to see them all. Let\'s visit the important ones.'},
+    {p:'students',s:'#panel-students .filter-bar',t:'3 · All Students',b:'Search by name, school, phone, email or activation code, and filter by status, gender, region or district to find any student quickly.'},
+    {p:'schools',s:tab('schools'),t:'4 · Schools',b:'Participation per school — who has activated and who has submitted results.'},
+    {p:'regions',s:tab('regions'),t:'5 · Regions',b:'The same picture by region, to see where participation is strong or weak.'},
+    {p:'me',s:tab('me'),t:'6 · M&amp;E',b:'Monitoring &amp; Evaluation figures for reporting: reach, completion and performance.'},
+    {p:'broadcast',s:tab('broadcast'),t:'7 · Broadcasts',b:'Send a message to students or agencies. It appears as a pop-up on their screens.'},
+    {p:'nominees',s:tab('nominees'),t:'8 · Nominees',b:'Students who agreed to be nominated for recognition.'},
+    {p:'requests',s:tab('requests'),t:'9 · Requests',b:'Help requests from students and schools. A red number means something is waiting for you.'},
+    {p:'leaderboard',s:tab('leaderboard'),t:'10 · Leaderboard',b:'Top performers across the programme.'},
+    {p:'charts',s:tab('charts'),t:'11 · Charts',b:'Visual summaries you can show in meetings.'},
+    {p:'live',s:tab('live'),t:'12 · Live Activity',b:'See what is happening right now — who is online and recent actions.'},
+    {p:'settings',s:tab('settings'),t:'13 · Settings',b:'Programme settings and controls. Change these carefully.'},
+    {p:'students',s:'#bellBtn',t:'14 · Messages &amp; alerts',b:'The bell shows messages from agencies using the Content Portal. Open it and tap <b>📲 Alerts</b> to get phone/laptop notifications even when the app is closed.'},
+    {p:'students',s:'.tab[href="portal.html"]',t:'15 · Content Portal',b:'Approve or reject questions from agencies, build quizzes and export them here.'},
+    {p:'students',t:'You are ready! 🎉',b:'Use <b>🎓 Tour</b> at the top whenever you want to see this again.'}
+  ];}
+  var shade,hole,card;
+  function build(){
+    if(shade)return;
+    shade=document.createElement('div');shade.id='tourShade';
+    hole=document.createElement('div');hole.id='tourHole';shade.appendChild(hole);
+    card=document.createElement('div');card.id='tourCard';
+    document.body.appendChild(shade);document.body.appendChild(card);
+    shade.addEventListener('click',function(e){e.stopPropagation();});
+  }
+  function key(){var n='admin';try{n=(document.getElementById('meName')||{}).textContent||'admin';}catch(e){}return 'naad_admintour_v1_'+n;}
+  function mark(){try{localStorage.setItem(key(),'1');}catch(e){}}
+  function seen(){try{return !!localStorage.getItem(key());}catch(e){return false;}}
+  function target(st){if(!st.s)return null;var el=document.querySelector(st.s);if(!el)return null;var r=el.getBoundingClientRect();return (r.width>4&&r.height>4)?el:null;}
+  function show(){
+    var st=steps[i];
+    if(st.p){try{switchTab(st.p,document.querySelector('.tab[onclick*="switchTab(\''+st.p+'\'"]'),true);}catch(e){}}
+    if(st.pre){try{st.pre();}catch(e){}}
+    clearTimeout(rt);
+    rt=setTimeout(function(){
+      var el=target(st);
+      if(el){try{el.scrollIntoView({block:'center',inline:'center'});}catch(e){}}
+      setTimeout(function(){draw(st,target(st));},el?280:0);
+    },320);
+  }
+  function draw(st,el){
+    if(!on)return;
+    var mob=window.innerWidth<=700,vw=window.innerWidth,vh=window.innerHeight;
+    if(el){var r=el.getBoundingClientRect(),pad=6;
+      var h=Math.min(r.height+pad*2,vh-20),t=Math.max(6,r.top-pad),l=Math.max(4,r.left-pad),w=Math.min(r.width+pad*2,vw-8);
+      hole.style.cssText='display:block;top:'+t+'px;left:'+l+'px;width:'+w+'px;height:'+h+'px;';
+    }else hole.style.cssText='display:block;top:50%;left:50%;width:0;height:0;';
+    var dots=steps.map(function(_,k){return '<i class="'+(k===i?'on':k<i?'done':'')+'"></i>';}).join('');
+    card.innerHTML='<div class="t-step">Step '+(i+1)+' of '+steps.length+'</div><h3>'+st.t+'</h3><div class="t-body">'+st.b+'</div><div class="t-dots">'+dots+'</div><div class="t-row"><button class="t-skip" onclick="TOUR.end()">'+(i===steps.length-1?'':'Skip tour')+'</button>'+(i>0?'<button class="t-back" onclick="TOUR.prev()">← Back</button>':'')+'<button class="t-next" onclick="TOUR.next()">'+(i===steps.length-1?'Finish ✓':'Next →')+'</button></div>';
+    card.classList.add('show');shade.classList.add('show');
+    if(!mob){
+      var cw=card.offsetWidth,ch=card.offsetHeight,x,y;
+      if(el){var r2=el.getBoundingClientRect();
+        if(r2.bottom+ch+20<vh){y=r2.bottom+14;x=r2.left;}
+        else if(r2.top-ch-20>0){y=r2.top-ch-14;x=r2.left;}
+        else if(r2.right+cw+20<vw){x=r2.right+14;y=Math.max(10,r2.top);}
+        else{x=Math.max(10,r2.left-cw-14);y=Math.max(10,r2.top);}
+      }else{x=(vw-cw)/2;y=(vh-ch)/2;}
+      x=Math.max(10,Math.min(x,vw-cw-10));y=Math.max(10,Math.min(y,vh-ch-10));
+      card.style.left=x+'px';card.style.top=y+'px';
+    }else if(!el){card.style.left='12px';}
+  }
+  function onResize(){if(on){var st=steps[i];draw(st,target(st));}}
+  window.addEventListener('resize',onResize);
+  return {
+    start:function(){build();steps=mk();i=0;on=true;show();},
+    auto:function(){if(!seen())TOUR.start();},
+    next:function(){if(i>=steps.length-1){TOUR.end();return;}i++;show();},
+    prev:function(){if(i>0){i--;show();}},
+    end:function(){on=false;mark();clearTimeout(rt);if(shade){shade.classList.remove('show');hole.style.display='none';card.classList.remove('show');}try{switchTab('students',document.querySelectorAll('.tab')[0],true);}catch(e){}}
+  };
+})();
 </script>
 </body>
 </html>
