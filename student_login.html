@@ -6,159 +6,110 @@
 <link rel="icon" type="image/x-icon" href="MEDIA/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-*{box-sizing:border-box;margin:0;padding:0;}
-body{
-  font-family:Arial,sans-serif;
-  background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);
-  min-height:100vh;color:#fff;
-  display:flex;flex-direction:column;align-items:center;
-  justify-content:center;padding:20px;
-}
-.logo{width:90px;height:90px;border-radius:50%;
-  border:3px solid rgba(255,215,0,0.5);margin-bottom:16px;
-  box-shadow:0 0 30px rgba(255,215,0,0.3);}
-.card{
-  background:rgba(255,255,255,0.06);
-  border:1px solid rgba(255,255,255,0.12);
-  border-radius:16px;padding:28px 24px;
-  width:100%;max-width:420px;
-  display:flex;flex-direction:column;gap:16px;
-  box-shadow:0 10px 40px rgba(0,0,0,0.5);
-}
-.card h2{font-size:20px;text-align:center;color:#FFD700;}
-.card p{font-size:13px;opacity:.75;text-align:center;line-height:1.7;}
-label{font-size:13px;font-weight:bold;opacity:.85;}
-input{
-  width:100%;padding:12px 14px;border-radius:10px;
-  border:2px solid rgba(255,255,255,0.15);
-  background:rgba(255,255,255,0.07);color:#fff;
-  font-size:14px;outline:none;transition:border .2s;
-}
-input:focus{border-color:#FFD700;}
-.btn{
-  padding:14px;font-size:16px;font-weight:bold;border:none;border-radius:12px;cursor:pointer;
-  background:linear-gradient(45deg,#FFD700,#e6a800);color:#000;transition:all .2s;
-  box-shadow:0 4px 18px rgba(255,215,0,0.4);
-}
-.btn:hover{transform:scale(1.02);}
-.btn:disabled{opacity:.4;cursor:not-allowed;transform:none;}
-.err{background:rgba(220,50,50,0.15);border:1px solid rgba(220,50,50,0.4);
-  border-radius:8px;padding:10px 14px;font-size:13px;color:#ff9090;text-align:center;display:none;}
-.tabs{display:flex;gap:6px;margin-bottom:2px;}
-.tab-btn{
-  flex:1;padding:9px;border-radius:9px;border:1.5px solid rgba(255,255,255,0.15);
-  background:transparent;color:rgba(255,255,255,0.6);font-size:12px;font-weight:bold;
-  cursor:pointer;transition:all .2s;
-}
-.tab-btn.active{border-color:#FFD700;color:#FFD700;background:rgba(255,215,0,0.08);}
-.footer-link{font-size:12px;text-align:center;opacity:.7;margin-top:4px;}
-.footer-link a{color:#FFD700;text-decoration:none;}
-.footer-link a:hover{text-decoration:underline;}
-.spinner{display:none;text-align:center;font-size:13px;opacity:.7;}
+:root{--navy:#0b1630;--navy2:#13224a;--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);--gold:#FFD700;--gold2:#e6a800;--ink:#eef2ff;--mute:#a9b6d6;--ok:#7CFC9A;--bad:#ff9a9a}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;background:radial-gradient(1200px 600px at 80% -10%,#1d3a7a 0,transparent 60%),linear-gradient(160deg,#0b1630,#101f45 55%,#0a1226);min-height:100vh;color:var(--ink);line-height:1.5}
+a{color:var(--gold)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border:0;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradient(45deg,var(--gold),var(--gold2));color:#1a1400;box-shadow:0 6px 20px rgba(255,215,0,.25);text-decoration:none;transition:transform .15s}
+.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);box-shadow:none}
+.btn.ghost:hover{background:rgba(255,255,255,.08)}
+label{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:0 0 6px;letter-spacing:.3px;text-transform:uppercase}
+input,select{width:100%;padding:13px 14px;border-radius:11px;border:1.5px solid var(--line);background:rgba(255,255,255,.06);color:#fff;font-size:15px;outline:none}
+select option{color:#000}
+input:focus,select:focus{border-color:var(--gold)}input:disabled,select:disabled{opacity:.65}
+.msg{display:none;margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px}
+.msg.ok{display:block;background:rgba(124,252,154,.1);border:1px solid rgba(124,252,154,.4);color:var(--ok)}
+.msg.err{display:block;background:rgba(255,120,120,.1);border:1px solid rgba(255,120,120,.4);color:var(--bad)}
+
+body{display:flex;align-items:center;justify-content:center;padding:24px}
+.shell{width:100%;max-width:440px}
+.brand{text-align:center;margin-bottom:22px}
+.brand img{width:84px;height:84px;border-radius:50%;border:3px solid rgba(255,215,0,.55);box-shadow:0 0 34px rgba(255,215,0,.25);margin-bottom:12px}
+.brand h1{font-size:24px;letter-spacing:.2px}.brand p{color:var(--mute);font-size:13.5px;margin-top:4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px 22px;box-shadow:0 18px 50px rgba(0,0,0,.45);backdrop-filter:blur(6px)}
+.field{margin-bottom:16px}
+.hint{font-size:12px;color:var(--mute);margin-top:6px}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;letter-spacing:.5px}
+.alt{text-align:center;margin-top:16px;font-size:13px;color:var(--mute)}
+.alt button{background:none;border:0;color:var(--gold);cursor:pointer;font-size:13px;text-decoration:underline}
+.note{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:11px 13px;font-size:12.5px;color:#f3e7b3;margin-bottom:18px}
 </style>
 </head>
 <body>
-
-<img src="MEDIA/logo_quiz.png" alt="Cadet Media Ghana" class="logo" onerror="this.style.display='none'">
-
-<div class="card">
-  <h2>🎓 Student Portal</h2>
-  <p>View your report, download your certificate, and manage your profile.</p>
-
-  <div>
-    <label>Full Name</label>
-    <input type="text" id="inName" placeholder="Exactly as used at activation">
+<div class="shell">
+  <div class="brand">
+    <img src="MEDIA/logo_quiz.png" alt="Cadet Media Ghana" onerror="this.style.display='none'">
+    <h1>Student Portal</h1>
+    <p>Your results, awards and certificates in one place.</p>
   </div>
 
-  <div class="tabs">
-    <button type="button" class="tab-btn active" id="tabCode" onclick="switchLoginMode('code')">Login with Code</button>
-    <button type="button" class="tab-btn" id="tabPin" onclick="switchLoginMode('pin')">Login with PIN</button>
+  <div class="card">
+    <!-- Main login: Account ID + PIN / activation code -->
+    <form id="idForm" autocomplete="off" onsubmit="return doLoginId(event)">
+      <div class="note">🔑 <b>First time?</b> Use the one-time activation code you were given. You will then choose your own PIN.<br><span style="opacity:.85">Activated a NAAD pendrive code? Your Account ID <b>is</b> that code (like CMG-2026-GH-00013-E25B). Type it in both boxes.</span></div>
+      <div class="field">
+        <label for="inId">Account ID</label>
+        <input class="mono" id="inId" placeholder="e.g. CMG-2026-TV-00012-ABCD" autocapitalize="characters" autocomplete="username" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="inSecret">PIN or activation code</label>
+        <input id="inSecret" type="password" placeholder="Your PIN, or your activation code" autocomplete="current-password">
+      </div>
+      <div class="msg" id="err"></div>
+      <button class="btn" id="goBtn" type="submit" style="width:100%;margin-top:6px">Log in</button>
+      <div class="alt">Older NAAD account? <button type="button" onclick="showLegacy(true)">Log in with name and code</button></div>
+    </form>
+
+    <!-- Older accounts: name + code or PIN (still supported) -->
+    <form id="legacyForm" style="display:none" autocomplete="off" onsubmit="return doLoginLegacy(event)">
+      <div class="field"><label for="lgName">Full name</label><input id="lgName" placeholder="Exactly as used at activation"></div>
+      <div class="field"><label for="lgSecret">Activation code or PIN</label><input id="lgSecret" type="password" placeholder="Activation code or PIN"></div>
+      <div class="msg" id="err2"></div>
+      <button class="btn" id="goBtn2" type="submit" style="width:100%;margin-top:6px">Log in</button>
+      <div class="alt"><button type="button" onclick="showLegacy(false)">← Back to Account ID login</button></div>
+    </form>
   </div>
-
-  <div id="codeField">
-    <label>Activation Code</label>
-    <input type="text" id="inCode" placeholder="e.g. CMG-2026-GH-00029-LNKZ" style="font-family:monospace;text-transform:uppercase;">
-  </div>
-
-  <div id="pinField" style="display:none;">
-    <label>PIN</label>
-    <input type="password" id="inPin" placeholder="Your PIN" inputmode="numeric">
-  </div>
-
-  <div class="err" id="loginErr"></div>
-  <div class="spinner" id="spinner">⏳ Checking…</div>
-
-  <button class="btn" id="loginBtn" onclick="doStudentLogin()">Log In</button>
-
-  <p class="footer-link">
-    New here? <a href="activate.html">Activate your code first</a>
-  </p>
+  <p class="alt" style="margin-top:18px">New to NAAD? <a href="activate.html">Activate your pendrive code</a><br>Forgot your PIN? Ask your school coordinator to reset it.</p>
 </div>
 
 <script>
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
-
-function switchLoginMode(mode){
-  document.getElementById('tabCode').classList.toggle('active', mode === 'code');
-  document.getElementById('tabPin').classList.toggle('active', mode === 'pin');
-  document.getElementById('codeField').style.display = mode === 'code' ? 'block' : 'none';
-  document.getElementById('pinField').style.display   = mode === 'pin'  ? 'block' : 'none';
-}
-
-function doStudentLogin(){
-  var name = document.getElementById('inName').value.trim();
-  var code = document.getElementById('inCode').value.trim();
-  var pin  = document.getElementById('inPin').value.trim();
-  var errEl = document.getElementById('loginErr');
-  var btn   = document.getElementById('loginBtn');
-  errEl.style.display = 'none';
-
-  if(!name){
-    errEl.textContent = 'Please enter your name.';
-    errEl.style.display = 'block';
-    return;
-  }
-  var usingPin = document.getElementById('pinField').style.display !== 'none';
-  if(usingPin && !pin){
-    errEl.textContent = 'Please enter your PIN.';
-    errEl.style.display = 'block';
-    return;
-  }
-  if(!usingPin && !code){
-    errEl.textContent = 'Please enter your activation code.';
-    errEl.style.display = 'block';
-    return;
-  }
-
-  btn.disabled = true;
-  document.getElementById('spinner').style.display = 'block';
-
-  var params = new URLSearchParams({ action: 'studentLogin', name: name });
-  if(usingPin) params.set('pin', pin); else params.set('code', code);
-
-  fetch(APPS_SCRIPT_URL + '?' + params.toString())
-    .then(function(r){ return r.json(); })
+function $(i){return document.getElementById(i)}
+function showLegacy(on){ $('idForm').style.display=on?'none':'block'; $('legacyForm').style.display=on?'block':'none'; }
+function fail(el,msg){ el.textContent=msg; el.className='msg err'; }
+function call(params,btn,errEl){
+  errEl.className='msg'; btn.disabled=true; var t=btn.textContent; btn.textContent='Checking…';
+  fetch(APPS_SCRIPT_URL+'?'+new URLSearchParams(params).toString())
+    .then(function(r){return r.json()})
     .then(function(res){
-      btn.disabled = false;
-      document.getElementById('spinner').style.display = 'none';
-      if(res && res.ok){
-        sessionStorage.setItem('cmgStudentToken', res.token);
-        sessionStorage.setItem('cmgStudentProfile', JSON.stringify(res.profile));
-        window.location.href = 'student_portal.html';
-      } else {
-        errEl.textContent = (res && res.error) ? res.error : 'Login failed. Please try again.';
-        errEl.style.display = 'block';
-      }
+      btn.disabled=false; btn.textContent=t;
+      if(res&&res.ok){
+        sessionStorage.setItem('cmgStudentToken',res.token);
+        sessionStorage.setItem('cmgStudentProfile',JSON.stringify(res.profile));
+        sessionStorage.setItem('cmgNeedsPin',res.needsPin?'1':'');
+        location.href='student_portal.html';
+      } else fail(errEl,(res&&res.error)||'Login failed. Please try again.');
     })
-    .catch(function(){
-      btn.disabled = false;
-      document.getElementById('spinner').style.display = 'none';
-      errEl.textContent = 'Could not reach the server. Check your connection.';
-      errEl.style.display = 'block';
-    });
+    .catch(function(){ btn.disabled=false; btn.textContent=t; fail(errEl,'Could not reach the server. Check your connection.'); });
 }
-
-document.getElementById('inName').focus();
+function doLoginId(e){
+  e.preventDefault();
+  var id=$('inId').value.trim(), sec=$('inSecret').value.trim();
+  if(!id||!sec) return fail($('err'),'Enter your Account ID and your PIN or activation code.'), false;
+  call({action:'studentLoginId',accountId:id,secret:sec},$('goBtn'),$('err')); return false;
+}
+function doLoginLegacy(e){
+  e.preventDefault();
+  var n=$('lgName').value.trim(), s=$('lgSecret').value.trim();
+  if(!n||!s) return fail($('err2'),'Enter your name and your activation code or PIN.'), false;
+  // A PIN is all digits; an activation code contains letters/dashes.
+  var p={action:'studentLogin',name:n}; if(/^\d{4,8}$/.test(s)) p.pin=s; else p.code=s;
+  call(p,$('goBtn2'),$('err2')); return false;
+}
+if(sessionStorage.getItem('cmgStudentToken')) location.replace('student_portal.html');
+$('inId').focus();
 </script>
 </body>
 </html>
