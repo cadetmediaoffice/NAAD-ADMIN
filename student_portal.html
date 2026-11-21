@@ -58,12 +58,15 @@ input:focus,select:focus{border-color:var(--gold)}input:disabled,select:disabled
 .pill{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:800;background:rgba(255,215,0,.14);border:1px solid rgba(255,215,0,.4);color:var(--gold)}
 .pill.green{background:rgba(124,252,154,.12);border-color:rgba(124,252,154,.4);color:var(--ok)}
 .kv{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:13px}.kv div span{display:block;font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.3px}.kv div b{font-size:15px}
+.mods{margin-top:12px;font-size:13px}.mods summary{cursor:pointer;color:var(--gold);font-weight:700}
+.mod{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin-top:8px}.mod .bar{grid-column:1/3;height:6px;border-radius:4px;background:rgba(255,255,255,.1);overflow:hidden}.mod .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold2),var(--gold))}
+.remarks{margin-top:12px;padding:12px 14px;border-left:3px solid var(--gold);background:rgba(255,215,0,.07);border-radius:0 12px 12px 0;font-size:13.5px}.remarks span{display:block;font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.3px;margin-bottom:4px}
 .empty{text-align:center;color:var(--mute);padding:26px 10px;font-size:14px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:560px){.grid{grid-template-columns:1fr}.stats b{font-size:22px}}
 .small{font-size:12px;color:var(--mute)}
 .modal{position:fixed;inset:0;background:rgba(5,10,25,.88);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
 .modal .box{background:#13224a;border:1px solid var(--line);border-radius:20px;padding:26px;max-width:400px;width:100%}
-@media print{.hero-cover{display:none}body{background:#fff;color:#000}.top .btn,.tabs,.modal,.noprint,.btn{display:none!important}.hero,.ev,.card,.stat{background:#fff!important;border:1px solid #bbb!important;box-shadow:none!important;color:#000}.hero .sub,.ev .meta,.stat span,.kv div span{color:#444!important}.stat b,.avatar{color:#000!important}.panel{display:block!important}#tabProfile,#tabSecurity,#tabLink{display:none!important}}
+@media print{.mods{display:none}.hero-cover{display:none}body{background:#fff;color:#000}.top .btn,.tabs,.modal,.noprint,.btn{display:none!important}.hero,.ev,.card,.stat{background:#fff!important;border:1px solid #bbb!important;box-shadow:none!important;color:#000}.hero .sub,.ev .meta,.stat span,.kv div span{color:#444!important}.stat b,.avatar{color:#000!important}.panel{display:block!important}#tabProfile,#tabSecurity,#tabLink{display:none!important}}
 </style>
 </head>
 <body>
@@ -340,6 +343,15 @@ function certUrl(c){
   return CERTIFICATE_PAGE_URL+'?'+new URLSearchParams({name:report.profile.name||'',gender:'',school:c.school||'',region:c.region||'',pct:c.totalScore||0,badge:badge,date:d,serial:c.code||'N/A',modules:mods}).toString();
 }
 
+function modulesHtml(c){
+  var raw=c.raw; if(!raw||!c.submitted) return '';
+  var rows=ASSESSMENT_MODULES.map(function(k){
+    var v=String(raw[k]||'').trim(), m=v.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/); if(!m) return '';
+    var pct=Math.max(0,Math.min(100,(+m[1]/(+m[2]||1))*100));
+    return '<div class="mod"><span>'+esc(k.replace(/ Quiz Score$| Score$/,''))+'</span><b>'+esc(v)+'</b><div class="bar"><i style="width:'+pct.toFixed(0)+'%"></i></div></div>';
+  }).join('');
+  return rows?'<details class="mods"><summary>See my score in each subject</summary>'+rows+'</details>':'';
+}
 function render(){
   var p=report.profile;
   $('hName').textContent=p.name||''; $('hId').textContent=p.accountId;
@@ -358,7 +370,7 @@ function render(){
       '<div class="row"><div><h3>NAAD Assessment</h3><div class="meta">'+esc(c.school)+(c.region?' · '+esc(c.region):'')+(c.actDate?' · '+esc(new Date(c.actDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})):'')+'</div></div>'+
       (c.submitted?'<span class="pill green">✅ Completed · '+esc(c.totalScore)+'%</span>':'<span class="pill">⏳ In progress</span>')+'</div>'+
       (c.submitted&&c.badge?'<div class="kv"><div><span>Badge</span><b>'+esc(c.badge)+'</b></div></div>':'')+
-      (c.submitted?'<div style="margin-top:12px"><a class="btn" href="'+esc(certUrl(c))+'" target="_blank" rel="noopener">🏆 View my certificate</a></div>':'')});
+      modulesHtml(c)+(c.submitted?'<div style="margin-top:12px"><a class="btn" href="'+esc(certUrl(c))+'" target="_blank" rel="noopener">🏆 View my certificate</a></div>':'')});
   });
   var progNames={}; if((report.codes||[]).length) progNames['NAAD']=1;
   (report.programs||[]).forEach(function(r){
@@ -366,7 +378,7 @@ function render(){
     var kv=''; if(d.combined!=null) kv+='<div><span>Combined score</span><b>'+esc(d.combined)+'</b></div>';
     if(d.judges!=null) kv+='<div><span>Judges</span><b>'+esc(d.judges)+(d.judgesMax?'/'+esc(d.judgesMax):'')+'</b></div>';
     if(d.rank) kv+='<div><span>Position</span><b>'+esc(d.rank)+(d.total?' of '+esc(d.total):'')+'</b></div>';
-    ev.push({t:new Date(r.recordedAt||0).getTime()||0,html:'<div class="row"><div><h3>'+esc(r.program)+'</h3><div class="meta">'+esc([r.level||d.category,r.year].filter(Boolean).join(' · '))+'</div></div><span class="pill">'+esc(r.result)+'</span></div>'+(kv?'<div class="kv">'+kv+'</div>':'')});
+    ev.push({t:new Date(r.recordedAt||0).getTime()||0,html:'<div class="row"><div><h3>'+esc(r.program)+'</h3><div class="meta">'+esc([r.level||d.category,r.year].filter(Boolean).join(' · '))+'</div></div><span class="pill">'+esc(r.result)+'</span></div>'+(kv?'<div class="kv">'+kv+'</div>':'')+(d.remarks?'<div class="remarks"><span>Judges\' remarks</span>'+esc(d.remarks)+'</div>':'')});
   });
   ev.sort(function(a,b){return b.t-a.t});
   $('journey').innerHTML=ev.length?'<div class="tl">'+ev.map(function(e){return '<div class="ev">'+e.html+'</div>'}).join('')+'</div>':'<div class="empty">Your results and awards will appear here as you take part in Cadet Media programmes.</div>';
