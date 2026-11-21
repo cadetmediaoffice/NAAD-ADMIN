@@ -63,8 +63,8 @@ body:before{content:"";position:fixed;inset:0;background:rgba(255,255,255,.78);b
 
   <div class="card">
     <!-- Main login: Account ID + PIN / activation code -->
-    <form id="idForm" autocomplete="off" onsubmit="return doLoginId(event)">
-      <div class="note">🔑 <b>First time?</b> Use the one-time activation code you were given. You will then choose your own PIN.<br><span style="opacity:.85">Activated a NAAD pendrive code? Your Account ID <b>is</b> that code (like CMG-2026-GH-00013-E25B). Type it in both boxes.</span></div>
+    <form id="idForm" style="display:none" autocomplete="off" onsubmit="return doLoginId(event)">
+      <div class="note">🔑 <b>First time?</b> Enter your Account ID and the one-time activation code you were given. You will then be asked to create your own PIN. After that you only need your name and PIN.<br><span style="opacity:.85">Activated a NAAD pendrive code? Your Account ID <b>is</b> that code (like CMG-2026-GH-00013-E25B). Type it in both boxes.</span></div>
       <div class="field">
         <label for="inId">Account ID</label>
         <input class="mono" id="inId" placeholder="e.g. CMG-2026-TV-00012-ABCD" autocapitalize="characters" autocomplete="username" spellcheck="false">
@@ -75,16 +75,17 @@ body:before{content:"";position:fixed;inset:0;background:rgba(255,255,255,.78);b
       </div>
       <div class="msg" id="err"></div>
       <button class="btn" id="goBtn" type="submit" style="width:100%;margin-top:6px">Log in</button>
-      <div class="alt"><button type="button" onclick="showReset(true)">Forgot your PIN?</button> · <button type="button" onclick="showLegacy(true)">Older account? Use name and code</button></div>
+      <div class="alt"><button type="button" onclick="showReset(true)">Forgot your PIN?</button> · <button type="button" onclick="showLegacy(true)">← Log in with name and PIN</button></div>
     </form>
 
     <!-- Older accounts: name + code or PIN (still supported) -->
-    <form id="legacyForm" style="display:none" autocomplete="off" onsubmit="return doLoginLegacy(event)">
-      <div class="field"><label for="lgName">Full name</label><input id="lgName" placeholder="Exactly as used at activation"></div>
-      <div class="field"><label for="lgSecret">Activation code or PIN</label><input id="lgSecret" type="password" placeholder="Activation code or PIN"></div>
+    <form id="legacyForm" autocomplete="off" onsubmit="return doLoginLegacy(event)">
+      <div class="field"><label for="lgName">Full name</label><input id="lgName" placeholder="Your full name, as registered" autocomplete="username"></div>
+      <div class="field"><label for="lgSecret">PIN</label><input id="lgSecret" type="password" inputmode="numeric" placeholder="Your PIN" autocomplete="current-password"><div class="hint">Your PIN is the 4–8 digit number you created. Same name as another student? Use your Account ID instead.</div></div>
       <div class="msg" id="err2"></div>
       <button class="btn" id="goBtn2" type="submit" style="width:100%;margin-top:6px">Log in</button>
-      <div class="alt"><button type="button" onclick="showLegacy(false)">← Back to Account ID login</button></div>
+      <div class="alt"><button type="button" onclick="showReset(true)">Forgot your PIN?</button></div>
+      <div class="alt" style="margin-top:8px">First time, or two students share your name? <button type="button" onclick="showLegacy(false)">Log in with Account ID</button></div>
     </form>
     <!-- Forgot PIN: email a code, then choose a new PIN -->
     <div id="resetBox" style="display:none">
@@ -109,7 +110,7 @@ body:before{content:"";position:fixed;inset:0;background:rgba(255,255,255,.78);b
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
 function $(i){return document.getElementById(i)}
 function showLegacy(on){ $('idForm').style.display=on?'none':'block'; $('legacyForm').style.display=on?'block':'none'; }
-function showReset(on){ $('idForm').style.display=on?'none':'block'; $('legacyForm').style.display='none'; $('resetBox').style.display=on?'block':'none'; if(on&&$('inId').value&&!$('rsId').value) $('rsId').value=$('inId').value.trim(); }
+function showReset(on){ $('idForm').style.display='none'; $('legacyForm').style.display=on?'none':'block'; $('resetBox').style.display=on?'block':'none'; if(on&&$('inId').value&&!$('rsId').value) $('rsId').value=$('inId').value.trim(); }
 function rsShow(ok,t){ var m=$('rsMsg'); m.textContent=t; m.className='msg '+(ok?'ok':'err'); }
 function rsCall(params,btn){ var t=btn.textContent; btn.disabled=true; btn.textContent='Please wait…';
   return fetch(APPS_SCRIPT_URL+'?'+new URLSearchParams(params).toString()).then(function(r){return r.json()}).then(function(r){btn.disabled=false;btn.textContent=t;return r}).catch(function(){btn.disabled=false;btn.textContent=t;rsShow(false,'Could not reach the server. Check your connection.');return null}); }
@@ -145,13 +146,13 @@ function doLoginId(e){
 function doLoginLegacy(e){
   e.preventDefault();
   var n=$('lgName').value.trim(), s=$('lgSecret').value.trim();
-  if(!n||!s) return fail($('err2'),'Enter your name and your activation code or PIN.'), false;
+  if(!n||!s) return fail($('err2'),'Enter your name and your PIN.'), false;
   // A PIN is all digits; an activation code contains letters/dashes.
   var p={action:'studentLogin',name:n}; if(/^\d{4,8}$/.test(s)) p.pin=s; else p.code=s;
   call(p,$('goBtn2'),$('err2')); return false;
 }
 if(sessionStorage.getItem('cmgStudentToken')) location.replace('student_portal.html');
-$('inId').focus();
+$('lgName').focus();
 </script>
 </body>
 </html>
