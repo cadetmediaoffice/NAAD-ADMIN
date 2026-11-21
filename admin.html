@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <title>CMG Admin Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#07101e">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NAAD Admin">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Barlow+Condensed:wght@400;600;700;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -17,6 +25,29 @@
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);
   min-height:100vh;overflow-x:hidden;}
 
+/* NOMINEES */
+.nom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;margin-top:6px;}
+.nom-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:8px;}
+.nom-top{display:flex;gap:12px;align-items:center;}
+.nom-photo{width:74px;height:74px;border-radius:12px;background:rgba(255,255,255,.06);border:1px dashed var(--border);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:10px;color:var(--muted);overflow:hidden;flex:none;line-height:1.2;}
+.nom-photo .icon{font-size:20px;}
+.nom-name{font-weight:700;font-size:15px;line-height:1.2;}
+.nom-sub{font-size:12px;color:var(--muted);}
+.nom-pct{font-family:'Orbitron',monospace;color:var(--gold);font-size:18px;font-weight:700;}
+.nom-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.nom-btn{background:rgba(255,215,0,.12);border:1px solid var(--border);color:var(--gold);padding:6px 11px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+.nom-btn:hover{background:rgba(255,215,0,.22);}
+.nom-btn.ok{border-color:rgba(0,230,118,.4);color:var(--green);background:rgba(0,230,118,.1);}
+.nom-btn.no{border-color:rgba(255,82,82,.4);color:var(--red);background:rgba(255,82,82,.1);}
+.nom-chip{font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;}
+.nom-chip.Pending{background:rgba(255,215,0,.14);color:var(--gold);}
+.nom-chip.Approved{background:rgba(0,230,118,.14);color:var(--green);}
+.nom-chip.Declined{background:rgba(255,82,82,.14);color:var(--red);}
+.nom-contact{font-size:12px;background:rgba(0,230,118,.08);border:1px solid rgba(0,230,118,.3);border-radius:8px;padding:7px 9px;word-break:break-all;}
+.nom-lock{font-size:11px;color:var(--muted);}
+.req-row{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;display:flex;flex-direction:column;gap:6px;}
+.nom-note{width:100%;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:7px 9px;font-family:inherit;font-size:12px;}
 /* BG */
 .bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;
   background-image:linear-gradient(rgba(255,215,0,0.025) 1px,transparent 1px),
@@ -116,6 +147,31 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--text);
   background:rgba(255,80,80,0.07);color:#ff8080;font-size:13px;font-weight:700;
   cursor:pointer;font-family:'Barlow Condensed',sans-serif;transition:all .2s;}
 .logout-btn:hover{background:rgba(255,80,80,0.15);}
+/* AGENCY BADGE + ONLINE STRIP + TOASTS */
+.me-badge{display:flex;align-items:center;gap:9px;padding:4px 14px 4px 4px;border:1.5px solid rgba(0,230,118,.35);
+  border-radius:999px;background:rgba(0,230,118,.06);}
+.me-badge img{width:38px;height:38px;border-radius:50%;background:#fff;object-fit:contain;display:block;}
+.me-badge .me-name{font-size:12px;font-weight:700;color:#e8f0ff;line-height:1.15;max-width:170px;}
+.me-badge .me-sub{font-size:10px;color:#00e676;letter-spacing:.5px;}
+#onlineStrip{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin:-8px 0 22px;padding:10px 14px;
+  border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.03);}
+#onlineStrip .os-label{font-size:12px;color:var(--muted);letter-spacing:.8px;white-space:nowrap;}
+#onlineStrip .os-label b{color:#00e676;}
+#onlineLogos{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.ol{position:relative;width:46px;height:46px;border-radius:50%;background:#fff;border:2px solid #00e676;
+  box-shadow:0 0 10px rgba(0,230,118,.4);}
+.ol img{width:100%;height:100%;border-radius:50%;object-fit:contain;display:block;}
+.ol .dot{position:absolute;right:-1px;bottom:-1px;width:12px;height:12px;border-radius:50%;background:#00e676;border:2px solid #0b1a2b;}
+.ol.new{animation:logoPop .6s ease;}
+.ol .ini{display:flex;align-items:center;justify-content:center;height:100%;font-size:12px;font-weight:800;color:#0b1a2b;}
+#toastBox{position:fixed;bottom:16px;right:16px;flex-direction:column-reverse;z-index:10050;display:flex;flex-direction:column;gap:10px;max-width:min(360px,calc(100vw - 32px));}
+.toast{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;background:rgba(8,20,36,.96);
+  border:1.5px solid #00e676;box-shadow:0 8px 28px rgba(0,0,0,.5);color:#e8f0ff;font-size:13px;
+  animation:toastIn .45s ease;transition:opacity .5s,transform .5s;}
+.toast img{width:40px;height:40px;border-radius:50%;background:#fff;object-fit:contain;flex:none;}
+.toast b{color:#00e676;}
+.toast.out{opacity:0;transform:translateX(30px);}
+@keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:none}}
 .live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;
   background:var(--green);box-shadow:0 0 8px var(--green);
   animation:pulse 1.5s infinite;margin-right:6px;}
@@ -298,9 +354,218 @@ td.muted{color:var(--muted);font-size:12px;}
 .profile-cert-link:hover{background:rgba(255,215,0,0.08);}
 tbody tr.clickable{cursor:pointer;}
 tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
+
+/* Notification bell */
+.bell-wrap{position:relative;display:inline-block;}
+#bellBadge{display:none;position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;border-radius:9px;background:var(--red);color:#fff;font-size:10px;font-weight:700;line-height:18px;text-align:center;padding:0 4px;}
+#bellBtn.ring{animation:bellring .8s ease 2;}
+@keyframes bellring{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-12deg)}60%{transform:rotate(8deg)}80%{transform:rotate(-6deg)}}
+#bellPanel{display:none;position:absolute;right:0;top:calc(100% + 8px);width:340px;max-width:92vw;max-height:70vh;overflow:auto;z-index:600;background:rgba(8,20,36,.98);border:1px solid rgba(255,215,0,.25);border-radius:14px;box-shadow:0 14px 40px rgba(0,0,0,.6);}
+#bellPanel .bp-head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08);font-weight:700;font-size:13px;color:var(--gold);}
+#bellPanel .bp-head button{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;}
+.bp-item{display:block;width:100%;text-align:left;background:none;border:none;border-bottom:1px solid rgba(255,255,255,.06);padding:11px 14px;cursor:pointer;color:var(--text);font-family:inherit;}
+.bp-item:hover{background:rgba(255,215,0,.06);}
+.bp-item.unread{border-left:3px solid var(--gold);background:rgba(255,215,0,.05);}
+.bp-title{font-size:13px;font-weight:700;margin-bottom:2px;}
+.bp-msg{font-size:12px;color:var(--muted);line-height:1.4;}
+.bp-time{font-size:10px;color:var(--muted);margin-top:4px;opacity:.8;}
+.bp-empty{padding:22px 14px;text-align:center;font-size:12px;color:var(--muted);}
+.bp-send{padding:10px 14px;border-top:1px solid rgba(255,255,255,.08);}
+.bp-send-label{font-size:11px;color:var(--gold);font-weight:700;margin-bottom:6px;}
+.bp-send textarea{width:100%;box-sizing:border-box;resize:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:8px;}
+.bp-send button{margin-top:6px;width:100%;padding:8px;border-radius:8px;border:1px solid rgba(255,215,0,.4);background:rgba(255,215,0,.12);color:var(--gold);font-weight:700;cursor:pointer;font-size:12px;}
+#bellSendStatus{font-size:11px;margin-top:5px;color:var(--muted);min-height:14px;}
+.bc-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,215,0,.18);border-radius:14px;padding:14px;margin-bottom:12px;}
+.bc-card.unread{border-left:3px solid var(--gold);}
+.bc-h{font-weight:700;color:var(--gold);font-size:14px;margin-bottom:8px;}
+.bc-card textarea,.bc-reply input{width:100%;box-sizing:border-box;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:8px;color:var(--text);font-family:inherit;font-size:13px;padding:9px;}
+.bc-btn{padding:9px 18px;border-radius:8px;border:1px solid rgba(255,215,0,.4);background:rgba(255,215,0,.12);color:var(--gold);font-weight:700;cursor:pointer;font-size:12px;}
+.bc-meta{font-size:11px;color:var(--muted);margin-bottom:6px;}
+.bc-msg{font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;}
+.bc-reply{display:flex;gap:8px;margin-top:10px;}
+.bc-rep-item{border-left:2px solid rgba(79,195,247,.35);padding:6px 10px;margin-top:8px;font-size:12px;}
+.bp-foot{padding:10px 14px;text-align:center;}
+.back-btn{display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;padding:7px 14px;border-radius:20px;border:1px solid rgba(255,215,0,.35);background:rgba(255,215,0,.08);color:var(--gold);font-weight:700;font-size:12px;cursor:pointer;font-family:inherit;}
+.back-btn:hover{background:rgba(255,215,0,.16);}
+#bellPanel .bp-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+#bellPanel .bp-tools button{background:none;border:none;color:var(--muted);font-size:11px;cursor:pointer;text-decoration:underline;}
+@media (max-width:700px){
+  #bellPanel{position:fixed;left:50%;right:auto;top:84px;transform:translateX(-50%);width:min(94vw,380px);max-height:76vh;}
+}
+.bp-foot a{color:var(--gold);font-size:12px;text-decoration:none;font-weight:700;}
+/* GUIDED TOUR */
+#tourShade{position:fixed;inset:0;z-index:100001;display:none}
+#tourShade.show{display:block}
+#tourHole{position:fixed;border-radius:12px;box-shadow:0 0 0 9999px rgba(3,8,20,.78);border:2px solid var(--gold);transition:all .25s ease;pointer-events:none}
+#tourCard{position:fixed;z-index:100002;width:min(360px,calc(100vw - 24px));background:linear-gradient(160deg,#0d1f3c,#0a1529);border:1px solid rgba(255,215,0,.45);border-radius:16px;padding:16px 16px 12px;box-shadow:0 12px 40px rgba(0,0,0,.6);color:var(--text);display:none}
+#tourCard.show{display:block}
+#tourCard .t-step{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:4px}
+#tourCard h3{font-family:var(--fh);font-size:16px;margin:0 0 6px;color:#fff}
+#tourCard .t-body{font-size:13px;line-height:1.65;color:rgba(238,242,255,.88)}
+#tourCard .t-body ul{margin:6px 0 0 16px;padding:0}
+#tourCard .t-body li{margin:3px 0}
+#tourCard .t-dots{display:flex;gap:4px;margin:12px 0 10px;flex-wrap:wrap}
+#tourCard .t-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.18)}
+#tourCard .t-dots i.on{background:var(--gold)}
+#tourCard .t-dots i.done{background:rgba(255,215,0,.5)}
+#tourCard .t-row{display:flex;gap:8px;align-items:center}
+#tourCard .t-skip{margin-right:auto;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;padding:8px 4px}
+#tourCard .t-back{padding:9px 14px;border-radius:9px;border:1px solid rgba(255,255,255,.2);background:transparent;color:var(--text);font-weight:600;cursor:pointer;font-size:12px}
+#tourCard .t-next{padding:9px 18px;border-radius:9px;border:none;background:var(--gold);color:#1a1200;font-weight:800;cursor:pointer;font-size:13px}
+@media(max-width:700px){#tourCard{left:12px!important;right:12px;bottom:12px;top:auto!important;width:auto}}
 </style>
 </head>
 <body>
+<script>
+/* CMG message alerts: sound + vibration + title flash + pop-up with quick reply.
+   Shared by the admin dashboard and the content portal. */
+window.cmgAlert = (function(){
+  var ctx = null, unlocked = false, queue = [], current = null, flashTimer = null, baseTitle = document.title;
+  function ls(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  var muted = ls('cmgSoundOff') === '1';
+
+  // ---------- styles ----------
+  var css = document.createElement('style');
+  css.textContent =
+    '#cmgPop{position:fixed;left:50%;top:14px;transform:translateX(-50%);width:min(94vw,430px);z-index:2147483000;display:none;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}' +
+    '#cmgPop .cp-card{background:#0b1626;color:#eef2ff;border:1px solid rgba(255,215,0,.55);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.75);padding:14px 14px 12px;animation:cpIn .28s ease;}' +
+    '@keyframes cpIn{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}' +
+    '#cmgPop .cp-top{display:flex;align-items:center;gap:8px;margin-bottom:6px;}' +
+    '#cmgPop .cp-ico{font-size:22px;animation:cpRing .9s ease 2;}@keyframes cpRing{0%,100%{transform:rotate(0)}25%{transform:rotate(16deg)}50%{transform:rotate(-14deg)}75%{transform:rotate(8deg)}}' +
+    '#cmgPop .cp-title{font-weight:800;font-size:14px;color:#FFD700;flex:1;min-width:0;}' +
+    '#cmgPop .cp-x{background:none;border:none;color:#9fb0cf;font-size:22px;line-height:1;cursor:pointer;padding:2px 6px;}' +
+    '#cmgPop .cp-msg{font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word;max-height:32vh;overflow:auto;margin:2px 0 10px;}' +
+    '#cmgPop .cp-meta{font-size:11px;color:#9fb0cf;margin-bottom:8px;}' +
+    '#cmgPop .cp-row{display:flex;gap:8px;}' +
+    '#cmgPop input{flex:1;min-width:0;box-sizing:border-box;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.2);border-radius:10px;color:#fff;font-size:16px;padding:10px;font-family:inherit;}' +
+    '#cmgPop .cp-btn{border:1px solid rgba(255,215,0,.55);background:rgba(255,215,0,.16);color:#FFD700;font-weight:800;border-radius:10px;padding:10px 16px;cursor:pointer;font-size:14px;white-space:nowrap;}' +
+    '#cmgPop .cp-btn:disabled{opacity:.5}' +
+    '#cmgPop .cp-foot{display:flex;justify-content:space-between;align-items:center;margin-top:8px;font-size:12px;}' +
+    '#cmgPop .cp-link{background:none;border:none;color:#9fb0cf;text-decoration:underline;cursor:pointer;font-size:12px;padding:2px;}' +
+    '#cmgPop .cp-st{font-size:12px;color:#9fb0cf;min-height:15px;margin-top:6px;}' +
+    '#cmgSoundHint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:2147482000;display:none;background:#0b1626;color:#FFD700;border:1px solid rgba(255,215,0,.5);border-radius:22px;padding:9px 16px;font-size:13px;font-family:system-ui,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.6);cursor:pointer;max-width:92vw;text-align:center;}';
+  document.head.appendChild(css);
+
+  var pop = document.createElement('div'); pop.id = 'cmgPop';
+  var hint = document.createElement('div'); hint.id = 'cmgSoundHint'; hint.textContent = '🔇 Tap here to turn on message sounds';
+  function mount(){ document.body.appendChild(pop); document.body.appendChild(hint); }
+  if(document.body) mount(); else document.addEventListener('DOMContentLoaded', mount);
+
+  // ---------- sound ----------
+  function ensureCtx(){
+    if(ctx) return ctx;
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if(!AC) return null;
+    try{ ctx = new AC(); }catch(e){ ctx = null; }
+    return ctx;
+  }
+  function unlock(){
+    var c = ensureCtx(); if(!c) return;
+    try{
+      if(c.state === 'suspended' && c.resume) c.resume();
+      var b = c.createBuffer(1, 1, 22050), s = c.createBufferSource(); s.buffer = b; s.connect(c.destination); s.start(0); // silent tick wakes iOS audio
+    }catch(e){}
+    if(c.state === 'running' || c.state === 'suspended'){ unlocked = true; hint.style.display = 'none'; }
+  }
+  ['pointerdown','touchstart','touchend','mousedown','keydown','click'].forEach(function(ev){
+    document.addEventListener(ev, unlock, {passive:true});
+  });
+  hint.addEventListener('click', function(){ unlock(); chime('message'); });
+
+  function tone(c, freq, start, dur, gain, type){
+    var o = c.createOscillator(), g = c.createGain();
+    o.type = type || 'sine'; o.frequency.setValueAtTime(freq, start);
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.exponentialRampToValueAtTime(gain, start + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+    o.connect(g); g.connect(c.destination); o.start(start); o.stop(start + dur + 0.05);
+  }
+  function chime(kind){
+    if(muted) return;
+    var c = ensureCtx(); if(!c) return;
+    try{ if(c.state === 'suspended' && c.resume) c.resume(); }catch(e){}
+    var t = c.currentTime + 0.02;
+    if(kind === 'soft'){ tone(c, 700, t, 0.35, 0.28); return; }
+    // clear three-note "ding-ding-dong" — deliberately easy to hear
+    tone(c, 988, t,        0.30, 0.5, 'triangle');
+    tone(c, 1319, t + 0.16, 0.30, 0.5, 'triangle');
+    tone(c, 784,  t + 0.34, 0.55, 0.55, 'triangle');
+  }
+  function buzz(){ try{ if(navigator.vibrate) navigator.vibrate([220,90,220]); }catch(e){} }
+
+  // ---------- title flash + OS notification ----------
+  function flash(n){
+    clearInterval(flashTimer); var on = false;
+    flashTimer = setInterval(function(){ on = !on; document.title = on ? '🔔 (' + n + ') New message' : baseTitle; }, 1000);
+  }
+  function stopFlash(){ clearInterval(flashTimer); flashTimer = null; document.title = baseTitle; }
+  document.addEventListener('visibilitychange', function(){ if(!document.hidden) stopFlash(); });
+  window.addEventListener('focus', stopFlash);
+  function osNotify(title, body){
+    try{
+      if(!('Notification' in window) || Notification.permission !== 'granted' || !document.hidden) return;
+      var n = new Notification(title, { body: body, tag: 'cmg-msg' });
+      n.onclick = function(){ try{ window.focus(); n.close(); }catch(e){} };
+    }catch(e){}
+  }
+
+  // ---------- pop-up ----------
+  function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function close(){ pop.style.display = 'none'; current = null; if(queue.length) show(queue.shift()); }
+  function show(item){
+    current = item;
+    var more = queue.length ? ' · +' + queue.length + ' more' : '';
+    var html = '<div class="cp-card"><div class="cp-top"><span class="cp-ico">' + esc(item.icon || '🔔') + '</span><span class="cp-title">' +
+      esc(item.title || 'New message') + '</span><button class="cp-x" aria-label="Close">×</button></div>' +
+      '<div class="cp-meta">' + esc(new Date(item.ts || Date.now()).toLocaleString()) + more + '</div>' +
+      '<div class="cp-msg">' + esc(item.msg || '') + '</div>';
+    if(item.onReply){
+      html += '<div class="cp-row"><input type="text" maxlength="300" placeholder="' + esc(item.replyLabel || 'Type a reply…') + '"><button class="cp-btn cp-send">↩ Reply</button></div><div class="cp-st"></div>';
+    }
+    html += '<div class="cp-foot"><button class="cp-link cp-open">Open all messages</button><button class="cp-link cp-later">Dismiss</button></div></div>';
+    pop.innerHTML = html; pop.style.display = 'block';
+    pop.querySelector('.cp-x').onclick = close;
+    pop.querySelector('.cp-later').onclick = close;
+    pop.querySelector('.cp-open').onclick = function(){ close(); if(item.onOpen) item.onOpen(); };
+    if(item.onReply){
+      var inp = pop.querySelector('input'), btn = pop.querySelector('.cp-send'), st = pop.querySelector('.cp-st');
+      function send(){
+        var text = inp.value.trim(); if(!text){ inp.focus(); return; }
+        btn.disabled = true; st.textContent = 'Sending…';
+        item.onReply(text, function(ok){
+          btn.disabled = false;
+          if(ok){ st.textContent = '✅ Sent'; setTimeout(close, 900); }
+          else st.textContent = '❌ Could not send. Try again.';
+        });
+      }
+      btn.onclick = send;
+      inp.addEventListener('keydown', function(e){ if(e.key === 'Enter') send(); });
+    }
+  }
+
+  // ---------- public ----------
+  function notify(item){
+    if(!item.silent){
+      chime(item.sound || 'message'); buzz();
+      flash(1 + queue.length + (current ? 1 : 0));
+      osNotify(item.title || 'New message', String(item.msg || '').slice(0, 140));
+    }
+    if(current) queue.push(item); else show(item);
+    if(!unlocked && !muted){ hint.style.display = 'block'; setTimeout(function(){ if(unlocked) hint.style.display = 'none'; }, 100); }
+  }
+  setTimeout(function(){ if(!unlocked && !muted) hint.style.display = 'block'; }, 2500);
+  return {
+    notify: notify,
+    test: function(){ unlock(); chime('message'); },
+    isMuted: function(){ return muted; },
+    setMuted: function(m){ muted = !!m; lset('cmgSoundOff', muted ? '1' : '0'); if(muted) hint.style.display = 'none'; },
+    enableOsAlerts: function(){ try{ if('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); }catch(e){} }
+  };
+})();
+
+</script>
+
 <div class="bg-grid"></div>
 
 <!-- BOOT OVERLAY (shown on initial page load, before login) -->
@@ -327,6 +592,8 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
       onkeydown="if(event.key==='Enter')doLogin()">
     <div class="login-err" id="loginErr">❌ Incorrect password. Try again.</div>
     <button onclick="doLogin()">🔓 Enter Dashboard</button>
+    <a id="installLink" href="#" onclick="installApp();return false;"
+       style="display:none;margin-top:12px;font-size:12px;color:var(--gold);text-decoration:none;letter-spacing:.5px;">📲 Install this app on your phone or laptop</a>
   </div>
 </div>
 
@@ -339,20 +606,61 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
   <div class="load-sub">Cadet Media Ghana · Secure Session</div>
 </div>
 
+<!-- INSTALL HELP (iPhone / iPad) -->
+<div id="installHelp" style="display:none;position:fixed;inset:0;z-index:10100;background:rgba(0,0,0,.72);align-items:center;justify-content:center;padding:20px;">
+  <div style="max-width:340px;background:#0b1a2b;border:1.5px solid var(--gold);border-radius:16px;padding:22px;color:#e8f0ff;font-size:14px;line-height:1.7;text-align:center;">
+    <img src="icon-192.png" alt="" style="width:64px;height:64px;border-radius:14px;margin-bottom:8px;">
+    <div style="font-family:'Orbitron',monospace;color:var(--gold);font-size:14px;margin-bottom:10px;">INSTALL NAAD ADMIN</div>
+    1. Open this page in <b>Safari</b>.<br>
+    2. Tap the <b>Share</b> button <span style="font-size:18px;">⬆️</span><br>
+    3. Choose <b>“Add to Home Screen”</b>.<br>
+    4. Tap <b>Add</b>.
+    <button onclick="document.getElementById('installHelp').style.display='none'" style="display:block;margin:16px auto 0;padding:10px 22px;border:none;border-radius:10px;background:var(--gold);color:#04090f;font-weight:800;cursor:pointer;">Got it</button>
+  </div>
+</div>
+
 <!-- MAIN DASHBOARD -->
 <div class="wrap" id="dashboard" style="display:none;">
 
   <!-- HEADER -->
   <div class="header">
     <div class="header-left">
+      <button class="back-btn" onclick="goBack()">← Back</button>
       <h1>⚙️ ADMIN DASHBOARD</h1>
       <p><span class="live-dot"></span>CADET MEDIA GHANA · NAAD SAFETY EDITION 2026</p>
     </div>
     <div class="header-right">
+      <div class="me-badge" id="meBadge" style="display:none;">
+        <img id="meLogo" src="logo_cmg.png" alt="">
+        <div><div class="me-name" id="meName"></div><div class="me-sub">● LOGGED IN</div></div>
+      </div>
+      <button class="refresh-btn" onclick="TOUR.start()" title="Guided tour">🎓 Tour</button>
+      <div class="bell-wrap" id="bellWrap" style="display:none;">
+        <button class="refresh-btn" id="bellBtn" onclick="toggleBell(event)" title="Content Portal notifications">🔔<span id="bellBadge"></span></button>
+        <div id="bellPanel">
+          <div class="bp-head"><span>🔔 Messages</span><span class="bp-tools"><button id="soundBtn" onclick="toggleSound()">🔊 Sound on</button><button onclick="cmgAlert.test()">Test</button><button data-cmg-push onclick="cmgPush.toggle()">📲 Alerts</button><button onclick="cmgPush.testUI()">Test alert</button><button onclick="markBellRead()">Mark all read</button></span></div>
+          <div id="bellList"></div>
+          <div class="bp-send">
+            <div class="bp-send-label" id="bellSendLabel">Message</div>
+            <textarea id="bellMsg" rows="2" maxlength="400" placeholder="Type a message…"></textarea>
+            <button onclick="sendBellMsg()" id="bellSendBtn">Send</button>
+            <div id="bellSendStatus"></div>
+          </div>
+          <div class="bp-foot"><a href="portal.html">📝 Open Content Portal →</a></div>
+        </div>
+      </div>
+      <button class="refresh-btn" id="installBtn" style="display:none;" onclick="installApp()">📲 Install App</button>
       <button class="refresh-btn" onclick="loadData()">🔄 Refresh</button>
       <button class="logout-btn" onclick="doLogout()">🚪 Logout</button>
     </div>
   </div>
+
+  <!-- AGENCIES ONLINE NOW -->
+  <div id="onlineStrip">
+    <div class="os-label">🟢 AGENCIES ONLINE: <b id="onlineCount">0</b></div>
+    <div id="onlineLogos"></div>
+  </div>
+  <div id="toastBox"></div>
 
   <!-- DATA SOURCE -->
   <div id="sourceBadge" class="source-badge hybrid">
@@ -440,9 +748,15 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
     <button class="tab active" onclick="switchTab('students',this)">👤 All Students</button>
     <button class="tab" onclick="switchTab('schools',this)">🏫 Schools</button>
     <button class="tab" onclick="switchTab('regions',this)">🌍 Regions</button>
+    <button class="tab" onclick="switchTab('me',this)">🎯 M&amp;E</button>
+    <button class="tab" onclick="switchTab('broadcast',this)">📢 Broadcasts <span id="bcTabBadge" style="display:none;background:var(--red);color:#fff;border-radius:9px;padding:0 6px;font-size:10px;margin-left:3px;"></span></button>
+    <button class="tab" onclick="switchTab('nominees',this)">⭐ Nominees</button>
+    <button class="tab" onclick="switchTab('requests',this)">🤝 Requests <span id="reqBadge" style="display:none;background:var(--red);color:#fff;border-radius:9px;padding:0 6px;font-size:10px;margin-left:3px;"></span></button>
+    <button class="tab" onclick="switchTab('leaderboard',this)">🥇 Leaderboard</button>
     <button class="tab" onclick="switchTab('charts',this)">📊 Charts</button>
     <button class="tab" onclick="switchTab('live',this)">🟢 Live Activity</button>
     <button class="tab" onclick="switchTab('settings',this)">⚙️ Settings</button>
+    <a class="tab" href="portal.html" style="text-decoration:none;display:inline-block;">📝 Content Portal</a>
   </div>
 
   <!-- STUDENTS PANEL -->
@@ -541,6 +855,100 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
     </div>
   </div>
 
+  <!-- VISITORS PANEL -->
+  <div class="panel" id="panel-visitors">
+    <div class="sec-title">📈 Page Visitors</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">👁</div><div class="stat-val" id="visTotal">—</div><div class="stat-lbl">Total Visits</div></div>
+      <div class="stat-card"><div class="stat-icon">🧑</div><div class="stat-val" id="visUnique">—</div><div class="stat-lbl">Unique Visitors</div></div>
+      <div class="stat-card"><div class="stat-icon">📅</div><div class="stat-val" id="visToday">—</div><div class="stat-lbl">Visits Today</div></div>
+      <div class="stat-card"><div class="stat-icon">✨</div><div class="stat-val" id="visTodayUnique">—</div><div class="stat-lbl">Unique Today</div></div>
+    </div>
+    <div class="sec-title" style="font-size:14px;">Admin Page (Agency Staff)</div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">🚪</div><div class="stat-val" id="admOpens">—</div><div class="stat-lbl">Admin Page Opens</div></div>
+      <div class="stat-card"><div class="stat-icon">🔐</div><div class="stat-val" id="admLogins">—</div><div class="stat-lbl">Successful Logins</div></div>
+      <div class="stat-card"><div class="stat-icon">🧑‍💼</div><div class="stat-val" id="admLoginsUnique">—</div><div class="stat-lbl">Devices Logged In</div></div>
+      <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-val" id="admFailed">—</div><div class="stat-lbl">Failed Login Attempts</div></div>
+    </div>
+    <div class="sec-title" style="font-size:14px;">Logins by Agency</div>
+    <div class="tbl-wrap" style="margin-bottom:24px;">
+      <table>
+        <thead><tr><th>Agency</th><th>Logins</th><th>Devices</th><th>Last Login</th></tr></thead>
+        <tbody id="admAgenciesTbody"><tr><td colspan="4">No logins yet.</td></tr></tbody>
+      </table>
+    </div>
+    <div class="sec-title" style="font-size:14px;">Last 7 Days (Public Pages)</div>
+    <div class="tbl-wrap" style="margin-bottom:24px;">
+      <table>
+        <thead><tr><th>Date</th><th>Visits</th><th>Unique Visitors</th></tr></thead>
+        <tbody id="visDaysTbody"><tr><td colspan="3"><div class="loading"><div class="spinner"></div><br>Loading…</div></td></tr></tbody>
+      </table>
+    </div>
+    <div class="sec-title" style="font-size:14px;">By Page</div>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Page</th><th>Visits</th><th>Unique Visitors</th></tr></thead>
+        <tbody id="visPagesTbody"><tr><td colspan="3"></td></tr></tbody>
+      </table>
+    </div>
+    <div style="margin-top:12px;font-size:12px;opacity:.7;">
+      A visit is counted once per page per browser session. Each login is counted every time someone signs in, under the agency whose password was used; "devices" counts different browsers. Unique visitors are counted by an anonymous ID stored on each device — no names or contact details are recorded. Visits are only counted when the device is online.
+    </div>
+  </div>
+
+  <!-- M&E PANEL: segment performance by region / district / school -->
+  <div class="panel" id="panel-nominees">
+    <div class="sec-title">⭐ Nominees — Top Performers in Your Segment</div>
+    <div class="filter-bar">
+      <select id="nomSeg" onchange="loadNominees()" style="display:none;"></select>
+      <button class="refresh-btn" onclick="loadNominees()">↻ Refresh</button>
+    </div>
+    <div id="nomIntro" style="font-size:12px;color:var(--muted);margin:-6px 0 14px;line-height:1.5;"></div>
+    <div id="nomList"><div style="color:var(--muted);padding:20px;">Open this tab to load nominees…</div></div>
+  </div>
+
+  <div class="panel" id="panel-requests">
+    <div class="sec-title">🤝 Agency Interest Requests</div>
+    <div class="filter-bar"><button class="refresh-btn" onclick="loadRequests()">↻ Refresh</button></div>
+    <div style="font-size:12px;color:var(--muted);margin:-6px 0 14px;line-height:1.5;">
+      Contact the student / guardian first. Approve only once they have agreed — the agency then sees the contact on the nominee card.</div>
+    <div id="reqList"></div>
+  </div>
+
+  <div class="panel" id="panel-me">
+    <div class="sec-title">🎯 M&amp;E — Segment Performance</div>
+    <div class="filter-bar">
+      <select id="meModule" onchange="renderMe()"></select>
+      <button class="refresh-btn" onclick="exportMeCsv()">⬇ Export CSV</button>
+    </div>
+    <div id="meScope" style="font-size:12px;color:var(--muted);margin:-6px 0 14px;"></div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-icon">🧑‍🎓</div><div class="stat-val" id="meTakers">—</div><div class="stat-lbl">Students Assessed</div></div>
+      <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-val" id="meAvg">—</div><div class="stat-lbl">Segment Average</div></div>
+      <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-val" id="meStrong">—</div><div class="stat-lbl">Strong &amp; Above (50%+)</div></div>
+      <div class="stat-card"><div class="stat-icon">🏅</div><div class="stat-val" id="meExc">—</div><div class="stat-lbl">Exceptional (85%+)</div></div>
+    </div>
+    <div class="sec-title" style="font-size:14px;">Performance Levels &amp; Gender</div>
+    <div id="meTiers" style="margin-bottom:22px;"></div>
+    <div class="sec-title" style="font-size:14px;">🌍 By Region</div>
+    <div class="tbl-wrap" style="margin-bottom:22px;"><table>
+      <thead><tr><th>#</th><th>Region</th><th>Assessed</th><th>Avg %</th><th>Strong+ %</th><th>Best %</th><th>Level</th></tr></thead>
+      <tbody id="meRegionTbody"></tbody></table></div>
+    <div class="sec-title" style="font-size:14px;">📍 By District</div>
+    <div class="tbl-wrap" style="margin-bottom:22px;"><table>
+      <thead><tr><th>#</th><th>District</th><th>Assessed</th><th>Avg %</th><th>Strong+ %</th><th>Best %</th><th>Level</th></tr></thead>
+      <tbody id="meDistrictTbody"></tbody></table></div>
+    <div class="sec-title" style="font-size:14px;">🏫 By School</div>
+    <div class="tbl-wrap" style="margin-bottom:22px;"><table>
+      <thead><tr><th>#</th><th>School</th><th>Assessed</th><th>Avg %</th><th>Strong+ %</th><th>Best %</th><th>Level</th></tr></thead>
+      <tbody id="meSchoolTbody"></tbody></table></div>
+    <div class="sec-title" style="font-size:14px;">🆘 Needs Support — Lowest Schools (3+ students assessed)</div>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>#</th><th>School</th><th>Region</th><th>Assessed</th><th>Avg %</th></tr></thead>
+      <tbody id="meLowTbody"></tbody></table></div>
+  </div>
+
   <!-- LIVE ACTIVITY PANEL -->
   <div class="panel" id="panel-live">
     <div class="sec-title">🟢 Live Activity — Who Is Online Right Now</div>
@@ -635,6 +1043,32 @@ tbody tr.clickable:hover{background:rgba(255,215,0,0.04);}
   </div>
 
   <!-- CHARTS PANEL -->
+  <div class="panel" id="panel-broadcast">
+    <div id="bcCompose" class="bc-card" style="display:none;">
+      <div class="bc-h">📢 Send a message</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+        <select id="bcTo" style="flex:1;min-width:200px;padding:9px;border-radius:8px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);color:var(--text);"></select>
+      </div>
+      <textarea id="bcText" rows="3" maxlength="400" placeholder="Type your message…"></textarea>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:8px;">
+        <button class="bc-btn" id="bcSendBtn" onclick="sendBroadcastTab()">📤 Send</button>
+        <span id="bcStatus" style="font-size:12px;color:var(--muted);"></span>
+      </div>
+    </div>
+    <div class="bc-h" style="margin:18px 0 8px;">📢 Broadcast list <span id="bcCount" style="color:var(--muted);font-weight:400;font-size:12px;"></span></div>
+    <div id="bcList"></div>
+    <div id="bcRepliesWrap" style="display:none;">
+      <div class="bc-h" style="margin:22px 0 8px;">↩ Replies from agencies</div>
+      <div id="bcReplies"></div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-leaderboard">
+    <div style="border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#04090f;">
+      <iframe id="lbFrame" style="width:100%;height:84vh;border:none;display:block;" title="Leaderboard"></iframe>
+    </div>
+  </div>
+
   <div class="panel" id="panel-charts">
     <div class="charts-grid">
       <div class="chart-card">
@@ -739,6 +1173,72 @@ function generateOpportunityComment(sw){
     'opportunities, subject to each programme\'s own eligibility requirements.';
 }
 
+// ── AGENCY IDENTITY (logo + full name shown for 3s after a correct password) ──
+var AGENCY_INFO = {
+  master:      { logo: 'cmg',         name: 'Cadet Media Ghana (Master Admin)' },
+  fire:        { logo: 'fire',        name: 'Ghana National Fire Service', mod: 'Fire Safety Quiz Score' },
+  police:      { logo: 'police',      name: 'Ghana Police Service', mod: 'Community Safety (Police) Quiz Score' },
+  ambulance:   { logo: 'ambulance',   name: 'National Ambulance Service', mod: 'Health & Ambulance Quiz Score' },
+  prisons:     { logo: 'prisons',     name: 'Ghana Prisons Service', mod: 'Prisons Service Quiz Score' },
+  nadmo:       { logo: 'nadmo',       name: 'NADMO Ghana', mod: 'Disaster Preparedness (NADMO) Quiz Score' },
+  immigration: { logo: 'immigration', name: 'Ghana Immigration Service', mod: 'Immigration Service Quiz Score' },
+  customs:     { logo: 'customs',     name: 'Customs Division', mod: 'Customs Division Quiz Score' },
+  tourism:     { logo: 'tourism',     name: 'Ghana Tourism Authority', mod: 'Tourism & Creative Arts Quiz Score' },
+  forestry:    { logo: 'forestry',    name: 'Forestry Commission', mod: 'Forest Conservation Quiz Score' },
+  gaf:         { logo: 'gaf',         name: 'Ghana Armed Forces', mod: 'National Defence (GAF) Quiz Score' },
+  nacoc:       { logo: 'nacoc',       name: 'Narcotics Control Commission', mod: 'Narcotics Control Quiz Score' }
+};
+var AGENCY_ALIAS = { forest:'forestry', fc:'forestry', narcotics:'nacoc', armedforces:'gaf', army:'gaf',
+  gnfs:'fire', gps:'police', nas:'ambulance', gis:'immigration', cmg:'master' };
+function agencyKeyOf(name){
+  var k = String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if(AGENCY_ALIAS[k]) return AGENCY_ALIAS[k];
+  if(AGENCY_INFO[k]) return k;
+  // tolerate longer names such as 'Ghana_Police' or 'Fire_Service'
+  var names = Object.keys(AGENCY_INFO).concat(['forest','narcotics','armedforces']);
+  for(var i = 0; i < names.length; i++){
+    if(names[i] !== 'master' && k.indexOf(names[i]) > -1) return AGENCY_ALIAS[names[i]] || names[i];
+  }
+  return k;
+}
+function agencyInfo(name){
+  return AGENCY_INFO[agencyKeyOf(name)] || { logo: '', name: String(name || '') };
+}
+// short + full names the content portal uses for each agency (for notifications)
+var PORTAL_NAMES = {
+  master:{n:'Admin',f:'Cadet Media Ghana (Administrator)'}, fire:{n:'GNFS',f:'Ghana National Fire Service'},
+  police:{n:'Police',f:'Ghana Police Service'}, ambulance:{n:'NAS',f:'National Ambulance Service'},
+  prisons:{n:'Prisons',f:'Ghana Prisons Service'}, nadmo:{n:'NADMO',f:'Nat. Disaster Mgmt Org.'},
+  immigration:{n:'GIS',f:'Ghana Immigration Service'}, customs:{n:'Customs',f:'Ghana Customs Division'},
+  tourism:{n:'Tourism',f:'Ministry of Tourism'}, forestry:{n:'Forest',f:'Forestry Commission'},
+  gaf:{n:'GAF',f:'Ghana Armed Forces'}, nacoc:{n:'NACOC',f:'Narcotic Control Commission'} };
+function portalNames(){ return PORTAL_NAMES[agencyKeyOf(myAgencyName())] || {n:'',f:''}; }
+var LOGIN_SUB_DEFAULT = 'Cadet Media Ghana · NAAD Safety Edition<br>Enter your agency password to continue.';
+function showLoginIdentity(agency){
+  var info = agencyInfo(agency);
+  var img = document.getElementById('loginLogo'), wrap = document.getElementById('loginLogoWrap');
+  if(info.logo){
+    img.style.display = 'block';
+    document.getElementById('loginLock').style.display = 'none';
+    img.src = 'logo_' + info.logo + '.png';
+  }
+  wrap.classList.add('verified');
+  document.getElementById('loginTitle').textContent = info.name.toUpperCase();
+  document.getElementById('loginSub').innerHTML = '<span class="login-ok">✅ Password verified — opening dashboard…</span>';
+}
+// Back to the CMG logo and the normal prompt (logout, expired session, wrong password)
+function resetLoginIdentity(){
+  var img = document.getElementById('loginLogo');
+  document.getElementById('loginLogoWrap').classList.remove('verified');
+  document.getElementById('loginLock').style.display = 'none';
+  img.style.display = 'block';
+  img.src = 'logo_cmg.png';
+  document.getElementById('loginTitle').textContent = 'ADMIN DASHBOARD';
+  document.getElementById('loginSub').innerHTML = LOGIN_SUB_DEFAULT;
+  var btn = document.querySelector('.login-box button'); if(btn){ btn.disabled = false; }
+  document.getElementById('pwInput').disabled = false;
+}
+
 // ── LOGIN (verified server-side by Apps Script — never trust the client) ──
 function doLogin(){
   var pw  = document.getElementById('pwInput').value;
@@ -755,6 +1255,7 @@ function doLogin(){
   .then(function(res){
     btn.disabled = false; btn.textContent = origLabel;
     if(res && res.ok && res.token){
+      try{ sessionStorage.removeItem('naad_session'); }catch(e){} // drop any earlier portal login
       sessionStorage.setItem(TOKEN_KEY, res.token);
       document.getElementById('loginOverlay').style.display = 'none';
       runLoginLoadingSequence();
@@ -823,11 +1324,20 @@ function runLoginLoadingSequence(onDone){
 }
 
 function doLogout(){
+  photoCache = {};
+  stopPresence(true);
+  meAutoOpened = false;
   sessionStorage.removeItem(TOKEN_KEY);
+  try{ sessionStorage.removeItem('naad_session'); }catch(e){}
   document.getElementById('loginOverlay').style.display = 'flex';
   document.getElementById('dashboard').style.display    = 'none';
   document.getElementById('pwInput').value = '';
   document.getElementById('loginErr').style.display = 'none';
+  try{ sessionStorage.removeItem('cmgAdminAgency'); }catch(e){}
+  resetLoginIdentity();
+  var _rl = function(){ location.reload(); }, _done = false; function _once(){ if(!_done){ _done = true; _rl(); } }
+  try{ cmgPush.leave().then(_once, _once); }catch(e){}
+  setTimeout(_once, 1800); // fresh page for the next login, so nothing from the last agency lingers
 }
 
 // If we already have a token from earlier this tab session, skip straight
@@ -843,6 +1353,9 @@ function tryAutoLogin(){
 
 // Called whenever a data fetch comes back unauthorized (expired/invalid token)
 function forceReLogin(message){
+  photoCache = {};
+  stopPresence(false);
+  meAutoOpened = false;
   sessionStorage.removeItem(TOKEN_KEY);
   document.getElementById('dashboard').style.display    = 'none';
   document.getElementById('loginOverlay').style.display = 'flex';
@@ -897,14 +1410,738 @@ function confirmWipe(){
 }
 
 // ── TAB SWITCH ─────────────────────────────────────
-function switchTab(name, el){
+function switchTab(name, el, noPush){
   document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
   document.querySelectorAll('.panel').forEach(function(p){ p.classList.remove('active'); });
   if(el) el.classList.add('active');
   else document.querySelectorAll('.tab')[0].classList.add('active');
   document.getElementById('panel-' + name).classList.add('active');
   if(name === 'charts') renderCharts();
+  if(name === 'leaderboard'){ var lf = document.getElementById('lbFrame'); if(!lf.getAttribute('src')) lf.src = 'leaderboard.html?admin=1'; }
   if(name === 'live')   loadLiveActivity();
+  if(name === 'visitors') loadVisitors();
+  if(name === 'nominees') loadNominees();
+  if(name === 'broadcast') openBroadcastTab();
+  if(name === 'requests') loadRequests();
+  if(!noPush){ try{ history.pushState({ tab: name }, '', '#' + name); }catch(e){} }
+}
+
+// ── Only the MASTER login sees Settings (Wipe All Data) ──
+function applyAgencyUI(){
+  var ag = '';
+  try{ ag = sessionStorage.getItem('cmgAdminAgency') || ''; }catch(e){}
+  var isMaster = (ag === 'MASTER');
+  document.querySelectorAll('.tab').forEach(function(t){
+    var oc = t.getAttribute('onclick') || '';
+    if(oc.indexOf("'settings'") > -1 || oc.indexOf("'requests'") > -1) t.style.display = isMaster ? '' : 'none';
+  });
+}
+applyAgencyUI();
+
+// ── INSTALL AS AN APP (PWA) ────────────────────────
+var deferredInstall = null;
+function isStandalone(){
+  return (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+}
+function isIOS(){
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+function updateInstallUI(){
+  var show = !isStandalone() && (!!deferredInstall || isIOS());
+  ['installBtn','installLink'].forEach(function(id){
+    var el = document.getElementById(id); if(el) el.style.display = show ? '' : 'none';
+  });
+}
+window.addEventListener('beforeinstallprompt', function(e){ e.preventDefault(); deferredInstall = e; updateInstallUI(); });
+window.addEventListener('appinstalled', function(){ deferredInstall = null; updateInstallUI(); });
+function installApp(){
+  if(deferredInstall){
+    deferredInstall.prompt();
+    deferredInstall.userChoice.then(function(){ deferredInstall = null; updateInstallUI(); });
+  } else if(isIOS()){
+    document.getElementById('installHelp').style.display = 'flex';
+  }
+}
+updateInstallUI();
+if('serviceWorker' in navigator && /^https?:$/.test(location.protocol)){
+  window.addEventListener('load', function(){ navigator.serviceWorker.register('sw.js').catch(function(){}); });
+}
+
+// ── M&E: SEGMENT PERFORMANCE (region / district / school) ──
+// Each agency is locked to its own segment (module). The master login can
+// switch between all segments. Scores are read from the results rows the
+// same way as the school/aptitude profiles.
+function moduleIndexOf(key){
+  for(var i = 0; i < ASSESSMENT_MODULES.length; i++) if(ASSESSMENT_MODULES[i].key === key) return i;
+  return -1;
+}
+function segPct(r, key){
+  var idx = moduleIndexOf(key);
+  var raw = r.raw || {};
+  var v = raw[key];
+  if((v === undefined || v === '') && idx > -1) v = raw['__col' + (idx < 13 ? 7 + idx : 27)];
+  v = (v == null ? '' : String(v)).trim();
+  if(!v) return null;
+  var m = v.match(/^(\d+(?:\.\d+)?)\s*\/\s*(\d+(?:\.\d+)?)$/);
+  if(m){ var t = parseFloat(m[2]); return t > 0 ? (parseFloat(m[1]) / t) * 100 : null; }
+  var n = parseFloat(v.replace('%', ''));
+  return (isNaN(n) || n < 0 || n > 100) ? null : n;
+}
+function myModuleKey(){ return agencyInfo(myAgencyName()).mod || null; }
+
+function meSetupSelector(){
+  var sel = document.getElementById('meModule');
+  var mine = myModuleKey(), isMaster = myAgencyName() === 'MASTER';
+  var prev = sel.value;
+  sel.innerHTML = ASSESSMENT_MODULES.map(function(m){
+    return '<option value="' + esc(m.key) + '">' + m.icon + ' ' + esc(m.label) + '</option>';
+  }).join('');
+  if(mine){ sel.value = mine; sel.disabled = true; }            // an agency is locked to its OWN segment
+  else if(isMaster){ sel.value = prev && moduleIndexOf(prev) > -1 ? prev : ASSESSMENT_MODULES[2].key; sel.disabled = false; }
+  else { sel.disabled = true; }                                  // unrecognised agency: no segment (see renderMe)
+}
+
+function meAggregate(rows, keyFn, key){
+  var map = {};
+  rows.forEach(function(r){
+    var p = segPct(r, key); if(p === null) return;
+    var k = keyFn(r) || 'Unknown';
+    if(!map[k]) map[k] = { name: k, n: 0, sum: 0, strong: 0, best: 0, region: r.region || '' };
+    var g = map[k]; g.n++; g.sum += p; if(p >= 50) g.strong++; if(p > g.best) g.best = p;
+  });
+  return Object.keys(map).map(function(k){
+    var g = map[k];
+    return { name: g.name, n: g.n, avg: Math.round(g.sum / g.n), strongPct: Math.round(g.strong / g.n * 100),
+             best: Math.round(g.best), region: g.region };
+  }).sort(function(a, b){ return b.avg - a.avg || b.n - a.n; });
+}
+
+function meRows(list, emptyCols){
+  if(!list.length) return '<tr><td colspan="' + emptyCols + '"><div class="empty">No assessed students in this segment yet.</div></td></tr>';
+  return list.map(function(g, i){
+    return '<tr><td><span class="rank-num">' + (i + 1) + '</span></td><td><strong>' + esc(g.name) + '</strong></td>' +
+      '<td style="color:var(--blue);font-weight:700;">' + g.n + '</td>' +
+      '<td style="color:var(--gold);font-weight:700;">' + g.avg + '%</td>' +
+      '<td>' + g.strongPct + '%</td><td>' + g.best + '%</td>' +
+      '<td class="muted">' + classifyPct(g.avg) + '</td></tr>';
+  }).join('');
+}
+
+var meLast = null;
+function renderMe(){
+  meSetupSelector();
+  if(myAgencyName() !== 'MASTER' && !myModuleKey()){
+    document.getElementById('meScope').textContent = 'Your login (' + myAgencyName() + ') is not linked to an assessment segment yet. Please contact CMG.';
+    ['meTakers','meAvg','meStrong','meExc'].forEach(function(id){ document.getElementById(id).textContent = '—'; });
+    return;
+  }
+  var key = document.getElementById('meModule').value;
+  var mod = ASSESSMENT_MODULES[moduleIndexOf(key)] || ASSESSMENT_MODULES[0];
+  var rows = mergedData || [];
+  var assessed = rows.filter(function(r){ return segPct(r, key) !== null; });
+  var pcts = assessed.map(function(r){ return segPct(r, key); });
+
+  var n = pcts.length;
+  var avg = n ? Math.round(pcts.reduce(function(a, b){ return a + b; }, 0) / n) : 0;
+  var strong = pcts.filter(function(p){ return p >= 50; }).length;
+  var exc = pcts.filter(function(p){ return p >= 85; }).length;
+  var inst = agencyInfo(myAgencyName());
+  document.getElementById('meScope').textContent = (myModuleKey()
+      ? inst.name + ' — your segment: ' + mod.label
+      : 'Master view — ' + mod.label) +
+    ' · ' + n + ' of ' + rows.length + ' registered students assessed in this segment.';
+  document.getElementById('meTakers').textContent = n;
+  document.getElementById('meAvg').textContent = n ? avg + '%' : '—';
+  document.getElementById('meStrong').textContent = n ? Math.round(strong / n * 100) + '%' : '—';
+  document.getElementById('meExc').textContent = exc;
+
+  // Performance levels + gender
+  var tiers = [['Exceptional (85%+)', function(p){ return p >= 85; }, 'green'],
+               ['Very Strong (70–84%)', function(p){ return p >= 70 && p < 85; }, 'green'],
+               ['Strong (50–69%)', function(p){ return p >= 50 && p < 70; }, 'blue'],
+               ['Developing (below 50%)', function(p){ return p < 50; }, 'blue']];
+  var html = tiers.map(function(t){
+    var c = pcts.filter(t[1]).length, w = n ? Math.round(c / n * 100) : 0;
+    return '<div class="bar-item"><div class="bar-label"><span>' + t[0] + '</span><span>' + c + ' (' + w + '%)</span></div>' +
+      '<div class="bar-track"><div class="bar-fill ' + t[2] + '" style="width:' + w + '%"></div></div></div>';
+  }).join('');
+  ['Male', 'Female'].forEach(function(g){
+    var ps = assessed.filter(function(r){ return r.gender === g; }).map(function(r){ return segPct(r, key); });
+    html += '<div style="font-size:12px;color:var(--muted);margin-top:6px;">' + g + ': ' + ps.length + ' assessed' +
+      (ps.length ? ' · average ' + Math.round(ps.reduce(function(a, b){ return a + b; }, 0) / ps.length) + '%' : '') + '</div>';
+  });
+  document.getElementById('meTiers').innerHTML = html;
+
+  var byRegion = meAggregate(rows, function(r){ return r.region; }, key);
+  var byDistrict = meAggregate(rows, function(r){ return r.district; }, key);
+  var bySchool = meAggregate(rows, function(r){ return r.school; }, key);
+  document.getElementById('meRegionTbody').innerHTML = meRows(byRegion, 7);
+  document.getElementById('meDistrictTbody').innerHTML = meRows(byDistrict, 7);
+  document.getElementById('meSchoolTbody').innerHTML = meRows(bySchool, 7);
+  var low = bySchool.filter(function(s){ return s.n >= 3; }).sort(function(a, b){ return a.avg - b.avg; }).slice(0, 10);
+  document.getElementById('meLowTbody').innerHTML = low.length ? low.map(function(s, i){
+    return '<tr><td><span class="rank-num">' + (i + 1) + '</span></td><td><strong>' + esc(s.name) + '</strong></td>' +
+      '<td class="muted">' + esc(s.region || '—') + '</td><td>' + s.n + '</td>' +
+      '<td style="color:var(--red);font-weight:700;">' + s.avg + '%</td></tr>';
+  }).join('') : '<tr><td colspan="5"><div class="empty">No school has 3 or more assessed students yet.</div></td></tr>';
+  meLast = { mod: mod.label, region: byRegion, district: byDistrict, school: bySchool };
+}
+
+function exportMeCsv(){
+  if(!meLast) return;
+  function q(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }
+  var lines = [['Segment', 'Level', 'Name', 'Students Assessed', 'Average %', 'Strong+ %', 'Best %'].map(q).join(',')];
+  [['Region', meLast.region], ['District', meLast.district], ['School', meLast.school]].forEach(function(grp){
+    grp[1].forEach(function(g){ lines.push([meLast.mod, grp[0], g.name, g.n, g.avg, g.strongPct, g.best].map(q).join(',')); });
+  });
+  var blob = new Blob(['\ufeff' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'NAAD_ME_' + meLast.mod.replace(/[^A-Za-z0-9]+/g, '_') + '.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+// Agencies land straight on their own segment after the first data load
+var meAutoOpened = false;
+function maybeOpenMeTab(){
+  if(meAutoOpened || !myModuleKey()) return;
+  meAutoOpened = true;
+  var btn = null;
+  document.querySelectorAll('.tab').forEach(function(t){ if((t.getAttribute('onclick') || '').indexOf("'me'") > -1) btn = t; });
+  switchTab('me', btn);
+}
+
+
+// ── NOMINEES (agencies) + REQUESTS (CMG master) ────
+function nApi(action, extra){
+  var token = sessionStorage.getItem(TOKEN_KEY) || '';
+  var q = '?action=' + action + '&token=' + encodeURIComponent(token);
+  Object.keys(extra || {}).forEach(function(k){ q += '&' + k + '=' + encodeURIComponent(extra[k]); });
+  return fetch(APPS_SCRIPT_URL + q).then(function(r){ return r.json(); }).then(function(res){
+    if(res && res.error === 'unauthorized'){ forceReLogin(); throw new Error('unauthorized'); }
+    return res;
+  });
+}
+var NOM_SEGS = [['fire','Fire'],['police','Police'],['ambulance','Ambulance'],['prisons','Prisons'],['nadmo','NADMO'],
+  ['immigration','Immigration'],['customs','Customs'],['tourism','Tourism'],['forestry','Forestry'],['gaf','GAF'],['nacoc','NACOC']];
+function nomIsMaster(){ return myAgencyName() === 'MASTER'; }
+function loadNominees(){
+  var list = document.getElementById('nomList'), sel = document.getElementById('nomSeg');
+  if(nomIsMaster()){
+    if(!sel.options.length){
+      sel.innerHTML = NOM_SEGS.map(function(x){ return '<option value="' + x[0] + '">' + x[1] + ' segment</option>'; }).join('');
+    }
+    sel.style.display = '';
+  }
+  if(!navigator.onLine){ list.innerHTML = '<div style="color:var(--muted);padding:20px;">Nominees need an internet connection.</div>'; return; }
+  list.innerHTML = '<div style="color:var(--muted);padding:20px;">Loading…</div>';
+  nApi('adminGetNominees', nomIsMaster() ? {seg: sel.value} : {}).then(function(res){
+    if(!res || res.status !== 'ok'){ list.innerHTML = '<div style="color:var(--red);padding:20px;">' + esc((res && res.message) || 'Could not load nominees.') + '</div>'; return; }
+    document.getElementById('nomIntro').innerHTML = esc(res.segment) + ' segment · top ' + (res.topPct || 10) + '% scoring <b>' + res.threshold + '%+</b>, who agreed to be shared. ' +
+      'Phone and email are locked. Tap <b>Express interest</b> and CMG will contact the student/guardian; details appear here only after they agree. Photos are watermarked and every view is logged.';
+    if(!res.nominees.length){ list.innerHTML = '<div style="color:var(--muted);padding:20px;">No nominees yet in this segment.</div>'; return; }
+    list.innerHTML = '<div class="nom-grid">' + res.nominees.map(function(n, i){ return nomCard(n, i, res.master); }).join('') + '</div>';
+  }).catch(function(){ list.innerHTML = '<div style="color:var(--red);padding:20px;">Could not load nominees.</div>'; });
+}
+function nomCard(n, i, master){
+  var photo = n.hasPhoto
+    ? '<div class="nom-photo" id="nomPh' + i + '" data-code="' + esc(n.code) + '"><button class="nom-btn" onclick="nomShowPhoto(' + i + ')">👁 View</button></div>'
+    : '<div class="nom-photo"><div class="icon">📷</div>No photo</div>';
+  var h = '<div class="nom-card"><div class="nom-top">' + photo + '<div style="min-width:0;">' +
+    '<div class="nom-name">' + esc(n.name) + '</div>' +
+    '<div class="nom-sub">' + esc(n.school || '—') + '</div>' +
+    '<div class="nom-sub">' + esc(n.district || '—') + ', ' + esc(n.region || '—') + ' · ' + esc(n.gender || '') + '</div></div></div>' +
+    '<div><span class="nom-pct">' + n.pct + '%</span> <span class="nom-sub">in segment</span>' +
+    (master ? (n.consent ? ' <span class="nom-sub">· ✅ consent given</span>' : ' <span class="nom-sub" style="color:var(--red)">· ⛔ no consent: hidden from agencies</span>') : '') + '</div>';
+  if(n.contact){
+    h += '<div class="nom-contact">📞 ' + esc(n.contact.phone || '—') + '<br>✉️ ' + esc(n.contact.email || '—') + '</div>';
+  } else {
+    h += '<div class="nom-lock">🔒 Contact locked</div>';
+  }
+  if(!master){
+    var it = n.interest;
+    if(!it){
+      h += '<input class="nom-note" id="nomNote' + i + '" maxlength="300" placeholder="Opportunity (e.g. internship, quota) — optional">' +
+           '<div class="nom-actions"><button class="nom-btn" onclick="nomInterest(' + i + ',\'' + esc(n.code) + '\',this)">🤝 Express interest</button></div>';
+    } else {
+      h += '<div class="nom-actions"><span class="nom-chip ' + esc(it.status) + '">' +
+        (it.status === 'Pending' ? '⏳ Awaiting CMG' : it.status === 'Approved' ? '✅ Approved' : '❌ Declined') + '</span></div>' +
+        (it.decisionNote ? '<div class="nom-sub">CMG: ' + esc(it.decisionNote) + '</div>' : '');
+    }
+  } else if(n.interest){
+    h += '<div class="nom-actions"><span class="nom-chip ' + esc(n.interest.status) + '">' + esc(n.interest.status) + '</span></div>';
+  }
+  return h + '</div>';
+}
+function nomShowPhoto(i){
+  var box = document.getElementById('nomPh' + i);
+  if(!box) return;
+  photoMsg(box, '⏳', 'Loading…');
+  loadSecurePhoto(box);
+}
+function nomInterest(i, code, btn){
+  var noteEl = document.getElementById('nomNote' + i);
+  btn.disabled = true; btn.textContent = 'Sending…';
+  nApi('adminExpressInterest', {code: code, note: noteEl ? noteEl.value : ''}).then(function(res){
+    if(res && res.status === 'ok'){ alert(res.message); loadNominees(); }
+    else { btn.disabled = false; btn.textContent = '🤝 Express interest'; alert((res && res.message) || 'Could not send request.'); }
+  }).catch(function(){ btn.disabled = false; btn.textContent = '🤝 Express interest'; });
+}
+
+function loadRequests(){
+  var box = document.getElementById('reqList');
+  if(!nomIsMaster()){ box.innerHTML = ''; return; }
+  box.innerHTML = '<div style="color:var(--muted);padding:20px;">Loading…</div>';
+  nApi('adminGetInterests').then(function(res){
+    if(!res || res.status !== 'ok'){ box.innerHTML = '<div style="color:var(--red);padding:20px;">' + esc((res && res.message) || 'Could not load.') + '</div>'; return; }
+    var pend = res.interests.filter(function(x){ return x.status === 'Pending'; }).length;
+    var b = document.getElementById('reqBadge'); b.textContent = pend; b.style.display = pend ? '' : 'none';
+    if(!res.interests.length){ box.innerHTML = '<div style="color:var(--muted);padding:20px;">No requests yet.</div>'; return; }
+    box.innerHTML = res.interests.map(function(x, i){
+      var h = '<div class="req-row"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">' +
+        '<b>' + esc(x.agency) + ' → ' + esc(x.name) + '</b><span class="nom-chip ' + esc(x.status) + '">' + esc(x.status) + '</span></div>' +
+        '<div class="nom-sub">' + esc(x.school) + ' · ' + esc(x.segment) + ' · ' + esc(new Date(x.ts).toLocaleString('en-GB')) + '</div>' +
+        (x.note ? '<div style="font-size:13px;">“' + esc(x.note) + '”</div>' : '') +
+        '<div class="nom-contact">Student contact (for CMG): 📞 ' + esc(x.phone || '—') + ' · ✉️ ' + esc(x.email || '—') + '</div>';
+      if(x.status === 'Pending'){
+        h += '<input class="nom-note" id="reqNote' + i + '" maxlength="300" placeholder="Note (e.g. guardian agreed on call) — optional">' +
+          '<div class="nom-actions"><button class="nom-btn ok" onclick="decideReq(\'' + esc(x.id) + '\',\'Approved\',' + i + ')">✅ Approve — release contact</button>' +
+          '<button class="nom-btn no" onclick="decideReq(\'' + esc(x.id) + '\',\'Declined\',' + i + ')">❌ Decline</button></div>';
+      } else if(x.decisionNote){ h += '<div class="nom-sub">Note: ' + esc(x.decisionNote) + '</div>'; }
+      return h + '</div>';
+    }).join('');
+  }).catch(function(){ box.innerHTML = '<div style="color:var(--red);padding:20px;">Could not load.</div>'; });
+}
+function decideReq(id, decision, i){
+  var n = document.getElementById('reqNote' + i);
+  if(decision === 'Approved' && !confirm('Release this student\'s phone and email to the agency? Only do this once the student/guardian has agreed.')) return;
+  nApi('adminDecideInterest', {id: id, decision: decision, note: n ? n.value : ''}).then(function(res){
+    if(res && res.status === 'ok') loadRequests(); else alert((res && res.message) || 'Failed.');
+  });
+}
+
+// ── PROTECTED STUDENT PHOTOS ───────────────────────
+// Photos are private on the server. They are fetched only with a valid login,
+// drawn onto a canvas and stamped with the viewing agency + time, so any
+// leaked screenshot can be traced back. Every fetch is logged server-side.
+var photoCache = {};
+function photoMsg(box, icon, text){
+  box.innerHTML = '<div class="icon">' + icon + '</div><div>' + esc(text) + '</div>';
+}
+function paintSecurePhoto(box, p){
+  var img = new Image();
+  img.onload = function(){
+    var W = Math.min(img.naturalWidth, 700), H = Math.round(img.naturalHeight * W / img.naturalWidth);
+    var c = document.createElement('canvas'); c.width = W; c.height = H;
+    var g = c.getContext('2d'); g.drawImage(img, 0, 0, W, H);
+    var label = agencyInfo(myAgencyName()).name + ' · ' + new Date().toLocaleString('en-GB');
+    var fs = Math.max(12, Math.round(W / 24));
+    g.save(); g.font = '700 ' + fs + 'px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.globalAlpha = 0.32; g.lineWidth = Math.max(2, fs / 8); g.strokeStyle = '#000'; g.fillStyle = '#fff';
+    g.translate(W / 2, H / 2); g.rotate(-Math.PI / 6);
+    var step = fs * 3.2, reach = Math.ceil(Math.sqrt(W * W + H * H) / step) + 1;
+    for(var i = -reach; i <= reach; i++){
+      g.strokeText(label, 0, i * step); g.fillText(label, 0, i * step);
+    }
+    g.restore();
+    c.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;';
+    c.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+    c.setAttribute('draggable', 'false');
+    box.innerHTML = ''; box.appendChild(c);
+  };
+  img.onerror = function(){ photoMsg(box, '📷', 'Photo could not be displayed'); };
+  img.src = 'data:' + p.mime + ';base64,' + p.data;
+}
+function loadSecurePhoto(boxEl){
+  var box = boxEl || document.getElementById('securePhotoBox');
+  if(!box) return;
+  var code = box.getAttribute('data-code');
+  if(photoCache[code]){ paintSecurePhoto(box, photoCache[code]); return; }
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  if(!navigator.onLine){ photoMsg(box, '📷', 'Photo needs an internet connection'); return; }
+  fetch(APPS_SCRIPT_URL + '?action=adminGetPhoto&token=' + encodeURIComponent(token || '') + '&code=' + encodeURIComponent(code))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.error === 'unauthorized'){ forceReLogin(); return; }
+      if(res && res.status === 'ok'){ photoCache[code] = res; paintSecurePhoto(box, res); }
+      else if(res && res.status === 'none'){ photoMsg(box, '📷', 'No photograph on file'); }
+      else { photoMsg(box, '📷', (res && res.message) || 'Photo failed to load'); }
+    })
+    .catch(function(){ photoMsg(box, '📷', 'Photo failed to load'); });
+}
+
+// ── PRESENCE: logo of the logged-in agency + agencies online now ──
+var presenceTimer = null, presenceKnown = null;
+function myAgencyName(){ try{ return sessionStorage.getItem('cmgAdminAgency') || ''; }catch(e){ return ''; } }
+function logoSrcFor(info){ return info.logo ? 'logo_' + info.logo + '.png' : ''; }
+
+function applyMeBadge(){
+  var info = agencyInfo(myAgencyName());
+  var badge = document.getElementById('meBadge');
+  if(!myAgencyName()){ badge.style.display = 'none'; return; }
+  document.getElementById('meLogo').src = logoSrcFor(info) || 'logo_cmg.png';
+  document.getElementById('meName').textContent = info.name;
+  badge.style.display = 'flex';
+}
+
+// ── Content Portal notifications (bell) ──────────────────────────────
+var notifTimer = null, notifList = [], notifFirst = true, notifTopSeen = 0;
+function notifSeenKey(){ return 'naad_admin_seen_' + (myAgencyName() || 'x'); }
+function notifSeen(){ try{ return parseInt(localStorage.getItem(notifSeenKey()) || '0', 10) || 0; }catch(e){ return 0; } }
+function startNotifs(){
+  if(notifTimer) return;
+  notifFirst = true; notifTopSeen = 0;
+  document.getElementById('bellWrap').style.display = 'inline-block';
+  var isM = myAgencyName() === 'MASTER';
+  document.getElementById('bellSendLabel').textContent = isM ? '📢 Message ALL agencies' : '↩ Reply to CMG';
+  document.getElementById('bellMsg').placeholder = isM ? 'Type a broadcast for every agency…' : 'Type a message to CMG…';
+  pollNotifs();
+  notifTimer = setInterval(function(){ pollNotifs(); }, 15000);
+  try{ cmgPush.init({ url: APPS_SCRIPT_URL, home: 'admin.html', getToken: function(){ return sessionStorage.getItem(TOKEN_KEY); }, onWake: function(){ pollNotifs(); } }); }catch(e){}
+}
+function stopNotifs(){
+  clearInterval(notifTimer); notifTimer = null; notifList = [];
+  var w = document.getElementById('bellWrap'); if(w) w.style.display = 'none';
+  var pnl = document.getElementById('bellPanel'); if(pnl) pnl.style.display = 'none';
+}
+function pollNotifs(){
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  if(!token || !navigator.onLine) return;
+  var pn = portalNames();
+  fetch(APPS_SCRIPT_URL + '?action=getNotifications&since=0&token=' + encodeURIComponent(token) +
+        '&agency=' + encodeURIComponent(pn.n) + '&fullname=' + encodeURIComponent(pn.f) + '&t=' + Date.now(), {cache:'no-store'})
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if(!d || d.status !== 'ok'){
+        document.getElementById('bellList').innerHTML = '<div class="bp-empty">' +
+          ((d && d.error === 'unauthorized') ? 'Please log in again.' : 'Messages could not be loaded. Check your connection, and that the latest Code.gs is deployed.') + '</div>';
+        return;
+      }
+      var list = (d.notifications || []).slice().sort(function(a,b){ return b.ts - a.ts; }).slice(0, 100);
+      var seen = notifSeen();
+      var fresh = list.filter(function(n){ return n.ts > seen && n.ts > notifTopSeen; });
+      notifList = list;
+      renderBroadcasts();
+      var fromPush = window.__cmgFromPush && (Date.now() - window.__cmgFromPush) < 60000;
+      if(fromPush){ fresh = list.filter(function(n){ return n.ts > seen && (Date.now() - n.ts) < 86400000; }); }
+      if((!notifFirst || fromPush) && fresh.length){
+        var btn = document.getElementById('bellBtn'); btn.classList.remove('ring'); void btn.offsetWidth; btn.classList.add('ring');
+        var isM = myAgencyName() === 'MASTER';
+        var toShow = fresh.filter(function(n){ return !(isM && n.type === 'type-broadcast'); }).slice(0, 4); // CMG does not get an alert for its own broadcast
+        toShow.forEach(function(n, i){ alertFor(n, i === 0); });
+        window.__cmgFromPush = 0;
+      }
+      if(list.length) notifTopSeen = Math.max(notifTopSeen, list[0].ts);
+      notifFirst = false;
+      renderBell();
+    }).catch(function(){});
+}
+function renderBell(){
+  var seen = notifSeen();
+  var unread = notifList.filter(function(n){ return n.ts > seen; }).length;
+  var b = document.getElementById('bellBadge');
+  b.style.display = unread ? 'block' : 'none'; b.textContent = unread > 99 ? '99+' : unread;
+  var box = document.getElementById('bellList');
+  if(!notifList.length){ box.innerHTML = '<div class="bp-empty">No messages yet.</div>'; return; }
+  box.innerHTML = notifList.slice(0, 30).map(function(n){
+    return '<button class="bp-item' + (n.ts > seen ? ' unread' : '') + '" onclick="openNotifItem(' + notifList.indexOf(n) + ')">' +
+      '<div class="bp-title">' + esc(n.title || 'Message') + '</div><div class="bp-msg">' + esc(n.msg || '') + '</div>' +
+      '<div class="bp-time">' + esc(new Date(n.ts).toLocaleString()) + '</div></button>';
+  }).join('');
+}
+// ── Broadcast tab ────────────────────────────────────────────────
+function bcSeenKey(){ return 'naad_admin_bcseen_' + (myAgencyName() || 'x'); }
+function isBroadcastItem(n){ return n.type === 'type-broadcast' || /^✉/.test(n.title || ''); }
+function isReplyItem(n){ return /^↩/.test(n.title || ''); }
+function renderBroadcasts(){
+  var isM = myAgencyName() === 'MASTER';
+  var bcs = notifList.filter(isBroadcastItem);
+  var seen = 0; try{ seen = parseInt(localStorage.getItem(bcSeenKey()) || '0', 10) || 0; }catch(e){}
+  var unread = bcs.filter(function(n){ return n.ts > seen; }).length;
+  var tb = document.getElementById('bcTabBadge');
+  var onTab = document.getElementById('panel-broadcast').classList.contains('active');
+  tb.style.display = (unread && !onTab) ? 'inline-block' : 'none'; tb.textContent = unread;
+  var box = document.getElementById('bcList');
+  document.getElementById('bcCount').textContent = bcs.length ? '(' + bcs.length + ')' : '';
+  if(!bcs.length) box.innerHTML = '<div class="bp-empty" style="border:1px dashed rgba(255,255,255,.15);border-radius:12px;">No broadcasts yet.' + (isM ? ' Use the box above to send the first one.' : '') + '</div>';
+  else box.innerHTML = bcs.map(function(n, i){
+    var direct = /^✉/.test(n.title || '');
+    return '<div class="bc-card' + (n.ts > seen ? ' unread' : '') + '">' +
+      '<div class="bc-meta">' + (direct ? '✉️ Message from CMG' : '📢 Broadcast from Cadet Media Ghana') + ' · ' + esc(new Date(n.ts).toLocaleString()) + '</div>' +
+      '<div class="bc-msg">' + esc(n.msg || '') + '</div>' +
+      (isM ? '' : '<div class="bc-reply"><input id="bcRep' + i + '" maxlength="300" placeholder="Reply to CMG…"><button class="bc-btn" onclick="replyBroadcast(' + i + ')">↩ Reply</button></div>') +
+      '</div>';
+  }).join('');
+  document.getElementById('bcRepliesWrap').style.display = isM ? 'block' : 'none';
+  if(isM){
+    var reps = notifList.filter(isReplyItem);
+    document.getElementById('bcReplies').innerHTML = reps.length ? reps.map(function(n){
+      return '<div class="bc-card"><div class="bc-meta">' + esc((n.title || '').replace(/^↩\s*/, '')) + ' · ' + esc(new Date(n.ts).toLocaleString()) + '</div><div class="bc-msg">' + esc(n.msg || '') + '</div></div>';
+    }).join('') : '<div class="bp-empty">No replies yet.</div>';
+  }
+}
+function openBroadcastTab(){
+  var isM = myAgencyName() === 'MASTER';
+  document.getElementById('bcCompose').style.display = isM ? 'block' : 'none';
+  var to = document.getElementById('bcTo');
+  if(isM && !to.options.length){
+    var h = '<option value="ALL">📢 All agencies (broadcast)</option>';
+    Object.keys(PORTAL_NAMES).forEach(function(k){ if(k !== 'master') h += '<option value="' + esc(PORTAL_NAMES[k].n) + '">✉️ ' + esc(PORTAL_NAMES[k].f) + ' only</option>'; });
+    to.innerHTML = h;
+  }
+  var bcs = notifList.filter(isBroadcastItem);
+  if(bcs.length){ try{ localStorage.setItem(bcSeenKey(), String(bcs[0].ts)); }catch(e){} }
+  renderBroadcasts(); pollNotifs();
+}
+function sendBroadcastTab(){
+  var msg = document.getElementById('bcText').value.trim(), st = document.getElementById('bcStatus');
+  var token = sessionStorage.getItem(TOKEN_KEY), target = document.getElementById('bcTo').value;
+  if(!msg){ st.textContent = 'Type a message first.'; return; }
+  var all = target === 'ALL';
+  var q = '&targetAgency=' + encodeURIComponent(target) + '&type=' + (all ? 'type-broadcast' : 'type-info') +
+          '&title=' + encodeURIComponent(all ? '📢 Message from CMG' : '✉ Message from CMG');
+  var btn = document.getElementById('bcSendBtn'); btn.disabled = true; st.textContent = 'Sending…';
+  fetch(APPS_SCRIPT_URL + '?action=pushNotification&token=' + encodeURIComponent(token) + q + '&msg=' + encodeURIComponent(msg) + '&t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false;
+      if(d && d.status === 'ok'){ document.getElementById('bcText').value = ''; st.textContent = all ? '✅ Sent to all agencies' : '✅ Sent'; setTimeout(pollNotifs, 800); }
+      else st.textContent = '❌ Could not send.';
+    }).catch(function(){ btn.disabled = false; st.textContent = '❌ No connection.'; });
+}
+function replyBroadcast(i){
+  var bcs = notifList.filter(isBroadcastItem), n = bcs[i], inp = document.getElementById('bcRep' + i);
+  if(!n || !inp) return;
+  var text = inp.value.trim(); if(!text){ inp.focus(); return; }
+  var pn = portalNames(), token = sessionStorage.getItem(TOKEN_KEY);
+  var msg = 'Re "' + (n.msg || '').slice(0, 50) + '": ' + text;
+  fetch(APPS_SCRIPT_URL + '?action=pushNotification&token=' + encodeURIComponent(token) + '&targetAgency=Admin&type=type-info&title=' +
+        encodeURIComponent('↩ Reply from ' + (pn.f || myAgencyName())) + '&msg=' + encodeURIComponent(msg) + '&t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(d){ inp.value = ''; inp.placeholder = (d && d.status === 'ok') ? '✅ Reply sent to CMG' : '❌ Could not send'; })
+    .catch(function(){ inp.placeholder = '❌ No connection'; });
+}
+
+// ── Alerts: sound + pop-up with quick reply ─────────────────────
+function replyTargetFor(n){
+  if(myAgencyName() === 'MASTER'){
+    var m = /^↩\s*Reply from\s+(.*)$/.exec(n.title || '');
+    if(!m) return null;
+    var f = m[1].trim();
+    for(var k in PORTAL_NAMES){ if(k !== 'master' && PORTAL_NAMES[k].f === f) return { n: PORTAL_NAMES[k].n, label: f }; }
+    return null;
+  }
+  return /^(✉|↩|📢)/.test(n.title || '') ? { n: 'Admin', label: 'CMG' } : null;
+}
+function sendReplyTo(target, text, done){
+  var token = sessionStorage.getItem(TOKEN_KEY), isM = myAgencyName() === 'MASTER', pn = portalNames();
+  var title = isM ? '✉ Message from CMG' : '↩ Reply from ' + (pn.f || myAgencyName());
+  fetch(APPS_SCRIPT_URL + '?action=pushNotification&token=' + encodeURIComponent(token) + '&targetAgency=' + encodeURIComponent(target.n) +
+        '&type=type-info&title=' + encodeURIComponent(title) + '&msg=' + encodeURIComponent(text) + '&t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(d){ done(!!(d && d.status === 'ok')); if(d && d.status === 'ok') setTimeout(pollNotifs, 800); })
+    .catch(function(){ done(false); });
+}
+function alertItemFor(n, silent, first){
+  var target = replyTargetFor(n);
+  var icon = n.type === 'type-broadcast' ? '📢' : n.type === 'type-approved' ? '✅' : n.type === 'type-rejected' ? '❌' : /^↩/.test(n.title || '') ? '↩' : '🔔';
+  var it = { title: n.title, msg: n.msg, ts: n.ts, icon: icon, silent: !!silent, sound: first ? 'message' : 'soft',
+             onOpen: function(){ goBroadcastTab(); } };
+  if(target){ it.replyLabel = 'Reply to ' + target.label + '…'; it.onReply = function(text, done){ sendReplyTo(target, text, done); }; }
+  return it;
+}
+function alertFor(n, first){ cmgAlert.notify(alertItemFor(n, false, first)); }
+function openNotifItem(i){
+  var n = notifList[i]; if(!n) return;
+  document.getElementById('bellPanel').style.display = 'none';
+  cmgAlert.notify(alertItemFor(n, true, true));
+  markBellRead();
+}
+function goBroadcastTab(){
+  var btn = null;
+  document.querySelectorAll('.tab').forEach(function(t){ if((t.getAttribute('onclick') || '').indexOf("'broadcast'") > -1) btn = t; });
+  switchTab('broadcast', btn);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function toggleSound(){
+  cmgAlert.setMuted(!cmgAlert.isMuted()); updateSoundBtn();
+  if(!cmgAlert.isMuted()) cmgAlert.test();
+}
+function updateSoundBtn(){ var b = document.getElementById('soundBtn'); if(b) b.textContent = cmgAlert.isMuted() ? '🔇 Sound off' : '🔊 Sound on'; }
+
+// ── Back button + tab history (works with the phone's back gesture too) ──
+function goBack(){
+  if(history.length > 1) history.back();
+  else window.location.href = 'portal.html';
+}
+window.addEventListener('popstate', function(e){
+  var t = (e.state && e.state.tab) || 'students';
+  var btn = null;
+  document.querySelectorAll('.tab').forEach(function(x){ if((x.getAttribute('onclick') || '').indexOf("'" + t + "'") > -1) btn = x; });
+  if(document.getElementById('panel-' + t)) switchTab(t, btn, true);
+});
+
+function sendBellMsg(){
+  var box = document.getElementById('bellMsg'), st = document.getElementById('bellSendStatus');
+  var msg = box.value.trim(), token = sessionStorage.getItem(TOKEN_KEY);
+  if(!msg){ st.textContent = 'Type a message first.'; return; }
+  var isM = myAgencyName() === 'MASTER', pn = portalNames();
+  var q = isM
+    ? '&targetAgency=ALL&type=type-broadcast&title=' + encodeURIComponent('📢 Message from CMG')
+    : '&targetAgency=Admin&type=type-info&title=' + encodeURIComponent('↩ Reply from ' + (pn.f || myAgencyName()));
+  var btn = document.getElementById('bellSendBtn'); btn.disabled = true; st.textContent = 'Sending…';
+  fetch(APPS_SCRIPT_URL + '?action=pushNotification&token=' + encodeURIComponent(token) + q + '&msg=' + encodeURIComponent(msg) + '&t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      btn.disabled = false;
+      if(d && d.status === 'ok'){ box.value = ''; st.textContent = isM ? '✅ Sent to all agencies' : '✅ Sent to CMG'; setTimeout(pollNotifs, 800); }
+      else st.textContent = '❌ Could not send. Please try again.';
+    }).catch(function(){ btn.disabled = false; st.textContent = '❌ No connection.'; });
+}
+function toggleBell(ev){
+  if(ev) ev.stopPropagation();
+  var p = document.getElementById('bellPanel');
+  p.style.display = (p.style.display === 'block') ? 'none' : 'block';
+}
+function markBellRead(){
+  if(notifList.length){ try{ localStorage.setItem(notifSeenKey(), String(notifList[0].ts)); }catch(e){} }
+  renderBell();
+}
+function openNotif(){ markBellRead(); window.location.href = 'portal.html'; }
+function showNotifToast(n, count){
+  var box = document.getElementById('toastBox');
+  var t = document.createElement('div'); t.className = 'toast'; t.style.cursor = 'pointer';
+  t.innerHTML = '<div style="font-size:22px">🔔</div><div>' + (count > 1 ? count + ' new portal messages' : 'New portal message') +
+    '<br><b>' + esc(n.title || '') + '</b><br><span style="font-size:11px;opacity:.75">' + esc((n.msg || '').slice(0, 90)) + '</span></div>';
+  t.onclick = function(){ openNotif(); };
+  box.appendChild(t);
+  setTimeout(function(){ t.classList.add('out'); }, 8000);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 8600);
+}
+document.addEventListener('click', function(e){
+  var p = document.getElementById('bellPanel');
+  if(p && p.style.display === 'block' && !e.target.closest('#bellWrap')) p.style.display = 'none';
+});
+
+function showToast(info){
+  var box = document.getElementById('toastBox');
+  var t = document.createElement('div'); t.className = 'toast';
+  var src = logoSrcFor(info);
+  t.innerHTML = (src ? '<img src="' + src + '" alt="">' : '') +
+    '<div>' + (info.logo === 'cmg' ? '🛡️ CMG admin is online' : '🤝 Sister agency joined') + '<br><b>' + esc(info.name) + '</b></div>';
+  box.appendChild(t);
+  setTimeout(function(){ t.classList.add('out'); }, 6500);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 7100);
+}
+
+function renderOnline(list){
+  // Merge duplicates (e.g. two passwords that map to the same agency) by logo key / name
+  var merged = {};
+  (list || []).forEach(function(a){
+    var info = agencyInfo(a.agency);
+    var key = info.logo || info.name;
+    merged[key] = info;
+  });
+  var keys = Object.keys(merged);
+  document.getElementById('onlineCount').textContent = keys.length;
+  var wrap = document.getElementById('onlineLogos');
+  var prev = presenceKnown || {};
+  wrap.innerHTML = keys.map(function(k){
+    var info = merged[k], src = logoSrcFor(info);
+    var inner = src ? '<img src="' + src + '" alt="' + esc(info.name) + '">'
+                    : '<div class="ini">' + esc(info.name.slice(0,3).toUpperCase()) + '</div>';
+    var isNew = presenceKnown !== null && !prev[k];
+    return '<div class="ol' + (isNew ? ' new' : '') + '" title="' + esc(info.name) + '">' + inner + '<span class="dot"></span></div>';
+  }).join('');
+  if(presenceKnown !== null){
+    var meKey = (function(){ var i = agencyInfo(myAgencyName()); return i.logo || i.name; })();
+    keys.forEach(function(k){ if(!prev[k] && k !== meKey) showToast(merged[k]); });
+  }
+  presenceKnown = merged;
+}
+
+function pollPresence(){
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  if(!token || !navigator.onLine) return;
+  fetch(APPS_SCRIPT_URL + '?action=adminPresence&token=' + encodeURIComponent(token))
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if(res && res.error === 'unauthorized'){ forceReLogin(); return; }
+      if(res && res.ok) renderOnline(res.online);
+    })
+    .catch(function(){});
+}
+function startPresence(){
+  applyMeBadge();
+  startNotifs();
+  setTimeout(function(){try{TOUR.auto();}catch(e){}},1800);
+  if(presenceTimer) return;
+  presenceKnown = null;
+  pollPresence();
+  presenceTimer = setInterval(function(){ pollPresence(); }, 25000);  // keeps going while minimized, so the agency stays shown as online
+}
+function stopPresence(tellServer){
+  stopNotifs();
+  clearInterval(presenceTimer); presenceTimer = null; presenceKnown = null;
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  if(tellServer && token){
+    try{ fetch(APPS_SCRIPT_URL + '?action=adminLeave&token=' + encodeURIComponent(token), {mode:'no-cors', keepalive:true}).catch(function(){}); }catch(e){}
+  }
+}
+// (No 'leave' on page hide: minimizing the app or opening the Content Portal must not mark you offline. Logout does.)
+document.addEventListener('visibilitychange', function(){ if(!document.hidden && presenceTimer) pollPresence(); });
+
+// ── VISITOR ID + ADMIN-PAGE OPEN TRACKING ──────────
+function cmgVid(){
+  var vid = null;
+  try{ vid = localStorage.getItem('cmgVisitorId'); }catch(e){}
+  if(!vid){
+    vid = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2,10);
+    try{ localStorage.setItem('cmgVisitorId', vid); }catch(e){}
+  }
+  return vid;
+}
+(function(){
+  try{
+    if(sessionStorage.getItem('cmgAdminOpenLogged')) return;
+    sessionStorage.setItem('cmgAdminOpenLogged','1');
+    if(!navigator.onLine) return;
+    fetch(APPS_SCRIPT_URL + '?action=logVisit&vid=' + encodeURIComponent(cmgVid()) + '&page=admin.html', {mode:'no-cors', keepalive:true}).catch(function(){});
+  }catch(e){}
+})();
+
+// ── VISITORS ───────────────────────────────────────
+function loadVisitors(){
+  var token = sessionStorage.getItem(TOKEN_KEY);
+  fetch(APPS_SCRIPT_URL + '?action=adminGetVisits&token=' + encodeURIComponent(token || ''))
+    .then(function(r){ return r.json(); })
+    .then(function(v){
+      if(v && v.error === 'unauthorized'){ forceReLogin(); return; }
+      if(!v || v.status !== 'ok') throw new Error('bad response');
+      document.getElementById('visTotal').textContent = v.total;
+      document.getElementById('visUnique').textContent = v.unique;
+      document.getElementById('visToday').textContent = v.today;
+      document.getElementById('visTodayUnique').textContent = v.todayUnique;
+      var ad = v.admin || {};
+      document.getElementById('admOpens').textContent = ad.opens || 0;
+      document.getElementById('admLogins').textContent = ad.logins || 0;
+      document.getElementById('admLoginsUnique').textContent = ad.loginsUnique || 0;
+      document.getElementById('admFailed').textContent = ad.failed || 0;
+      document.getElementById('admAgenciesTbody').innerHTML = (ad.agencies && ad.agencies.length) ? ad.agencies.map(function(a){
+        return '<tr><td>' + String(a.agency).replace(/[<>&"]/g,'') + '</td><td>' + a.logins + '</td><td>' + a.devices + '</td><td>' + String(a.lastLogin).replace(/[<>&"]/g,'') + '</td></tr>';
+      }).join('') : '<tr><td colspan="4">No logins yet.</td></tr>';
+      document.getElementById('visDaysTbody').innerHTML = v.last7.slice().reverse().map(function(d){
+        return '<tr><td>' + d.date + '</td><td>' + d.visits + '</td><td>' + d.unique + '</td></tr>';
+      }).join('');
+      document.getElementById('visPagesTbody').innerHTML = v.pages.length ? v.pages.map(function(p){
+        return '<tr><td>' + String(p.page).replace(/[<>&"]/g,'') + '</td><td>' + p.visits + '</td><td>' + p.unique + '</td></tr>';
+      }).join('') : '<tr><td colspan="3">No visits recorded yet.</td></tr>';
+    })
+    .catch(function(){
+      document.getElementById('visDaysTbody').innerHTML =
+        '<tr><td colspan="3">Could not load visitor data. Make sure the latest Code.gs is deployed.</td></tr>';
+    });
 }
 
 // ── LIVE ACTIVITY ──────────────────────────────────
@@ -1035,6 +2272,7 @@ function minutesAgoFromStr(str){
 
 // ── LOAD DATA (hybrid: online + localStorage fallback) ─
 function loadData(){
+  startPresence();
   setBadge('loading');
 
   // Always show cached data immediately if available
@@ -1171,6 +2409,8 @@ function renderAll(){
   renderStudents();
   renderSchools();
   renderRegions();
+  renderMe();
+  maybeOpenMeTab();
 }
 
 // ── STATS ──────────────────────────────────────────
@@ -1719,12 +2959,11 @@ function openStudentProfile(idx){
       '</div>';
   }
 
-  var photoBox = r.photo
-    ? '<div class="profile-photo-box" style="padding:0;overflow:hidden;">' +
-        '<img src="' + esc(toDrivePreviewUrl_(r.photo)) + '" alt="' + esc(r.name) + '" ' +
-          'style="width:100%;height:100%;object-fit:cover;" ' +
-          'onerror="this.parentNode.innerHTML=\'<div class=&quot;icon&quot;>📷</div><div>Photo failed to load</div>\';">' +
-      '</div>'
+  var photoBox = r.photo && r.code
+    ? '<div class="profile-photo-box" id="securePhotoBox" data-code="' + esc(r.code) + '" style="padding:0;overflow:hidden;position:relative;">' +
+        '<div class="icon">⏳</div><div>Loading protected photo…</div>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--muted);margin:-6px 0 14px;">🔒 Protected photo — stamped with your agency name. Every view is logged.</div>'
     : '<div class="profile-photo-box">' +
         '<div class="icon">📷</div>' +
         '<div>No photograph on file</div>' +
@@ -1776,6 +3015,7 @@ function openStudentProfile(idx){
     '</div>';
 
   document.getElementById('profileContent').innerHTML = html;
+  loadSecurePhoto();
   document.getElementById('profileOverlay').classList.add('open');
 }
 
@@ -1989,6 +3229,292 @@ function runBootSequence(){
 // ── AUTO-LOGIN if this tab already has a valid session token ─
 // (runs after the boot sequence finishes)
 runBootSequence();
+</script>
+<script>
+/* cmgPush — phone / laptop alerts even when the app is closed (Web Push + icon badge). */
+(function(){
+  if(window.cmgPush) return;
+  var cfg = {}, reg = null, pt = null, busy = false;
+  try{ if(/[?&]push=1/.test(location.search)){ window.__cmgFromPush = Date.now(); history.replaceState(null,'',location.pathname + location.hash); } }catch(e){}
+  function lget(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+  function lset(k,v){ try{ localStorage.setItem(k,v); }catch(e){} }
+  var isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  var standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  function supported(){ return ('serviceWorker' in navigator) && ('PushManager' in window) && ('Notification' in window) && /^https?:$/.test(location.protocol); }
+  function perm(){ try{ return Notification.permission; }catch(e){ return 'denied'; } }
+  function state(){
+    if(!supported()) return 'unsupported';
+    if(perm() === 'denied') return 'denied';
+    return (perm() === 'granted' && lget('cmgPushOn') === '1') ? 'on' : 'off';
+  }
+  function api(action, extra){
+    var u = cfg.url + '?action=' + action + (extra || '') + '&t=' + Date.now();
+    return fetch(u, {cache:'no-store'}).then(function(r){ return r.json(); });
+  }
+  function b64ToU8(s){
+    s = s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length % 4) s += '=';
+    var raw = atob(s), a = new Uint8Array(raw.length); for(var i=0;i<raw.length;i++) a[i] = raw.charCodeAt(i); return a;
+  }
+  function sameKey(sub, keyU8){
+    try{
+      var cur = sub.options && sub.options.applicationServerKey; if(!cur) return true;
+      var a = new Uint8Array(cur); if(a.length !== keyU8.length) return false;
+      for(var i=0;i<a.length;i++) if(a[i] !== keyU8[i]) return false; return true;
+    }catch(e){ return true; }
+  }
+  function getReg(){
+    if(reg) return Promise.resolve(reg);
+    return navigator.serviceWorker.register('sw.js').then(function(){ return navigator.serviceWorker.ready; }).then(function(r){ reg = r; try{ r.update().catch(function(){}); }catch(e){} return r; });
+  }
+  function toSW(msg){
+    return getReg().then(function(r){ var w = r.active || navigator.serviceWorker.controller; if(w) w.postMessage(msg); }).catch(function(){});
+  }
+  // Register (or refresh) this device for the logged-in agency.
+  function register(){
+    var token = cfg.getToken && cfg.getToken();
+    if(!token) return Promise.reject(new Error('Please log in first.'));
+    var keyU8;
+    return getReg().then(function(r){
+      return api('pushKey').then(function(k){
+        if(!k || !k.key) throw new Error('Alerts are not set up on the server yet.');
+        keyU8 = b64ToU8(k.key);
+        return r.pushManager.getSubscription().then(function(sub){
+          if(sub && !sameKey(sub, keyU8)) return sub.unsubscribe().then(function(){ return null; });
+          return sub;
+        });
+      }).then(function(sub){
+        return sub || r.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyU8 });
+      });
+    }).then(function(sub){
+      return api('pushSubscribe', '&token=' + encodeURIComponent(token) + '&home=' + encodeURIComponent(cfg.home || 'admin.html') +
+                 '&endpoint=' + encodeURIComponent(sub.endpoint));
+    }).then(function(d){
+      if(!d || d.status !== 'ok' || !d.pt) throw new Error((d && d.message) || (d && d.error === 'unauthorized' ? 'Please log in again.' : 'The server did not accept this device.'));
+      pt = d.pt; lset('cmgPushPt', pt); lset('cmgPushOn', '1');
+      return toSW({ type:'cfg', url: cfg.url, pt: pt, home: cfg.home || 'admin.html', seen: 0 }).then(markSeen);
+    });
+  }
+  // The user is looking at the app: clear the icon badge and tell the worker.
+  function markSeen(){
+    try{ if(navigator.clearAppBadge) navigator.clearAppBadge().catch(function(){}); }catch(e){}
+    pt = pt || lget('cmgPushPt'); if(!pt || !cfg.url) return Promise.resolve();
+    return api('pushPeek', '&pt=' + encodeURIComponent(pt) + '&since=9999999999999').then(function(d){
+      if(d && d.status === 'ok') return toSW({ type:'seen', ts: d.now });
+      if(d && d.message === 'unknown device') lset('cmgPushOn', '0');
+    }).catch(function(){});
+  }
+  function enable(){
+    if(busy) return Promise.resolve({ok:false, msg:'Please wait…'});
+    if(!supported()){
+      return Promise.resolve({ ok:false, msg: isIOS && !standalone
+        ? 'On iPhone/iPad: tap Share → "Add to Home Screen", open NAAD from that icon, then switch alerts on.'
+        : 'This browser does not support background alerts. Use Chrome, Edge or Safari (installed to the home screen).' });
+    }
+    busy = true; paint();
+    var ask = perm() === 'granted' ? Promise.resolve('granted') : Notification.requestPermission();
+    return Promise.resolve(ask).then(function(p){
+      if(p !== 'granted') throw new Error('Permission was not given. Allow notifications for this site in the browser settings, then try again.');
+      return register();
+    }).then(function(){ busy = false; paint(); return { ok:true, msg:'✅ Alerts are on for this device.' }; })
+      .catch(function(e){ busy = false; lset('cmgPushOn','0'); paint(); return { ok:false, msg:(e && e.message) || 'Could not turn alerts on.' }; });
+  }
+  function disable(){
+    pt = pt || lget('cmgPushPt');
+    var done = function(){ lset('cmgPushOn','0'); lset('cmgPushPt',''); paint(); };
+    var p = pt ? api('pushUnsubscribe', '&pt=' + encodeURIComponent(pt)).catch(function(){}) : Promise.resolve();
+    return p.then(function(){ return getReg(); }).then(function(r){ return r.pushManager.getSubscription(); })
+      .then(function(s){ return s ? s.unsubscribe() : null; }).catch(function(){}).then(function(){ pt = null; done(); toSW({type:'clear'}); });
+  }
+  function leave(){  // used on logout: this device stops receiving the previous agency's alerts
+    var p = lget('cmgPushPt'), had = lget('cmgPushOn') === '1';
+    lset('cmgPushOn','0'); lset('cmgPushPt','');
+    try{ if(navigator.clearAppBadge) navigator.clearAppBadge().catch(function(){}); }catch(e){}
+    if(!p || !cfg.url) return Promise.resolve();
+    toSW({type:'clear'});
+    return api('pushUnsubscribe', '&pt=' + encodeURIComponent(p)).catch(function(){}).then(function(){
+      return supported() ? getReg().then(function(r){ return r.pushManager.getSubscription(); }).then(function(s){ return s ? s.unsubscribe() : null; }).catch(function(){}) : null;
+    });
+  }
+  function test(){
+    var token = cfg.getToken && cfg.getToken(); pt = pt || lget('cmgPushPt');
+    if(state() !== 'on' || !pt) return Promise.resolve({ ok:false, msg:'Switch alerts on first.' });
+    return api('pushSelfTest', '&token=' + encodeURIComponent(token || '') + '&pt=' + encodeURIComponent(pt))
+      .then(function(d){ return { ok: !!(d && d.status === 'ok'), msg: (d && d.message) || 'No answer from the server.' }; })
+      .catch(function(){ return { ok:false, msg:'No internet connection.' }; });
+  }
+
+  // ---- small UI: banner + button label ----
+  var bar = null;
+  function css(){
+    var st = document.createElement('style');
+    st.textContent = '#cmgPushBar{position:fixed;left:50%;bottom:58px;transform:translateX(-50%);z-index:2147482500;display:none;width:min(92vw,420px);box-sizing:border-box;background:#0b1626;color:#eef2ff;border:1px solid rgba(255,215,0,.5);border-radius:14px;padding:10px 12px;font:13px/1.35 system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.6);}' +
+      '#cmgPushBar b{color:#FFD700}#cmgPushBar .pb-r{display:flex;gap:8px;margin-top:8px}' +
+      '#cmgPushBar button{flex:1;border:1px solid rgba(255,215,0,.55);background:rgba(255,215,0,.16);color:#FFD700;font-weight:800;border-radius:9px;padding:9px;font-size:13px;cursor:pointer}' +
+      '#cmgPushBar button.pb-no{flex:0 0 auto;background:transparent;color:#9fb0cf;border-color:rgba(255,255,255,.2);font-weight:600}' +
+      '#cmgPushBar .pb-m{margin-top:6px;color:#9fb0cf;font-size:12px}';
+    document.head.appendChild(st);
+    bar = document.createElement('div'); bar.id = 'cmgPushBar';
+    bar.innerHTML = '<div><b>📲 Get alerts even when the app is closed</b><br>Sound, pop-up and a number on the app icon whenever a message arrives.</div>' +
+      '<div class="pb-r"><button class="pb-yes">Turn on alerts</button><button class="pb-no">Not now</button></div><div class="pb-m" style="display:none"></div>';
+    document.body.appendChild(bar);
+    bar.querySelector('.pb-yes').onclick = function(){ toggle(); };
+    bar.querySelector('.pb-no').onclick = function(){ bar.style.display = 'none'; try{ sessionStorage.setItem('cmgPushDismiss','1'); }catch(e){} };
+  }
+  function say(m){ if(!bar) return; var el = bar.querySelector('.pb-m'); el.textContent = m; el.style.display = m ? 'block' : 'none'; }
+  function label(){
+    var s = state();
+    return busy ? '📲 Working…' : s === 'on' ? '📲 Alerts on' : s === 'denied' ? '📲 Alerts blocked' : s === 'unsupported' ? (isIOS && !standalone ? '📲 Alerts: install app' : '📲 Alerts n/a') : '📲 Turn on alerts';
+  }
+  function paint(){
+    var s = state(), btns = document.querySelectorAll('[data-cmg-push]');
+    for(var i=0;i<btns.length;i++){ btns[i].textContent = label(); btns[i].style.opacity = s === 'on' ? '1' : '.9'; }
+    if(bar){
+      var dismissed = false; try{ dismissed = sessionStorage.getItem('cmgPushDismiss') === '1'; }catch(e){}
+      var loggedIn = !!(cfg.getToken && cfg.getToken());
+      bar.style.display = (loggedIn && !dismissed && (s === 'off' || (s === 'unsupported' && isIOS && !standalone))) ? 'block' : 'none';
+    }
+  }
+  function toggle(){
+    var s = state();
+    if(s === 'on'){ return disable().then(function(){ say('Alerts are off for this device.'); }); }
+    return enable().then(function(r){
+      say(r.msg);
+      if(r.ok){ setTimeout(function(){ if(bar) bar.style.display = 'none'; }, 1800); }
+      if(cfg.onMessage) cfg.onMessage(r.msg, r.ok);
+    });
+  }
+  function init(c){
+    cfg = c || {};
+    if(!bar) css();
+    paint();
+    if(!supported()) return;
+    getReg().then(function(){
+      navigator.serviceWorker.addEventListener('message', function(e){
+        if(e.data && (e.data.type === 'push-wake' || e.data.type === 'push-open')){ if(e.data.type === 'push-open') window.__cmgFromPush = Date.now(); if(cfg.onWake) cfg.onWake(); }
+      });
+    }).catch(function(){});
+    // already allowed before: quietly keep this device registered for whoever is logged in now
+    if(perm() === 'granted' && lget('cmgPushOn') === '1' && cfg.getToken && cfg.getToken()){
+      register().then(paint).catch(function(){ paint(); });
+    }
+    document.addEventListener('visibilitychange', function(){ if(!document.hidden && state() === 'on') markSeen(); });
+    window.addEventListener('focus', function(){ if(state() === 'on') markSeen(); });
+  }
+  function swVersion(){
+    return getReg().then(function(r){
+      return new Promise(function(res){
+        var w = r.active || navigator.serviceWorker.controller; if(!w) return res('no active worker');
+        var ch = new MessageChannel(), done = false;
+        ch.port1.onmessage = function(e){ done = true; res(e.data && e.data.v ? e.data.v + (e.data.hasCfg ? ' (device registered)' : ' (device NOT registered in worker)') : 'unknown'); };
+        try{ w.postMessage({type:'ping'}, [ch.port2]); }catch(e){ return res('error'); }
+        setTimeout(function(){ if(!done) res('OLD worker (no push support) — close the app fully and reopen it'); }, 2500);
+      });
+    }).catch(function(e){ return 'error: ' + e; });
+  }
+  function diagnose(){
+    var L = [];
+    L.push('Browser alerts: ' + (supported() ? 'supported' : 'NOT supported here'));
+    L.push('Permission: ' + perm());
+    L.push('Installed app: ' + (standalone ? 'yes' : 'no (opened in a browser tab)'));
+    L.push('Alerts switch: ' + state());
+    if(!supported()) return Promise.resolve(L.join('\n'));
+    return swVersion().then(function(v){
+      L.push('Service worker: ' + v);
+      return getReg().then(function(r){ return r.pushManager.getSubscription(); });
+    }).then(function(s){
+      L.push('Push subscription in browser: ' + (s ? 'yes' : 'NO'));
+      return test();
+    }).then(function(t){
+      L.push('Server test: ' + t.msg);
+      return L.join('\n');
+    }).catch(function(e){ L.push('Error: ' + e); return L.join('\n'); });
+  }
+  function testUI(){
+    return diagnose().then(function(txt){ try{ alert('Alert check\n\n' + txt); }catch(e){} return txt; });
+  }
+  window.cmgPush = { diagnose:diagnose, testUI:testUI, init:init, enable:enable, disable:disable, toggle:toggle, test:test, leave:leave, state:state, paint:paint, markSeen:markSeen, refresh:paint };
+})();
+
+
+// ══════════ ADMIN GUIDED TOUR ══════════
+var TOUR=(function(){
+  var steps=[],i=0,on=false,rt=null;
+  function tab(n){return '.tab[onclick*="switchTab(\''+n+'\'"]';}
+  function mk(){return [
+    {p:'students',t:'Welcome to the Admin Dashboard 👋',b:'This 2-minute tour shows what each part does so you can monitor students, schools, results and messages. Restart it any time with <b>🎓 Tour</b> at the top.'},
+    {p:'students',s:'.stats-grid',t:'1 · Live numbers',b:'The big boxes at the top show totals across the whole programme — activations, quizzes started, results submitted and more. They refresh when you reload.'},
+    {p:'students',s:'.tabs',t:'2 · The tabs',b:'Everything is organised in tabs. Swipe or scroll sideways to see them all. Let\'s visit the important ones.'},
+    {p:'students',s:'#panel-students .filter-bar',t:'3 · All Students',b:'Search by name, school, phone, email or activation code, and filter by status, gender, region or district to find any student quickly.'},
+    {p:'schools',s:tab('schools'),t:'4 · Schools',b:'Participation per school — who has activated and who has submitted results.'},
+    {p:'regions',s:tab('regions'),t:'5 · Regions',b:'The same picture by region, to see where participation is strong or weak.'},
+    {p:'me',s:tab('me'),t:'6 · M&amp;E',b:'Monitoring &amp; Evaluation figures for reporting: reach, completion and performance.'},
+    {p:'broadcast',s:tab('broadcast'),t:'7 · Broadcasts',b:'Send a message to students or agencies. It appears as a pop-up on their screens.'},
+    {p:'nominees',s:tab('nominees'),t:'8 · Nominees',b:'Students who agreed to be nominated for recognition.'},
+    {p:'requests',s:tab('requests'),t:'9 · Requests',b:'Help requests from students and schools. A red number means something is waiting for you.'},
+    {p:'leaderboard',s:tab('leaderboard'),t:'10 · Leaderboard',b:'Top performers across the programme.'},
+    {p:'charts',s:tab('charts'),t:'11 · Charts',b:'Visual summaries you can show in meetings.'},
+    {p:'live',s:tab('live'),t:'12 · Live Activity',b:'See what is happening right now — who is online and recent actions.'},
+    {p:'settings',s:tab('settings'),t:'13 · Settings',b:'Programme settings and controls. Change these carefully.'},
+    {p:'students',s:'#bellBtn',t:'14 · Messages &amp; alerts',b:'The bell shows messages from agencies using the Content Portal. Open it and tap <b>📲 Alerts</b> to get phone/laptop notifications even when the app is closed.'},
+    {p:'students',s:'.tab[href="portal.html"]',t:'15 · Content Portal',b:'Approve or reject questions from agencies, build quizzes and export them here.'},
+    {p:'students',t:'You are ready! 🎉',b:'Use <b>🎓 Tour</b> at the top whenever you want to see this again.'}
+  ];}
+  var shade,hole,card;
+  function build(){
+    if(shade)return;
+    shade=document.createElement('div');shade.id='tourShade';
+    hole=document.createElement('div');hole.id='tourHole';shade.appendChild(hole);
+    card=document.createElement('div');card.id='tourCard';
+    document.body.appendChild(shade);document.body.appendChild(card);
+    shade.addEventListener('click',function(e){e.stopPropagation();});
+  }
+  function key(){var n='admin';try{n=(document.getElementById('meName')||{}).textContent||'admin';}catch(e){}return 'naad_admintour_v1_'+n;}
+  function mark(){try{localStorage.setItem(key(),'1');}catch(e){}}
+  function seen(){try{return !!localStorage.getItem(key());}catch(e){return false;}}
+  function target(st){if(!st.s)return null;var el=document.querySelector(st.s);if(!el)return null;var r=el.getBoundingClientRect();return (r.width>4&&r.height>4)?el:null;}
+  function show(){
+    var st=steps[i];
+    if(st.p){try{switchTab(st.p,document.querySelector('.tab[onclick*="switchTab(\''+st.p+'\'"]'),true);}catch(e){}}
+    if(st.pre){try{st.pre();}catch(e){}}
+    clearTimeout(rt);
+    rt=setTimeout(function(){
+      var el=target(st);
+      if(el){try{el.scrollIntoView({block:'center',inline:'center'});}catch(e){}}
+      setTimeout(function(){draw(st,target(st));},el?280:0);
+    },320);
+  }
+  function draw(st,el){
+    if(!on)return;
+    var mob=window.innerWidth<=700,vw=window.innerWidth,vh=window.innerHeight;
+    if(el){var r=el.getBoundingClientRect(),pad=6;
+      var h=Math.min(r.height+pad*2,vh-20),t=Math.max(6,r.top-pad),l=Math.max(4,r.left-pad),w=Math.min(r.width+pad*2,vw-8);
+      hole.style.cssText='display:block;top:'+t+'px;left:'+l+'px;width:'+w+'px;height:'+h+'px;';
+    }else hole.style.cssText='display:block;top:50%;left:50%;width:0;height:0;';
+    var dots=steps.map(function(_,k){return '<i class="'+(k===i?'on':k<i?'done':'')+'"></i>';}).join('');
+    card.innerHTML='<div class="t-step">Step '+(i+1)+' of '+steps.length+'</div><h3>'+st.t+'</h3><div class="t-body">'+st.b+'</div><div class="t-dots">'+dots+'</div><div class="t-row"><button class="t-skip" onclick="TOUR.end()">'+(i===steps.length-1?'':'Skip tour')+'</button>'+(i>0?'<button class="t-back" onclick="TOUR.prev()">← Back</button>':'')+'<button class="t-next" onclick="TOUR.next()">'+(i===steps.length-1?'Finish ✓':'Next →')+'</button></div>';
+    card.classList.add('show');shade.classList.add('show');
+    if(!mob){
+      var cw=card.offsetWidth,ch=card.offsetHeight,x,y;
+      if(el){var r2=el.getBoundingClientRect();
+        if(r2.bottom+ch+20<vh){y=r2.bottom+14;x=r2.left;}
+        else if(r2.top-ch-20>0){y=r2.top-ch-14;x=r2.left;}
+        else if(r2.right+cw+20<vw){x=r2.right+14;y=Math.max(10,r2.top);}
+        else{x=Math.max(10,r2.left-cw-14);y=Math.max(10,r2.top);}
+      }else{x=(vw-cw)/2;y=(vh-ch)/2;}
+      x=Math.max(10,Math.min(x,vw-cw-10));y=Math.max(10,Math.min(y,vh-ch-10));
+      card.style.left=x+'px';card.style.top=y+'px';
+    }else if(!el){card.style.left='12px';}
+  }
+  function onResize(){if(on){var st=steps[i];draw(st,target(st));}}
+  window.addEventListener('resize',onResize);
+  return {
+    start:function(){build();steps=mk();i=0;on=true;show();},
+    auto:function(){if(!seen())TOUR.start();},
+    next:function(){if(i>=steps.length-1){TOUR.end();return;}i++;show();},
+    prev:function(){if(i>0){i--;show();}},
+    end:function(){on=false;mark();clearTimeout(rt);if(shade){shade.classList.remove('show');hole.style.display='none';card.classList.remove('show');}try{switchTab('students',document.querySelectorAll('.tab')[0],true);}catch(e){}}
+  };
+})();
 </script>
 </body>
 </html>
