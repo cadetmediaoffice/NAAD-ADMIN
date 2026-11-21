@@ -75,7 +75,7 @@ body:before{content:"";position:fixed;inset:0;background:rgba(255,255,255,.78);b
       </div>
       <div class="msg" id="err"></div>
       <button class="btn" id="goBtn" type="submit" style="width:100%;margin-top:6px">Log in</button>
-      <div class="alt">Older NAAD account? <button type="button" onclick="showLegacy(true)">Log in with name and code</button></div>
+      <div class="alt"><button type="button" onclick="showReset(true)">Forgot your PIN?</button> · <button type="button" onclick="showLegacy(true)">Older account? Use name and code</button></div>
     </form>
 
     <!-- Older accounts: name + code or PIN (still supported) -->
@@ -86,15 +86,40 @@ body:before{content:"";position:fixed;inset:0;background:rgba(255,255,255,.78);b
       <button class="btn" id="goBtn2" type="submit" style="width:100%;margin-top:6px">Log in</button>
       <div class="alt"><button type="button" onclick="showLegacy(false)">← Back to Account ID login</button></div>
     </form>
+    <!-- Forgot PIN: email a code, then choose a new PIN -->
+    <div id="resetBox" style="display:none">
+      <h2 style="font-size:18px;margin-bottom:6px">Reset your PIN</h2>
+      <p class="hint" style="margin-bottom:14px">We will email a 6-digit code to the email address on your account.</p>
+      <div class="field"><label for="rsId">Account ID</label><input class="mono" id="rsId" autocapitalize="characters" spellcheck="false"></div>
+      <button class="btn" id="rsSend" type="button" style="width:100%" onclick="sendResetCode()">Send me a code</button>
+      <div id="rsStep2" style="display:none;margin-top:18px">
+        <div class="field"><label for="rsCode">6-digit code from your email</label><input id="rsCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></div>
+        <div class="field"><label for="rsPin">New PIN (4–8 digits)</label><input id="rsPin" type="password" inputmode="numeric" maxlength="8"></div>
+        <button class="btn" id="rsSave" type="button" style="width:100%" onclick="saveNewPin()">Save new PIN</button>
+      </div>
+      <div class="msg" id="rsMsg"></div>
+      <div class="alt"><button type="button" onclick="showReset(false)">← Back to log in</button></div>
+    </div>
   </div>
   <img class="partners" src="boot_logo.png" alt="NAAD partner institutions">
-  <p class="alt foot" style="margin-top:14px;color:#2b3a63">New to NAAD? <a href="activate.html">Activate your pendrive code</a><br>Forgot your PIN? Ask your school coordinator to reset it.</p>
+  <p class="alt foot" style="margin-top:14px;color:#2b3a63">New to NAAD? <a href="activate.html">Activate your pendrive code</a><br>No email on your account? Ask your school coordinator to reset your PIN.</p>
 </div>
 
 <script>
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
 function $(i){return document.getElementById(i)}
 function showLegacy(on){ $('idForm').style.display=on?'none':'block'; $('legacyForm').style.display=on?'block':'none'; }
+function showReset(on){ $('idForm').style.display=on?'none':'block'; $('legacyForm').style.display='none'; $('resetBox').style.display=on?'block':'none'; if(on&&$('inId').value&&!$('rsId').value) $('rsId').value=$('inId').value.trim(); }
+function rsShow(ok,t){ var m=$('rsMsg'); m.textContent=t; m.className='msg '+(ok?'ok':'err'); }
+function rsCall(params,btn){ var t=btn.textContent; btn.disabled=true; btn.textContent='Please wait…';
+  return fetch(APPS_SCRIPT_URL+'?'+new URLSearchParams(params).toString()).then(function(r){return r.json()}).then(function(r){btn.disabled=false;btn.textContent=t;return r}).catch(function(){btn.disabled=false;btn.textContent=t;rsShow(false,'Could not reach the server. Check your connection.');return null}); }
+function sendResetCode(){ var id=$('rsId').value.trim(); if(!id) return rsShow(false,'Enter your Account ID.');
+  rsCall({action:'studentRequestReset',accountId:id},$('rsSend')).then(function(r){ if(!r) return; rsShow(r.status==='ok',r.message); if(r.status==='ok') $('rsStep2').style.display='block'; }); }
+function saveNewPin(){ var id=$('rsId').value.trim(), c=$('rsCode').value.trim(), p=$('rsPin').value.trim();
+  if(!/^\d{6}$/.test(c)) return rsShow(false,'Enter the 6-digit code from your email.');
+  if(!/^\d{4,8}$/.test(p)) return rsShow(false,'PIN must be 4 to 8 digits (numbers only).');
+  rsCall({action:'studentResetPin',accountId:id,code:c,newPin:p},$('rsSave')).then(function(r){ if(!r) return; rsShow(r.status==='ok',r.message);
+    if(r.status==='ok'){ $('inId').value=id; setTimeout(function(){ showReset(false); },1800); } }); }
 function fail(el,msg){ el.textContent=msg; el.className='msg err'; }
 function call(params,btn,errEl){
   errEl.className='msg'; btn.disabled=true; var t=btn.textContent; btn.textContent='Checking…';
