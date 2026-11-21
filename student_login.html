@@ -3,44 +3,60 @@
 <head>
 <meta charset="UTF-8">
 <title>Student Portal Login — Cadet Media Ghana</title>
-<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="favicon_preview.png">
+<link rel="apple-touch-icon" href="favicon_preview.png">
+<meta name="theme-color" content="#0b1630">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-:root{--navy:#0b1630;--navy2:#13224a;--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);--gold:#FFD700;--gold2:#e6a800;--ink:#eef2ff;--mute:#a9b6d6;--ok:#7CFC9A;--bad:#ff9a9a}
+:root{--navy:#0b1630;--navy2:#13224a;--card:rgba(255,255,255,.92);--line:rgba(11,22,48,.18);--gold:#FFD700;--gold2:#e6a800;--ink:#0b1630;--mute:#4a5a82;--ok:#0a7a33;--bad:#b3261e}
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;background:radial-gradient(1200px 600px at 80% -10%,#1d3a7a 0,transparent 60%),linear-gradient(160deg,#0b1630,#101f45 55%,#0a1226);min-height:100vh;color:var(--ink);line-height:1.5}
-a{color:var(--gold)}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;background:#e9ebef url(bg_image.png) center/cover no-repeat fixed;min-height:100vh;color:var(--ink);line-height:1.5}
+a{color:#0b3a8f;font-weight:600}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border:0;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradient(45deg,var(--gold),var(--gold2));color:#1a1400;box-shadow:0 6px 20px rgba(255,215,0,.25);text-decoration:none;transition:transform .15s}
 .btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
 .btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);box-shadow:none}
-.btn.ghost:hover{background:rgba(255,255,255,.08)}
+.btn.ghost:hover{background:rgba(11,22,48,.06)}
 label{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:0 0 6px;letter-spacing:.3px;text-transform:uppercase}
-input,select{width:100%;padding:13px 14px;border-radius:11px;border:1.5px solid var(--line);background:rgba(255,255,255,.06);color:#fff;font-size:15px;outline:none}
+input,select{width:100%;padding:13px 14px;border-radius:11px;border:1.5px solid var(--line);background:#fff;color:#0b1630;font-size:15px;outline:none}
+input::placeholder{color:#8a96b5}
 select option{color:#000}
-input:focus,select:focus{border-color:var(--gold)}input:disabled,select:disabled{opacity:.65}
+input:focus,select:focus{border-color:#0b3a8f;box-shadow:0 0 0 3px rgba(255,215,0,.45)}input:disabled,select:disabled{opacity:.65}
 .msg{display:none;margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px}
-.msg.ok{display:block;background:rgba(124,252,154,.1);border:1px solid rgba(124,252,154,.4);color:var(--ok)}
-.msg.err{display:block;background:rgba(255,120,120,.1);border:1px solid rgba(255,120,120,.4);color:var(--bad)}
+.msg.ok{display:block;background:rgba(10,122,51,.08);border:1px solid rgba(10,122,51,.35);color:var(--ok)}
+.msg.err{display:block;background:rgba(179,38,30,.07);border:1px solid rgba(179,38,30,.35);color:var(--bad)}
 
-body{display:flex;align-items:center;justify-content:center;padding:24px}
-.shell{width:100%;max-width:440px}
-.brand{text-align:center;margin-bottom:22px}
-.brand img{width:84px;height:84px;border-radius:50%;border:3px solid rgba(255,215,0,.55);box-shadow:0 0 34px rgba(255,215,0,.25);margin-bottom:12px}
-.brand h1{font-size:24px;letter-spacing:.2px}.brand p{color:var(--mute);font-size:13.5px;margin-top:4px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:26px 22px;box-shadow:0 18px 50px rgba(0,0,0,.45);backdrop-filter:blur(6px)}
+body{display:flex;align-items:center;justify-content:center;padding:24px;position:relative}
+body:before{content:"";position:fixed;inset:0;background:rgba(255,255,255,.78);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:0}
+.shell{width:100%;max-width:440px;position:relative;z-index:1}
+.brand{text-align:center;margin-bottom:18px}
+.brand img{height:62px;width:auto;margin-bottom:10px}
+.brand h1{font-size:24px;letter-spacing:.2px;color:#0b1630}.brand p{color:var(--mute);font-size:13.5px;margin-top:4px}
+.card{background:var(--card);border:1px solid rgba(255,255,255,.9);border-top:4px solid var(--gold);border-radius:20px;padding:26px 22px;box-shadow:0 22px 60px rgba(11,22,48,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.foot{background:rgba(255,255,255,.9);border-radius:14px;padding:10px 14px;box-shadow:0 8px 24px rgba(11,22,48,.18)}
+.partners{display:block;width:100%;max-width:440px;margin:18px auto 0;opacity:.95}
+/* Wide landscape screens: NAAD artwork stays fully visible on the left, form sits on the right */
+@media(min-width:1360px) and (min-aspect-ratio:16/10){
+  body:before{background:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,0) 60%,rgba(235,237,241,.55) 100%);backdrop-filter:none;-webkit-backdrop-filter:none}
+  body{justify-content:flex-end;padding:24px 2vw 24px 24px;background-position:left center}
+  .shell{max-width:420px}
+  .brand img{display:none}
+  .brand h1{font-size:26px}
+  .partners{display:none}
+}
 .field{margin-bottom:16px}
 .hint{font-size:12px;color:var(--mute);margin-top:6px}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;letter-spacing:.5px}
 .alt{text-align:center;margin-top:16px;font-size:13px;color:var(--mute)}
-.alt button{background:none;border:0;color:var(--gold);cursor:pointer;font-size:13px;text-decoration:underline}
-.note{background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.25);border-radius:12px;padding:11px 13px;font-size:12.5px;color:#f3e7b3;margin-bottom:18px}
+.alt button{background:none;border:0;color:#0b3a8f;font-weight:600;cursor:pointer;font-size:13px;text-decoration:underline}
+.note{background:rgba(255,215,0,.2);border:1px solid rgba(230,168,0,.5);border-radius:12px;padding:11px 13px;font-size:12.5px;color:#5c4700;margin-bottom:18px}
 </style>
 </head>
 <body>
 <div class="shell">
   <div class="brand">
-    <img src="logo_cmg.png" alt="Cadet Media Ghana" onerror="this.style.display='none'">
+    <img src="logo_naad.png" alt="NAAD – National Academic Assessment Drive" onerror="this.style.display='none'">
     <h1>Student Portal</h1>
     <p>Your results, awards and certificates in one place.</p>
   </div>
@@ -71,7 +87,8 @@ body{display:flex;align-items:center;justify-content:center;padding:24px}
       <div class="alt"><button type="button" onclick="showLegacy(false)">← Back to Account ID login</button></div>
     </form>
   </div>
-  <p class="alt" style="margin-top:18px">New to NAAD? <a href="activate.html">Activate your pendrive code</a><br>Forgot your PIN? Ask your school coordinator to reset it.</p>
+  <img class="partners" src="boot_logo.png" alt="NAAD partner institutions">
+  <p class="alt foot" style="margin-top:14px;color:#2b3a63">New to NAAD? <a href="activate.html">Activate your pendrive code</a><br>Forgot your PIN? Ask your school coordinator to reset it.</p>
 </div>
 
 <script>

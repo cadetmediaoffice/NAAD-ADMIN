@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <title>My Portal — Cadet Media Ghana</title>
-<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="favicon_preview.png">
+<link rel="apple-touch-icon" href="favicon_preview.png">
+<meta name="theme-color" content="#0b1630">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 :root{--navy:#0b1630;--navy2:#13224a;--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.14);--gold:#FFD700;--gold2:#e6a800;--ink:#eef2ff;--mute:#a9b6d6;--ok:#7CFC9A;--bad:#ff9a9a}
@@ -25,9 +28,15 @@ input:focus,select:focus{border-color:var(--gold)}input:disabled,select:disabled
 
 .wrap{max-width:860px;margin:0 auto;padding:18px 16px 60px}
 .top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px}
-.top .b{display:flex;align-items:center;gap:10px;font-weight:800}.top .b img{width:38px;height:38px;border-radius:50%;border:2px solid rgba(255,215,0,.5)}
+.top .b{display:flex;align-items:center;gap:10px;font-weight:800}.top .b img{width:46px;height:46px;border-radius:50%;border:2px solid rgba(255,215,0,.6);background:#fff;padding:4px;object-fit:contain}
 .top .b span{font-size:15px;letter-spacing:.2px}
-.hero{display:flex;gap:18px;align-items:center;flex-wrap:wrap;background:linear-gradient(135deg,rgba(255,215,0,.12),rgba(255,255,255,.05));border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.hero{background:linear-gradient(135deg,rgba(255,215,0,.10),rgba(255,255,255,.05));border:1px solid var(--line);border-radius:22px;padding:0;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.4)}
+.hero-cover{height:200px;background:#e9ebef url(bg_image.png) center 40%/cover no-repeat;position:relative}
+.hero-cover:after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(11,22,48,0) 55%,rgba(11,22,48,.45))}
+.hero-body{display:flex;gap:18px;align-items:flex-start;padding:0 22px 22px}
+.hero-body .avatar{margin-top:-52px;position:relative;z-index:1;width:104px;height:104px;border-width:4px;background:#13224a;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+.hero-info{min-width:0;padding-top:14px}
+@media(max-width:520px){.hero-cover{height:130px}.hero-body{flex-direction:column;gap:6px}.hero-info{padding-top:0}}
 .avatar{width:92px;height:92px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);flex:none;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:800;color:var(--gold)}
 .hero h1{font-size:24px;line-height:1.2}.hero .sub{color:var(--mute);font-size:14px;margin-top:2px}
 .chip{display:inline-flex;align-items:center;gap:8px;margin-top:10px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.3);border:1px solid var(--line);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px}
@@ -54,24 +63,27 @@ input:focus,select:focus{border-color:var(--gold)}input:disabled,select:disabled
 .small{font-size:12px;color:var(--mute)}
 .modal{position:fixed;inset:0;background:rgba(5,10,25,.88);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
 .modal .box{background:#13224a;border:1px solid var(--line);border-radius:20px;padding:26px;max-width:400px;width:100%}
-@media print{body{background:#fff;color:#000}.top .btn,.tabs,.modal,.noprint,.btn{display:none!important}.hero,.ev,.card,.stat{background:#fff!important;border:1px solid #bbb!important;box-shadow:none!important;color:#000}.hero .sub,.ev .meta,.stat span,.kv div span{color:#444!important}.stat b,.avatar{color:#000!important}.panel{display:block!important}#tabProfile,#tabSecurity,#tabLink{display:none!important}}
+@media print{.hero-cover{display:none}body{background:#fff;color:#000}.top .btn,.tabs,.modal,.noprint,.btn{display:none!important}.hero,.ev,.card,.stat{background:#fff!important;border:1px solid #bbb!important;box-shadow:none!important;color:#000}.hero .sub,.ev .meta,.stat span,.kv div span{color:#444!important}.stat b,.avatar{color:#000!important}.panel{display:block!important}#tabProfile,#tabSecurity,#tabLink{display:none!important}}
 </style>
 </head>
 <body>
 <div class="wrap" id="app" style="display:none">
   <div class="top">
-    <div class="b"><img src="logo_cmg.png" alt="" onerror="this.style.display='none'"><span>Cadet Media Ghana · My Portal</span></div>
+    <div class="b"><img src="logo_naad.png" alt="NAAD" onerror="this.style.display='none'"><span>NAAD · My Portal</span></div>
     <button class="btn ghost" onclick="doLogout()">Log out</button>
   </div>
 
   <div class="hero">
+    <div class="hero-cover" role="img" aria-label="NAAD – National Academic Assessment Drive"></div>
+    <div class="hero-body">
     <div class="avatar" id="avatar">?</div>
-    <div style="min-width:0">
+    <div class="hero-info">
       <h1 id="hName">…</h1>
       <div class="sub" id="hSub"></div>
       <div class="chip">ID <b id="hId"></b> <button class="noprint" onclick="copyId()">Copy</button></div>
       <div class="noprint" style="margin-top:10px"><button class="btn ghost" style="padding:8px 14px;font-size:12.5px" onclick="document.getElementById('photoInput').click()">📷 Change photo</button>
         <input type="file" id="photoInput" accept="image/*" style="display:none"></div>
+    </div>
     </div>
   </div>
   <div class="msg" id="photoMsg"></div>
