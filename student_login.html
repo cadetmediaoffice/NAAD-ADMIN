@@ -3,13 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <title>Student Portal Login — Cadet Media Ghana</title>
-<link rel="icon" href="favicon.ico" sizes="any">
-<link rel="icon" type="image/png" href="favicon_preview.png">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="naad-student-192.png">
+<link rel="apple-touch-icon" href="naad-student-192.png">
+<link rel="manifest" href="naad-student.webmanifest">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="NAAD">
+<meta name="apple-mobile-web-app-title" content="NAAD Student">
 <meta name="theme-color" content="#0b1630">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
@@ -255,7 +254,7 @@ $('nx').onclick=function(){ clearInterval(tm); if(si>=sl.length-1) showLogin(); 
   }
   tick();
 })();
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+if('serviceWorker' in navigator) navigator.serviceWorker.register('naad-student-sw.js',{scope:'student_'}).catch(function(){});
 var dip=null, ib=$('install');
 window.addEventListener('beforeinstallprompt',function(e){ e.preventDefault(); dip=e; ib.style.display='block'; });
 window.addEventListener('appinstalled',function(){ ib.style.display='none'; });
