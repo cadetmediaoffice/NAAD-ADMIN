@@ -5,7 +5,11 @@
 <title>Student Portal Login — Cadet Media Ghana</title>
 <link rel="icon" href="favicon.ico" sizes="any">
 <link rel="icon" type="image/png" href="favicon_preview.png">
-<link rel="apple-touch-icon" href="favicon_preview.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="NAAD">
 <meta name="theme-color" content="#0b1630">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
@@ -63,9 +67,53 @@ input:focus{border-color:#0b3a8f;box-shadow:0 0 0 3px rgba(255,215,0,.55)}
   .mband .tag{display:block;margin-top:8px;color:#FFD700;font-weight:800;font-style:italic}
   .mband img{display:block;width:100%;max-width:440px;margin:14px auto 0;background:rgba(255,255,255,.92);border-radius:12px;padding:6px}
 }
+
+/* ===== Loading screens, intro slideshow, install button ===== */
+.ov{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:24px;background:#0b1630 url(login_art.jpg) center/cover no-repeat;transition:opacity .5s,visibility 0s}
+.ov:before{content:"";position:absolute;inset:0;background:linear-gradient(rgba(11,22,48,.8),rgba(11,22,48,.93))}
+.ov>*{position:relative}
+.ov.hide{opacity:0;pointer-events:none;visibility:hidden;transition:opacity .5s,visibility 0s .5s}
+.ov h2{font-size:clamp(28px,6vw,46px);font-weight:800}
+.ov h2 b{color:#FFD700}
+.ov p{margin-top:6px;color:#dfe6f7;font-size:15px}
+.bar{width:min(420px,80vw);height:16px;border-radius:9px;background:rgba(255,255,255,.2);overflow:hidden;margin-top:22px}
+.bar i{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,#ce1126,#fcd116,#006b3f,#fcd116,#ce1126) 0 0/320px 100% repeat-x;animation:flow 1.5s linear infinite}
+@keyframes flow{to{background-position:320px 0}}
+.pct{margin-top:10px;font-weight:800;font-size:16px;letter-spacing:.5px;color:#FFD700}
+#intro{z-index:90;display:block;padding:0;background:#0b1630}
+#intro:before{display:none}
+.sl{position:absolute;inset:0;opacity:0;transition:opacity .8s;background:#0b1630 url(login_art.jpg) no-repeat;background-size:cover}
+.sl.on{opacity:1}
+.sl:after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(11,22,48,.1),rgba(11,22,48,.55) 45%,rgba(11,22,48,.96))}
+.sl .tx{position:absolute;z-index:1;left:0;right:0;bottom:21vh;padding:0 26px;max-width:680px;margin:0 auto;text-align:left}
+.sl h3{font-size:clamp(26px,5vw,42px);font-weight:800;line-height:1.15}
+.sl h3 b{color:#FFD700}
+.sl p{margin-top:10px;font-size:clamp(15px,2.4vw,19px);color:#e3e9fb}
+.s1{background-position:50% 50%}.s2{background-position:12% 55%}.s3{background-position:92% 88%}.s4{background-position:50% 0}
+@media(min-width:1000px){.sl{background-size:170% auto}.s1{background-size:cover;background-position:center}.s2{background-position:0 40%}.s3{background-position:100% 100%}.s4{background-position:50% 0}}
+.skip{position:absolute;top:14px;right:14px;z-index:3;background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:20px;padding:8px 16px;font-weight:700;cursor:pointer}
+.ctl{position:absolute;z-index:3;left:0;right:0;bottom:5vh;display:flex;flex-direction:column;align-items:center;gap:14px}
+.dots{display:flex;gap:8px}.dots i{width:9px;height:9px;border-radius:5px;background:rgba(255,255,255,.4);transition:.3s}.dots i.on{width:26px;background:#FFD700}
+.nx{min-width:210px;padding:13px 28px;border:0;border-radius:14px;font-weight:800;font-size:16px;cursor:pointer;background:linear-gradient(45deg,#FFD700,#e6a800);color:#1a1400}
+.inst{display:none;position:fixed;top:12px;left:12px;z-index:95;background:#FFD700;color:#1a1400;border:0;border-radius:20px;padding:8px 14px;font-weight:800;font-size:13px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.3)}
 </style>
 </head>
 <body>
+<button class="inst" id="install" type="button">⬇ Install app</button>
+
+<div class="ov" id="loader" role="status"><h2>NAAD <b>Student Portal</b></h2><p>Loading…</p><div class="bar"><i id="ldBar"></i></div><div class="pct" id="ldPct">0%</div></div>
+
+<div class="ov hide" id="go" role="status"><h2>NAAD <b>Student Portal</b></h2><p>Signing you in…</p><div class="bar"><i id="goBar"></i></div><div class="pct" id="goPct">0%</div></div>
+
+<div class="ov hide" id="intro" role="dialog" aria-label="About NAAD">
+  <div class="sl s1"><div class="tx"><h3>Welcome to <b>NAAD</b></h3><p>The National Academic Assessment Drive by Cadet Media Ghana. Learn today, lead tomorrow. One place for your results, awards and certificates.</p></div></div>
+  <div class="sl s2"><div class="tx"><h3>Learn, practise &amp; <b>assess</b></h3><p>Study safety lessons, practise, then take your assessments using your NAAD pendrive code.</p></div></div>
+  <div class="sl s3"><div class="tx"><h3>Track progress, earn <b>badges</b></h3><p>See your results, collect badges and finish with your NAAD certificate. Print your record any time from your portal.</p></div></div>
+  <div class="sl s4"><div class="tx"><h3>Together, we <b>save lives</b></h3><p>Bridging the gap between students and security agencies, with GNFS, Ghana Police, National Ambulance, Forestry Commission and NADMO.</p></div></div>
+  <button class="skip" type="button" onclick="showLogin()">Skip</button>
+  <div class="ctl"><div class="dots" id="dots"></div><button class="nx" id="nx" type="button">Next</button></div>
+</div>
+
 <div class="stage">
   <div class="mhead">
     <img src="logo_naad.png" alt="NAAD – National Academic Assessment Drive" onerror="this.style.display='none'">
@@ -152,8 +200,14 @@ function saveNewPin(){ var id=$('rsId').value.trim(), c=$('rsCode').value.trim()
   rsCall({action:'studentResetPin',accountId:id,code:c,newPin:p},$('rsSave')).then(function(r){ if(!r) return; rsShow(r.status==='ok',r.message||'Could not change the PIN. Please try again.');
     if(r.status==='ok'){ $('inId').value=id; setTimeout(function(){ showReset(false); },1800); } }); }
 function fail(el,msg){ el.textContent=msg; el.className='msg err'; }
+var gp=0,gTimer=null;
+function setGo(v){ $('goBar').style.width=v+'%'; $('goPct').textContent=Math.round(v)+'%'; }
+function goStart(){ gp=0; setGo(0); $('go').classList.remove('hide'); clearInterval(gTimer); gTimer=setInterval(function(){ gp+=(90-gp)*.06; setGo(gp); },60); }
+function goStop(){ clearInterval(gTimer); $('go').classList.add('hide'); }
+function goFinish(cb){ clearInterval(gTimer); var i=setInterval(function(){ gp+=(100-gp)*.3+.6; if(gp>=100){ clearInterval(i); setGo(100); setTimeout(cb,350); } else setGo(gp); },40); }
+window.addEventListener('pageshow',function(e){ if(e.persisted) goStop(); });
 function call(params,btn,errEl){
-  errEl.className='msg'; btn.disabled=true; var t=btn.textContent; btn.textContent='Checking…';
+  errEl.className='msg'; btn.disabled=true; var t=btn.textContent; btn.textContent='Checking…'; goStart();
   fetch(APPS_SCRIPT_URL+'?'+new URLSearchParams(params).toString())
     .then(function(r){return r.json()})
     .then(function(res){
@@ -162,10 +216,10 @@ function call(params,btn,errEl){
         sessionStorage.setItem('cmgStudentToken',res.token);
         sessionStorage.setItem('cmgStudentProfile',JSON.stringify(res.profile));
         sessionStorage.setItem('cmgNeedsPin',res.needsPin?'1':'');
-        location.href='student_portal.html';
-      } else fail(errEl,(res&&res.error)||'Login failed. Please try again.');
+        fetch('student_portal.html').catch(function(){}).then(function(){ goFinish(function(){ location.href='student_portal.html'; }); });
+      } else { goStop(); fail(errEl,(res&&res.error)||'Login failed. Please try again.'); }
     })
-    .catch(function(){ btn.disabled=false; btn.textContent=t; fail(errEl,'Could not reach the server. Check your connection.'); });
+    .catch(function(){ btn.disabled=false; btn.textContent=t; goStop(); fail(errEl,'Could not reach the server. Check your connection.'); });
 }
 function doLoginId(e){
   e.preventDefault();
@@ -182,7 +236,31 @@ function doLoginLegacy(e){
   call(p,$('goBtn2'),$('err2')); return false;
 }
 if(sessionStorage.getItem('cmgStudentToken')) location.replace('student_portal.html');
-if(window.matchMedia('(min-width:1000px)').matches) $('inId').focus();
+/* ---- Opening loader, intro slideshow, install ---- */
+var si=0,tm=null,sl=document.querySelectorAll('.sl');
+for(var k=0;k<sl.length;k++) $('dots').appendChild(document.createElement('i'));
+function goSlide(n){ si=n; [].forEach.call(sl,function(x,i){ x.classList.toggle('on',i===n); }); [].forEach.call($('dots').children,function(d,i){ d.classList.toggle('on',i===n); }); $('nx').textContent=(n===sl.length-1)?'Log in →':'Next'; }
+function startSlides(){ goSlide(0); $('intro').classList.remove('hide'); tm=setInterval(function(){ if(si<sl.length-1) goSlide(si+1); else clearInterval(tm); },5000); }
+function showLogin(){ clearInterval(tm); sessionStorage.setItem('naadIntro','1'); $('intro').classList.add('hide'); if(window.matchMedia('(min-width:1000px)').matches) $('inId').focus(); }
+$('nx').onclick=function(){ clearInterval(tm); if(si>=sl.length-1) showLogin(); else goSlide(si+1); };
+(function(){
+  var p=0,loaded=false,t0=Date.now(),img=new Image();
+  img.onload=img.onerror=function(){ loaded=true; }; img.src='login_art.jpg';
+  function set(v){ $('ldBar').style.width=v+'%'; $('ldPct').textContent=Math.round(v)+'%'; }
+  function tick(){
+    var el=Date.now()-t0, target=(loaded&&el>1800)?100:Math.min(88,el/25);
+    p+=(target-p)*.1; if(target===100&&p>99.4) p=100; set(p);
+    if(p<100) requestAnimationFrame(tick);
+    else setTimeout(function(){ $('loader').classList.add('hide'); if(!sessionStorage.getItem('naadIntro')) startSlides(); else showLogin(); },350);
+  }
+  tick();
+})();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+var dip=null, ib=$('install');
+window.addEventListener('beforeinstallprompt',function(e){ e.preventDefault(); dip=e; ib.style.display='block'; });
+window.addEventListener('appinstalled',function(){ ib.style.display='none'; });
+if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!navigator.standalone) ib.style.display='block';
+ib.onclick=function(){ if(dip){ dip.prompt(); dip=null; ib.style.display='none'; } else alert('To install: tap the Share button, then "Add to Home Screen".'); };
 </script>
 </body>
 </html>
