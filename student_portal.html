@@ -368,8 +368,8 @@ function render(){
     if(c.submitted) certs++;
     ev.push({t:new Date(c.actDate||0).getTime()||0,html:
       '<div class="row"><div><h3>NAAD Assessment</h3><div class="meta">'+esc(c.school)+(c.region?' · '+esc(c.region):'')+(c.actDate?' · '+esc(new Date(c.actDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})):'')+'</div></div>'+
-      (c.submitted?'<span class="pill green">✅ Completed · '+esc(c.totalScore)+'%</span>':'<span class="pill">⏳ In progress</span>')+'</div>'+
-      (c.submitted&&c.badge?'<div class="kv"><div><span>Badge</span><b>'+esc(c.badge)+'</b></div></div>':'')+
+      (c.submitted?'<span class="pill green">✅ Completed · '+esc(c.totalScore)+'%</span>':(c.activated===false?'<span class="pill">🔓 Ready to activate</span>':'<span class="pill">⏳ In progress</span>'))+'</div>'+
+      (c.activated===false?'<div class="small" style="margin-top:10px">Your NAAD pendrive code is reserved for you. <a href="activate.html">Activate your pendrive</a> to start the quiz. Your results will appear here.</div>':'')+(c.submitted&&c.badge?'<div class="kv"><div><span>Badge</span><b>'+esc(c.badge)+'</b></div></div>':'')+
       modulesHtml(c)+(c.submitted?'<div style="margin-top:12px"><a class="btn" href="'+esc(certUrl(c))+'" target="_blank" rel="noopener">🏆 View my certificate</a></div>':'')});
   });
   var progNames={}; if((report.codes||[]).length) progNames['NAAD']=1;
