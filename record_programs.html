@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Record Programmes — NAAD Admin</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="favicon_preview.png">
+<meta name="theme-color" content="#0b1630">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<style>
+:root{--card:rgba(255,255,255,.07);--line:rgba(255,255,255,.16);--gold:#FFD700;--gold2:#e6a800;--ink:#eef2ff;--mute:#a9b6d6;--ok:#7CFC9A;--bad:#ff9a9a}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;background:linear-gradient(160deg,#0b1630,#101f45 55%,#0a1226);min-height:100vh;color:var(--ink);line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:20px 16px 70px}
+h1{font-size:22px;color:var(--gold)}.sub{color:var(--mute);font-size:13.5px;margin:4px 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:16px}
+.card h2{font-size:15px;color:var(--gold);margin-bottom:12px}
+label{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:0 0 6px;letter-spacing:.3px;text-transform:uppercase}
+input,select,textarea{width:100%;padding:12px 13px;border-radius:11px;border:1.5px solid var(--line);background:rgba(255,255,255,.06);color:#fff;font:inherit;font-size:15px;outline:none}
+select option{color:#000}textarea{min-height:130px;resize:vertical;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:560px){.grid{grid-template-columns:1fr}}
+.field{margin-bottom:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border:0;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradient(45deg,var(--gold),var(--gold2));color:#1a1400;text-decoration:none}
+.btn:disabled{opacity:.45;cursor:not-allowed}.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.msg{display:none;margin-top:14px;padding:11px 14px;border-radius:10px;font-size:13.5px;line-height:1.55}
+.msg.ok{display:block;background:rgba(124,252,154,.1);border:1px solid rgba(124,252,154,.4);color:var(--ok)}
+.msg.err{display:block;background:rgba(255,120,120,.1);border:1px solid rgba(255,120,120,.4);color:var(--bad)}
+.msg.info{display:block;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);color:#f3e7b3}
+.seg{display:flex;gap:8px;margin-bottom:14px}.seg button{flex:1;padding:11px;border-radius:11px;border:1.5px solid var(--line);background:transparent;color:var(--mute);font-weight:700;cursor:pointer}
+.seg button.on{background:rgba(255,215,0,.14);border-color:var(--gold);color:var(--gold)}
+.schools{max-height:260px;overflow:auto;border:1.5px solid var(--line);border-radius:11px;margin-top:8px}
+.schools label{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:0;border-bottom:1px solid rgba(255,255,255,.07);text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink);font-weight:500;cursor:pointer}
+.schools input{width:auto}.schools .n{margin-left:auto;color:var(--mute);font-size:12px}
+.chk{display:flex;align-items:center;gap:10px;font-size:14.5px;cursor:pointer;text-transform:none;letter-spacing:0;color:var(--ink);font-weight:600}.chk input{width:auto}
+.small{font-size:12px;color:var(--mute)}
+#gate{text-align:center;padding:40px 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h1>Record programmes</h1><div class="sub">Add attendance, results and certificates to student profiles, a whole school at a time.</div></div><a class="btn ghost" href="admin.html">← Admin</a></div>
+
+  <div id="gate" class="card" style="display:none">
+    <p style="margin-bottom:14px">Please log in as the master admin.</p>
+    <div style="max-width:320px;margin:0 auto"><input type="password" id="pw" placeholder="Admin password" autocomplete="current-password"><button class="btn" style="width:100%;margin-top:10px" onclick="doLogin()">Log in</button><div class="msg" id="gateMsg"></div></div>
+  </div>
+
+  <div id="main" style="display:none">
+    <div class="card">
+      <h2>1. What happened</h2>
+      <div class="grid">
+        <div class="field"><label>Programme</label>
+          <select id="program" onchange="onProgram()">
+            <option>NAAD Safety Day</option>
+            <option>Life Fire Service Tales</option>
+            <option>NAAD Safety Edition</option>
+            <option>NAAD Academic Edition</option>
+            <option>Cadet TV Personality Awards</option>
+            <option>Cadet Drill Star</option>
+            <option value="__other__">Other…</option>
+          </select>
+          <input id="programOther" placeholder="Programme name" style="display:none;margin-top:8px"></div>
+        <div class="field"><label>Year / edition</label><input id="year" value="2026" maxlength="12"></div>
+        <div class="field"><label>Their result</label>
+          <select id="result" onchange="onResult()">
+            <option>Attended</option><option>Participated</option><option>Completed</option><option>Finalist</option><option>Winner</option><option>1st Runner-up</option><option>2nd Runner-up</option><option value="__other__">Other…</option>
+          </select>
+          <input id="resultOther" placeholder="e.g. Best Team" style="display:none;margin-top:8px"></div>
+        <div class="field"><label>Date of the event</label><input type="date" id="eventDate"></div>
+      </div>
+      <div class="field"><label>Extra detail (optional)</label><input id="level" placeholder="e.g. Greater Accra regional round" maxlength="60"></div>
+      <label class="chk"><input type="checkbox" id="cert" onchange="document.getElementById('certRow').style.display=this.checked?'block':'none'"> Certificate awarded</label>
+      <div class="field" id="certRow" style="display:none;margin-top:12px;max-width:260px"><label>Certificate date</label><input type="date" id="certDate"><div class="small" style="margin-top:6px">Leave empty to use the date of the event. Students see "Certificate awarded" with this date.</div></div>
+    </div>
+
+    <div class="card">
+      <h2>2. Which students</h2>
+      <div class="seg"><button id="mSchool" class="on" onclick="setMode('school')">Whole school(s)</button><button id="mList" onclick="setMode('list')">A list</button></div>
+      <div id="schoolBox">
+        <input id="schoolFilter" placeholder="Search schools…" oninput="drawSchools()">
+        <div class="schools" id="schools"><div class="small" style="padding:12px">Loading schools…</div></div>
+        <div class="small" style="margin-top:8px">Only students who already have an account (for example, those who activated a NAAD pendrive code) are listed.</div>
+      </div>
+      <div id="listBox" style="display:none">
+        <textarea id="lines" placeholder="One per line: Account ID or full name&#10;CMG-2026-GH-00013-E25B&#10;Ama Boateng"></textarea>
+        <div class="small" style="margin-top:8px">Use the Account ID when two students share a name.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3. Check, then record</h2>
+      <div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="previewBtn" onclick="run(true)">Preview</button><button class="btn" id="goBtn" onclick="run(false)" disabled>Record it</button></div>
+      <div class="msg" id="out"></div>
+      <p class="small" style="margin-top:12px">Doing the same programme, year and detail again only updates the entries. It never creates duplicates.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
+var TOKEN_KEY = 'cmgAdminToken', mode = 'school', schools = [], picked = {}, previewKey = '';
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function tok(){ try{ return sessionStorage.getItem(TOKEN_KEY)||''; }catch(e){ return ''; } }
+function say(cls,html){ var o=$('out'); o.className='msg '+cls; o.innerHTML=html; }
+function onProgram(){ $('programOther').style.display=$('program').value==='__other__'?'block':'none'; resetPreview(); }
+function onResult(){ $('resultOther').style.display=$('result').value==='__other__'?'block':'none'; resetPreview(); }
+function setMode(m){ mode=m; $('mSchool').className=m==='school'?'on':''; $('mList').className=m==='list'?'on':''; $('schoolBox').style.display=m==='school'?'block':'none'; $('listBox').style.display=m==='list'?'block':'none'; resetPreview(); }
+function resetPreview(){ previewKey=''; $('goBtn').disabled=true; }
+document.addEventListener('input',function(e){ if(e.target.id!=='schoolFilter'&&e.target.id!=='pw') resetPreview(); });
+
+function boot(){
+  if(!tok()){ $('gate').style.display='block'; return; }
+  $('gate').style.display='none'; $('main').style.display='block';
+  fetch(APPS_SCRIPT_URL+'?action=adminListSchools&token='+encodeURIComponent(tok())).then(function(r){return r.json()}).then(function(d){
+    if(d&&d.error==='unauthorized'){ try{sessionStorage.removeItem(TOKEN_KEY)}catch(e){} $('main').style.display='none'; $('gate').style.display='block'; return; }
+    schools=(d&&d.schools)||[]; drawSchools();
+  }).catch(function(){ $('schools').innerHTML='<div class="small" style="padding:12px">Could not load schools. Refresh the page.</div>'; });
+}
+function drawSchools(){
+  var q=$('schoolFilter').value.toLowerCase(), list=schools.filter(function(s){return s.school.toLowerCase().indexOf(q)>-1});
+  $('schools').innerHTML=list.length?list.map(function(s,i){ var id='sc'+schools.indexOf(s); return '<label><input type="checkbox" data-s="'+esc(s.school)+'" '+(picked[s.school]?'checked':'')+' onchange="pick(this)"> '+esc(s.school)+'<span class="n">'+s.count+' student'+(s.count===1?'':'s')+'</span></label>'; }).join(''):'<div class="small" style="padding:12px">No schools match.</div>';
+}
+function pick(el){ if(el.checked) picked[el.dataset.s]=1; else delete picked[el.dataset.s]; resetPreview(); }
+function doLogin(){
+  var pw=$('pw').value; if(!pw) return; var m=$('gateMsg');
+  fetch(APPS_SCRIPT_URL+'?action=adminLogin&password='+encodeURIComponent(pw)).then(function(r){return r.json()}).then(function(r){
+    if(r&&r.ok&&r.token){ if(r.agency&&r.agency!=='MASTER'){ m.className='msg err'; m.textContent='Only the master admin can record programmes.'; return; } try{sessionStorage.setItem(TOKEN_KEY,r.token)}catch(e){} boot(); }
+    else { m.className='msg err'; m.textContent='Wrong password.'; }
+  }).catch(function(){ m.className='msg err'; m.textContent='Could not reach the server.'; });
+}
+function payload(dry){
+  var program=$('program').value==='__other__'?$('programOther').value.trim():$('program').value;
+  var result=$('result').value==='__other__'?$('resultOther').value.trim():$('result').value;
+  var p={action:'adminBulkRecordProgram',token:tok(),program:program,year:$('year').value.trim(),result:result,level:$('level').value.trim(),eventDate:$('eventDate').value,certificate:$('cert').checked,certDate:$('certDate').value,mode:mode,dryRun:dry};
+  if(mode==='school') p.schools=Object.keys(picked); else p.lines=$('lines').value.split(/\r?\n/).map(function(x){return x.trim()}).filter(Boolean);
+  return p;
+}
+function run(dry){
+  var p=payload(dry);
+  if(!p.program||!p.year) return say('err','Choose the programme and type the year.');
+  if(!p.result) return say('err','Choose or type their result.');
+  if(mode==='school'&&!p.schools.length) return say('err','Tick at least one school.');
+  if(mode==='list'&&!p.lines.length) return say('err','Type at least one Account ID or name.');
+  var key=JSON.stringify(Object.assign({},p,{dryRun:0,token:0}));
+  if(!dry&&key!==previewKey) return say('err','Press Preview first, then Record it.');
+  var b=dry?$('previewBtn'):$('goBtn'); b.disabled=true; say('info',dry?'Checking…':'Recording…');
+  fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)}).then(function(r){return r.json()}).then(function(r){
+    $('previewBtn').disabled=false;
+    if(r&&r.error==='unauthorized'){ try{sessionStorage.removeItem(TOKEN_KEY)}catch(e){} boot(); return; }
+    if(!r||r.status!=='ok'){ b.disabled=false; return say('err',esc((r&&r.message)||'Something went wrong.')); }
+    var un=(r.unmatched&&r.unmatched.length)?'<br><b>Not found ('+r.unmatched.length+'):</b> '+r.unmatched.slice(0,15).map(esc).join('; ')+(r.unmatched.length>15?'…':''):'';
+    if(dry){
+      previewKey=key; $('goBtn').disabled=r.total===0;
+      say(r.total?'info':'err',r.total?('This will be recorded for <b>'+r.total+' student'+(r.total===1?'':'s')+'</b> (for example: '+r.sample.map(esc).join(', ')+').'+un+'<br>Press <b>Record it</b> to save.'):('No students found.'+un));
+    } else {
+      previewKey=''; $('goBtn').disabled=true;
+      say('ok','Done. <b>'+r.total+'</b> student'+(r.total===1?'':'s')+': '+r.added+' new, '+r.updated+' updated.'+un);
+    }
+  }).catch(function(){ $('previewBtn').disabled=false; b.disabled=false; say('err','Could not reach the server. Try again.'); });
+}
+boot();
+</script>
+</body>
+</html>

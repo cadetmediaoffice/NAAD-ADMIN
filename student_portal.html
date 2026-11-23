@@ -94,7 +94,7 @@ input:focus,select:focus{border-color:var(--gold)}input:disabled,select:disabled
   <div class="stats">
     <div class="stat"><b id="sProg">0</b><span>Programmes</span></div>
     <div class="stat"><b id="sRes">0</b><span>Results recorded</span></div>
-    <div class="stat"><b id="sCert">0</b><span>NAAD certificates</span></div>
+    <div class="stat"><b id="sCert">0</b><span>Certificates</span></div>
   </div>
 
   <div class="tabs noprint" id="tabs">
@@ -367,18 +367,22 @@ function render(){
   (report.codes||[]).forEach(function(c){
     if(c.submitted) certs++;
     ev.push({t:new Date(c.actDate||0).getTime()||0,html:
-      '<div class="row"><div><h3>NAAD Assessment</h3><div class="meta">'+esc(c.school)+(c.region?' · '+esc(c.region):'')+(c.actDate?' · '+esc(new Date(c.actDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})):'')+'</div></div>'+
+      '<div class="row"><div><h3>NAAD '+esc(c.edition||'Safety')+' Edition</h3><div class="meta">'+esc(c.school)+(c.region?' · '+esc(c.region):'')+(c.actDate?' · '+esc(new Date(c.actDate).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})):'')+'</div></div>'+
       (c.submitted?'<span class="pill green">✅ Completed · '+esc(c.totalScore)+'%</span>':(c.activated===false?'<span class="pill">🔓 Ready to activate</span>':'<span class="pill">⏳ In progress</span>'))+'</div>'+
       (c.activated===false?'<div class="small" style="margin-top:10px">Your NAAD pendrive code is reserved for you. <a href="activate.html">Activate your pendrive</a> to start the quiz. Your results will appear here.</div>':'')+(c.submitted&&c.badge?'<div class="kv"><div><span>Badge</span><b>'+esc(c.badge)+'</b></div></div>':'')+
       modulesHtml(c)+(c.submitted?'<div style="margin-top:12px"><a class="btn" href="'+esc(certUrl(c))+'" target="_blank" rel="noopener">🏆 View my certificate</a></div>':'')});
   });
-  var progNames={}; if((report.codes||[]).length) progNames['NAAD']=1;
+  var progNames={}; (report.codes||[]).forEach(function(c){ progNames['NAAD '+(c.edition||'Safety')+' Edition']=1; });
   (report.programs||[]).forEach(function(r){
-    progNames[r.program]=1; var d=r.detail||{};
-    var kv=''; if(d.combined!=null) kv+='<div><span>Combined score</span><b>'+esc(d.combined)+'</b></div>';
+    progNames[r.program]=1; var d=r.detail||{}; if(d.certificate) certs++;
+    var fmt=function(x){ try{ var z=new Date(x); return isNaN(z)?esc(x):z.toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); }catch(e){ return esc(x); } };
+    var kv='';
+    if(d.votes!=null) kv+='<div><span>Public votes</span><b>'+esc(Number(d.votes).toLocaleString())+'</b></div>';
+    if(d.publicScore!=null) kv+='<div><span>Public score</span><b>'+esc(d.publicScore)+'/100</b></div>';
     if(d.judges!=null) kv+='<div><span>Judges</span><b>'+esc(d.judges)+(d.judgesMax?'/'+esc(d.judgesMax):'')+'</b></div>';
+    if(d.combined!=null) kv+='<div><span>Combined (50/50)</span><b>'+esc(d.combined)+'/100</b></div>';
     if(d.rank) kv+='<div><span>Position</span><b>'+esc(d.rank)+(d.total?' of '+esc(d.total):'')+'</b></div>';
-    ev.push({t:new Date(r.recordedAt||0).getTime()||0,html:'<div class="row"><div><h3>'+esc(r.program)+'</h3><div class="meta">'+esc([r.level||d.category,r.year].filter(Boolean).join(' · '))+'</div></div><span class="pill">'+esc(r.result)+'</span></div>'+(kv?'<div class="kv">'+kv+'</div>':'')+(d.remarks?'<div class="remarks"><span>Judges\' remarks</span>'+esc(d.remarks)+'</div>':'')});
+    ev.push({t:new Date(r.recordedAt||0).getTime()||0,html:'<div class="row"><div><h3>'+esc(r.program)+'</h3><div class="meta">'+esc([r.level||d.category,r.year].filter(Boolean).join(' · '))+(d.eventDate?' · '+fmt(d.eventDate):'')+'</div></div><span class="pill">'+esc(r.result)+'</span></div>'+(kv?'<div class="kv">'+kv+'</div>':'')+(d.certificate?'<div style="margin-top:12px"><span class="pill green">🏅 Certificate awarded'+(d.certificateDate?' · '+fmt(d.certificateDate):'')+'</span></div>':'')+(d.remarks?'<div class="remarks"><span>Judges\' remarks</span>'+esc(d.remarks)+'</div>':'')+(d.asOf&&d.final!==true?'<div class="small" style="margin-top:10px">Provisional: updated '+esc(new Date(d.asOf).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}))+'. Votes and scores change until voting closes on 31 December 2026.</div>':'')+(d.final===true?'<div class="small" style="margin-top:10px">Final result.</div>':'')});
   });
   ev.sort(function(a,b){return b.t-a.t});
   $('journey').innerHTML=ev.length?'<div class="tl">'+ev.map(function(e){return '<div class="ev">'+e.html+'</div>'}).join('')+'</div>':'<div class="empty">Your results and awards will appear here as you take part in Cadet Media programmes.</div>';
