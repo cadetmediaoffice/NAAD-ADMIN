@@ -9,108 +9,138 @@
 <meta name="theme-color" content="#0b1630">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-:root{--navy:#0b1630;--navy2:#13224a;--card:rgba(255,255,255,.92);--line:rgba(11,22,48,.18);--gold:#FFD700;--gold2:#e6a800;--ink:#0b1630;--mute:#4a5a82;--ok:#0a7a33;--bad:#b3261e}
+:root{--navy:#0b1630;--blue:#0b2a8f;--mute:#4a5a82;--ok:#0a7a33;--bad:#b3261e}
 *{box-sizing:border-box;margin:0;padding:0}
 html{-webkit-text-size-adjust:100%}
-body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;background:#e9ebef url(bg_image.png) center/cover no-repeat fixed;min-height:100vh;color:var(--ink);line-height:1.5}
+body{font-family:'Segoe UI',system-ui,-apple-system,Roboto,Arial,sans-serif;background:#eaf1fb;color:var(--navy);line-height:1.4;min-height:100vh}
 a{color:#0b3a8f;font-weight:600}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border:0;border-radius:12px;font-weight:700;font-size:14px;cursor:pointer;background:linear-gradient(45deg,var(--gold),var(--gold2));color:#1a1400;box-shadow:0 6px 20px rgba(255,215,0,.25);text-decoration:none;transition:transform .15s}
-.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
-.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line);box-shadow:none}
-.btn.ghost:hover{background:rgba(11,22,48,.06)}
-label{display:block;font-size:12px;font-weight:700;color:var(--mute);margin:0 0 6px;letter-spacing:.3px;text-transform:uppercase}
-input,select{width:100%;padding:13px 14px;border-radius:11px;border:1.5px solid var(--line);background:#fff;color:#0b1630;font-size:15px;outline:none}
-input::placeholder{color:#8a96b5}
-select option{color:#000}
-input:focus,select:focus{border-color:#0b3a8f;box-shadow:0 0 0 3px rgba(255,215,0,.45)}input:disabled,select:disabled{opacity:.65}
-.msg{display:none;margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px}
+.sr{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+
+/* ===== Desktop: the campaign artwork is the page; a real login card sits exactly over the artwork's login box ===== */
+.stage{position:relative;max-width:1536px;margin:0 auto;container-type:inline-size;overflow:hidden}
+.art{display:block;width:100%;height:auto}
+.mhead,.mnote,.mtiles,.mband{display:none}
+.card{--u:1cqw;position:absolute;left:64.9%;top:37.4%;width:33.5%;min-height:calc(var(--u)*19.5);z-index:2;background:#fff;border:calc(var(--u)*.3) solid var(--blue);border-radius:calc(var(--u)*1.8);overflow:hidden;box-shadow:0 calc(var(--u)*.6) calc(var(--u)*2) rgba(11,22,48,.35);font-size:calc(var(--u)*1.3)}
+.ctitle{background:var(--blue);color:#fff;text-align:center;font-weight:800;font-size:calc(var(--u)*2.3);line-height:1.2;padding:calc(var(--u)*.7) 0 calc(var(--u)*.6)}
+.cbody{padding:calc(var(--u)*.8) calc(var(--u)*.9) calc(var(--u)*.8)}
+.field{position:relative;margin-bottom:calc(var(--u)*.6)}
+.ico{position:absolute;left:calc(var(--u)*1);top:50%;transform:translateY(-50%);font-size:calc(var(--u)*1.5);pointer-events:none}
+input{width:100%;padding:calc(var(--u)*.85) calc(var(--u)*1) calc(var(--u)*.85) calc(var(--u)*3.4);border-radius:calc(var(--u)*.8);border:1.5px solid #c9cfdb;background:#f4f5f8;color:var(--navy);font-size:calc(var(--u)*1.4);outline:none}
+.field.plain input{padding-left:calc(var(--u)*1)}
+input::placeholder{color:#6b7794}
+input:focus{border-color:#0b3a8f;box-shadow:0 0 0 3px rgba(255,215,0,.55)}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.4px}
+.btn{width:100%;display:flex;align-items:center;justify-content:center;gap:.4em;padding:calc(var(--u)*.8);border:0;border-radius:calc(var(--u)*.8);font-weight:800;font-size:calc(var(--u)*1.7);cursor:pointer;background:linear-gradient(#1a5be6,#0a43b5);color:#fff;box-shadow:0 4px 12px rgba(10,67,181,.35)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.alt{text-align:center;margin-top:calc(var(--u)*.6);font-size:calc(var(--u)*1.2);color:var(--mute)}
+.alt button,.alt a{background:none;border:0;color:#0b3a8f;font-size:inherit;font-weight:600;cursor:pointer;text-decoration:none}
+.alt button:hover,.alt a:hover{text-decoration:underline}
+.sep{margin:0 .5em;color:#9aa5c4}
+.msg{display:none;margin:calc(var(--u)*.4) 0;padding:calc(var(--u)*.5) calc(var(--u)*.8);border-radius:10px;font-size:calc(var(--u)*1.15)}
 .msg.ok{display:block;background:rgba(10,122,51,.08);border:1px solid rgba(10,122,51,.35);color:var(--ok)}
 .msg.err{display:block;background:rgba(179,38,30,.07);border:1px solid rgba(179,38,30,.35);color:var(--bad)}
+.rtitle{font-size:calc(var(--u)*1.7);margin-bottom:calc(var(--u)*.3)}
+.hint{font-size:calc(var(--u)*1.15);color:var(--mute);margin-bottom:calc(var(--u)*.6)}
 
-body{display:flex;align-items:center;justify-content:center;padding:24px;position:relative}
-body:before{content:"";position:fixed;inset:0;background:rgba(255,255,255,.78);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);z-index:0}
-.shell{width:100%;max-width:440px;position:relative;z-index:1}
-.brand{text-align:center;margin-bottom:18px}
-.brand img{height:62px;width:auto;margin-bottom:10px}
-.brand h1{font-size:24px;letter-spacing:.2px;color:#0b1630}.brand p{color:var(--mute);font-size:13.5px;margin-top:4px}
-.card{background:var(--card);border:1px solid rgba(255,255,255,.9);border-top:4px solid var(--gold);border-radius:20px;padding:26px 22px;box-shadow:0 22px 60px rgba(11,22,48,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.foot{background:rgba(255,255,255,.9);border-radius:14px;padding:10px 14px;box-shadow:0 8px 24px rgba(11,22,48,.18)}
-.partners{display:block;width:100%;max-width:440px;margin:18px auto 0;opacity:.95}
-/* Wide landscape screens: NAAD artwork stays fully visible on the left, form sits on the right */
-@media(min-width:1360px) and (min-aspect-ratio:16/10){
-  body:before{background:linear-gradient(90deg,rgba(255,255,255,0) 0,rgba(255,255,255,0) 60%,rgba(235,237,241,.55) 100%);backdrop-filter:none;-webkit-backdrop-filter:none}
-  body{justify-content:flex-end;padding:24px 2vw 24px 24px;background-position:left center}
-  .shell{max-width:420px}
-  .brand img{display:none}
-  .brand h1{font-size:26px}
-  .partners{display:none}
+/* ===== Phones and tablets: stacked layout built from the same artwork ===== */
+@media(max-width:999px){
+  body{background:linear-gradient(#0b1630,#13224a 55%,#0b1630)}
+  .stage{overflow:visible}
+  .mhead{display:block;text-align:center;padding:18px 16px 14px;color:#fff}
+  .mhead img{height:54px;width:auto;margin-bottom:8px}
+  .mhead h1{font-size:24px;font-weight:800;letter-spacing:.2px}
+  .mhead h1 b{color:#FFD700}
+  .mhead p{margin-top:2px;font-style:italic;font-weight:600;color:#FFD700;font-size:15px}
+  .artwrap{overflow:hidden;aspect-ratio:725/640}
+  .art{width:211.9%;max-width:none;margin-top:-31.7%}
+  .card{--u:11px;position:relative;left:auto;top:auto;width:auto;min-height:0;margin:-30px 14px 0}
+  .mnote{display:block;margin:14px 14px 0;font-size:12.5px;color:#e8edff;background:rgba(255,215,0,.14);border:1px solid rgba(255,215,0,.45);border-radius:12px;padding:10px 12px}
+  .mtiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 14px 0}
+  .mtiles span{display:block;text-align:center;padding:10px 4px;border-radius:14px;font-weight:700;font-size:13px;color:var(--navy);border:2px solid #fff}
+  .mtiles i{display:block;font-style:normal;font-size:22px}
+  .mband{display:block;margin-top:20px;padding:16px 14px 24px;text-align:center;color:#fff;font-weight:600;font-size:14px;background:var(--navy);border-top:6px solid;border-image:linear-gradient(90deg,#ce1126 33.3%,#fcd116 33.3% 66.6%,#006b3f 66.6%) 1}
+  .mband b{color:#FFD700}
+  .mband .tag{display:block;margin-top:8px;color:#FFD700;font-weight:800;font-style:italic}
+  .mband img{display:block;width:100%;max-width:440px;margin:14px auto 0;background:rgba(255,255,255,.92);border-radius:12px;padding:6px}
 }
-.field{margin-bottom:16px}
-.hint{font-size:12px;color:var(--mute);margin-top:6px}
-.mono{font-family:ui-monospace,Menlo,Consolas,monospace;text-transform:uppercase;letter-spacing:.5px}
-.alt{text-align:center;margin-top:16px;font-size:13px;color:var(--mute)}
-.alt button{background:none;border:0;color:#0b3a8f;font-weight:600;cursor:pointer;font-size:13px;text-decoration:underline}
-.note{background:rgba(255,215,0,.2);border:1px solid rgba(230,168,0,.5);border-radius:12px;padding:11px 13px;font-size:12.5px;color:#5c4700;margin-bottom:18px}
 </style>
 </head>
 <body>
-<div class="shell">
-  <div class="brand">
+<div class="stage">
+  <div class="mhead">
     <img src="logo_naad.png" alt="NAAD – National Academic Assessment Drive" onerror="this.style.display='none'">
-    <h1>Student Portal</h1>
-    <p>Your results, awards and certificates in one place.</p>
+    <h1>NAAD <b>Student Portal</b></h1>
+    <p>Your Learning. Our Priority.</p>
   </div>
+
+  <div class="artwrap"><img class="art" src="login_art.jpg" alt="NAAD Student Portal. Learn, practise, assess, track progress, earn badges and get certified. Cadet Media Ghana with GNFS, Ghana Police, National Ambulance, Forestry Commission and NADMO."></div>
 
   <div class="card">
-    <!-- Main login: Account ID + PIN / activation code -->
-    <form id="idForm" style="display:none" autocomplete="off" onsubmit="return doLoginId(event)">
-      <div class="note">🔑 <b>First time?</b> Enter your Account ID and the one-time activation code you were given. You will then be asked to create your own PIN. After that you only need your name and PIN.<br><span style="opacity:.85">Activated a NAAD pendrive code? Your Account ID <b>is</b> that code (like CMG-2026-GH-00013-E25B). Type it in both boxes.</span></div>
-      <div class="field">
-        <label for="inId">Account ID</label>
-        <input class="mono" id="inId" placeholder="e.g. CMG-2026-TV-00012-ABCD" autocapitalize="characters" autocomplete="username" spellcheck="false">
-      </div>
-      <div class="field">
-        <label for="inSecret">PIN or activation code</label>
-        <input id="inSecret" type="password" placeholder="Your PIN, or your activation code" autocomplete="current-password">
-      </div>
-      <div class="msg" id="err"></div>
-      <button class="btn" id="goBtn" type="submit" style="width:100%;margin-top:6px">Log in</button>
-      <div class="alt"><button type="button" onclick="showReset(true)">Forgot your PIN?</button> · <button type="button" onclick="showLegacy(true)">← Log in with name and PIN</button></div>
-    </form>
+    <div class="ctitle">Student Login</div>
+    <div class="cbody">
+      <!-- Main login: Account ID + PIN / activation code -->
+      <form id="idForm" autocomplete="off" onsubmit="return doLoginId(event)">
+        <div class="field"><label class="sr" for="inId">Account ID</label><span class="ico">👤</span>
+          <input class="mono" id="inId" placeholder="Activation Code / Student ID" title="Activated a NAAD pendrive code? Your Account ID is that code." autocapitalize="characters" autocomplete="username" spellcheck="false"></div>
+        <div class="field"><label class="sr" for="inSecret">PIN or activation code</label><span class="ico">🔒</span>
+          <input id="inSecret" type="password" placeholder="PIN (or activation code)" autocomplete="current-password"></div>
+        <div class="msg" id="err"></div>
+        <button class="btn" id="goBtn" type="submit">➜ Login</button>
+        <div class="alt"><button type="button" onclick="showReset(true)">Forgot PIN?</button><span class="sep">|</span><a href="activate.html">Register Now</a></div>
+        <div class="alt" style="margin-top:.2em"><button type="button" onclick="showLegacy(true)">Log in with name and PIN</button></div>
+      </form>
 
-    <!-- Older accounts: name + code or PIN (still supported) -->
-    <form id="legacyForm" autocomplete="off" onsubmit="return doLoginLegacy(event)">
-      <div class="field"><label for="lgName">Full name</label><input id="lgName" placeholder="Your full name, as registered" autocomplete="username"></div>
-      <div class="field"><label for="lgSecret">PIN</label><input id="lgSecret" type="password" inputmode="numeric" placeholder="Your PIN" autocomplete="current-password"><div class="hint">Your PIN is the 4–8 digit number you created. Same name as another student? Use your Account ID instead.</div></div>
-      <div class="msg" id="err2"></div>
-      <button class="btn" id="goBtn2" type="submit" style="width:100%;margin-top:6px">Log in</button>
-      <div class="alt"><button type="button" onclick="showReset(true)">Forgot your PIN?</button></div>
-      <div class="alt" style="margin-top:8px">First time, or two students share your name? <button type="button" onclick="showLegacy(false)">Log in with Account ID</button></div>
-    </form>
-    <!-- Forgot PIN: email a code, then choose a new PIN -->
-    <div id="resetBox" style="display:none">
-      <h2 style="font-size:18px;margin-bottom:6px">Reset your PIN</h2>
-      <p class="hint" style="margin-bottom:14px">We will email a 6-digit code to the email address on your account.</p>
-      <div class="field"><label for="rsId">Account ID</label><input class="mono" id="rsId" autocapitalize="characters" spellcheck="false"></div>
-      <button class="btn" id="rsSend" type="button" style="width:100%" onclick="sendResetCode()">Send me a code</button>
-      <div class="msg" id="rsMsg" role="status"></div>
-      <div id="rsStep2" style="display:none;margin-top:18px">
-        <div class="field"><label for="rsCode">6-digit code from your email</label><input id="rsCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></div>
-        <div class="field"><label for="rsPin">New PIN (4–8 digits)</label><input id="rsPin" type="password" inputmode="numeric" maxlength="8"></div>
-        <button class="btn" id="rsSave" type="button" style="width:100%" onclick="saveNewPin()">Save new PIN</button>
+      <!-- Older accounts: name + PIN (still supported) -->
+      <form id="legacyForm" style="display:none" autocomplete="off" onsubmit="return doLoginLegacy(event)">
+        <div class="field"><label class="sr" for="lgName">Full name</label><span class="ico">👤</span>
+          <input id="lgName" placeholder="Full name, as registered" autocomplete="username"></div>
+        <div class="field"><label class="sr" for="lgSecret">PIN</label><span class="ico">🔒</span>
+          <input id="lgSecret" type="password" inputmode="numeric" placeholder="Your PIN (4–8 digits)" autocomplete="current-password"></div>
+        <div class="msg" id="err2"></div>
+        <button class="btn" id="goBtn2" type="submit">➜ Login</button>
+        <div class="alt"><button type="button" onclick="showReset(true)">Forgot PIN?</button><span class="sep">|</span><a href="activate.html">Register Now</a></div>
+        <div class="alt" style="margin-top:.2em">Two students share your name? <button type="button" onclick="showLegacy(false)">Use Account ID</button></div>
+      </form>
+
+      <!-- Forgot PIN: email a code, then choose a new PIN -->
+      <div id="resetBox" style="display:none">
+        <h2 class="rtitle">Reset your PIN</h2>
+        <p class="hint">We will email a 6-digit code to the email address on your account.</p>
+        <div class="field plain"><label class="sr" for="rsId">Account ID</label><input class="mono" id="rsId" placeholder="Account ID" autocapitalize="characters" spellcheck="false"></div>
+        <button class="btn" id="rsSend" type="button" onclick="sendResetCode()">Send me a code</button>
+        <div class="msg" id="rsMsg" role="status"></div>
+        <div id="rsStep2" style="display:none;margin-top:calc(var(--u)*.8)">
+          <div class="field plain"><label class="sr" for="rsCode">6-digit code from your email</label><input id="rsCode" placeholder="6-digit code from your email" inputmode="numeric" maxlength="6" autocomplete="one-time-code"></div>
+          <div class="field plain"><label class="sr" for="rsPin">New PIN</label><input id="rsPin" placeholder="New PIN (4–8 digits)" type="password" inputmode="numeric" maxlength="8"></div>
+          <button class="btn" id="rsSave" type="button" onclick="saveNewPin()">Save new PIN</button>
+        </div>
+        <div class="alt"><button type="button" onclick="showReset(false)">← Back to log in</button></div>
       </div>
-      <div class="alt"><button type="button" onclick="showReset(false)">← Back to log in</button></div>
     </div>
   </div>
-  <img class="partners" src="boot_logo.png" alt="NAAD partner institutions">
-  <p class="alt foot" style="margin-top:14px;color:#2b3a63">New to NAAD? <a href="activate.html">Activate your pendrive code</a><br>No email on your account? Ask your school coordinator to reset your PIN.</p>
+
+  <!-- Mobile-only extras -->
+  <div class="mnote">🔑 <b>First time?</b> Enter your Account ID and the one-time activation code you were given, then create your own PIN. <b>Activated a NAAD pendrive code?</b> Your Account ID <b>is</b> that code (like CMG-2026-GH-00013-E25B): type it in both boxes. No email on your account? Ask your school coordinator to reset your PIN.</div>
+  <div class="mtiles">
+    <span style="background:#bfe3ff"><i>📖</i>Learn</span>
+    <span style="background:#c9f29a"><i>📝</i>Practice</span>
+    <span style="background:#ffc45c"><i>✏️</i>Assess</span>
+    <span style="background:#d9b6ff"><i>📈</i>Track Progress</span>
+    <span style="background:#a6e86a"><i>🏆</i>Earn Badges</span>
+    <span style="background:#aad4ff"><i>🎓</i>Get Certified</span>
+  </div>
+  <div class="mband">Bridging the gap between students and security agencies to prioritize <b>safety over security.</b>
+    <span class="tag">NAAD… Together, We Save Lives!</span>
+    <img src="boot_logo.png" alt="NAAD partner institutions" onerror="this.style.display='none'">
+  </div>
 </div>
 
 <script>
 var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbww1yKs60nUWmgsmwthFuzJW8438EO25n7uGaA0_dkk2YkW5xiZ9le494Mr8cSHDiYP/exec';
+var lastForm='idForm';
 function $(i){return document.getElementById(i)}
-function showLegacy(on){ $('idForm').style.display=on?'none':'block'; $('legacyForm').style.display=on?'block':'none'; }
-function showReset(on){ $('idForm').style.display='none'; $('legacyForm').style.display=on?'none':'block'; $('resetBox').style.display=on?'block':'none'; if(on&&$('inId').value&&!$('rsId').value) $('rsId').value=$('inId').value.trim(); }
+function showLegacy(on){ lastForm=on?'legacyForm':'idForm'; $('idForm').style.display=on?'none':'block'; $('legacyForm').style.display=on?'block':'none'; }
+function showReset(on){ $('idForm').style.display=(!on&&lastForm==='idForm')?'block':'none'; $('legacyForm').style.display=(!on&&lastForm==='legacyForm')?'block':'none'; $('resetBox').style.display=on?'block':'none'; if(on&&$('inId').value&&!$('rsId').value) $('rsId').value=$('inId').value.trim(); }
 function rsShow(ok,t){ var m=$('rsMsg'); m.textContent=t; m.className='msg '+(ok?'ok':'err'); try{m.scrollIntoView({block:'nearest'})}catch(e){} }
 function rsCall(params,btn){ var t=btn.textContent; btn.disabled=true; btn.textContent='Please wait…';
   return fetch(APPS_SCRIPT_URL+'?'+new URLSearchParams(params).toString()).then(function(r){return r.json()}).then(function(r){btn.disabled=false;btn.textContent=t;return r}).catch(function(){btn.disabled=false;btn.textContent=t;rsShow(false,'Could not reach the server. Check your connection.');return null}); }
@@ -152,7 +182,7 @@ function doLoginLegacy(e){
   call(p,$('goBtn2'),$('err2')); return false;
 }
 if(sessionStorage.getItem('cmgStudentToken')) location.replace('student_portal.html');
-$('lgName').focus();
+if(window.matchMedia('(min-width:1000px)').matches) $('inId').focus();
 </script>
 </body>
 </html>
